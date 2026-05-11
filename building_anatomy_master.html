@@ -67,7 +67,19 @@
 
     /* Canvas + overlay label */
     #canvas-wrap{position:relative;width:100%;height:100%}
-    #canvas3d{display:block;width:100%;height:100%}
+    #canvas3d{display:block;width:100%;height:100%;touch-action:none}
+
+    /* Touch hint badge */
+    #touch-hint{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+                display:flex;gap:14px;align-items:center;
+                background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
+                border:1px solid rgba(255,255,255,.12);border-radius:999px;
+                padding:8px 18px;pointer-events:none;
+                opacity:0;transition:opacity .4s;z-index:20}
+    #touch-hint.show{opacity:1}
+    .th-item{display:flex;align-items:center;gap:6px;font-size:10px;
+             color:rgba(255,255,255,.7);letter-spacing:.04em;white-space:nowrap}
+    .th-icon{font-size:14px;line-height:1}
     #ann-label{position:absolute;pointer-events:none;
                transition:opacity .4s,left .05s,top .05s;opacity:0;
                transform:translate(-50%,-50%)}
@@ -201,6 +213,14 @@
           <div class="ann-label-line"></div>
           <div class="ann-label-dot"></div>
         </div>
+      </div>
+      <!-- Touch gesture hint -->
+      <div id="touch-hint">
+        <div class="th-item"><span class="th-icon">☝️</span>1 jari: rotasi</div>
+        <div style="width:1px;height:14px;background:rgba(255,255,255,.15)"></div>
+        <div class="th-item"><span class="th-icon">🤏</span>2 jari: zoom</div>
+        <div style="width:1px;height:14px;background:rgba(255,255,255,.15)"></div>
+        <div class="th-item"><span class="th-icon">✌️</span>2 jari geser: pan</div>
       </div>
     </div>
   </div>
@@ -478,6 +498,81 @@ canvas.addEventListener('wheel',e=>{
   sphTgt.r = Math.max(2, Math.min(60, sphTgt.r+e.deltaY*0.018));
   e.preventDefault();
 },{passive:false});
+
+/* ── Touch hint (muncul sebentar saat pertama kali touch) ── */
+let touchHintTimer = null;
+let touchHintShown = false;
+function showTouchHint(){
+  const hint = document.getElementById('touch-hint');
+  if(!hint) return;
+  hint.classList.add('show');
+  clearTimeout(touchHintTimer);
+  touchHintTimer = setTimeout(()=>hint.classList.remove('show'), 2200);
+}
+
+/* ── Touch controls ─────────────────────────────────────
+   1 jari  → rotasi
+   2 jari pinch → zoom in/out
+   2 jari drag  → pan
+   ──────────────────────────────────────────────────── */
+let touchPrev     = [];
+let touchLastDist = 0;
+let touchLastMid  = null;
+
+function touchDist(t){
+  const dx=t[0].clientX-t[1].clientX, dy=t[0].clientY-t[1].clientY;
+  return Math.sqrt(dx*dx+dy*dy);
+}
+function touchMid(t){
+  return { x:(t[0].clientX+t[1].clientX)/2, y:(t[0].clientY+t[1].clientY)/2 };
+}
+
+canvas.addEventListener('touchstart', e=>{
+  e.preventDefault();
+  touchPrev = Array.from(e.touches);
+  if(e.touches.length===2){
+    touchLastDist = touchDist(e.touches);
+    touchLastMid  = touchMid(e.touches);
+  }
+  showTouchHint();
+},{passive:false});
+
+canvas.addEventListener('touchmove', e=>{
+  e.preventDefault();
+  const t = e.touches;
+  if(t.length===1 && touchPrev.length>=1){
+    const dx = t[0].clientX - touchPrev[0].clientX;
+    const dy = t[0].clientY - touchPrev[0].clientY;
+    sphTgt.theta -= dx * 0.007;
+    sphTgt.phi = Math.max(0.08, Math.min(Math.PI-0.08, sphTgt.phi + dy*0.007));
+  } else if(t.length===2){
+    const dist = touchDist(t);
+    const mid  = touchMid(t);
+    if(touchLastDist > 0){
+      const scale = touchLastDist / dist;
+      sphTgt.r = Math.max(2, Math.min(60, sphTgt.r * scale));
+    }
+    if(touchLastMid){
+      const dx = mid.x - touchLastMid.x;
+      const dy = mid.y - touchLastMid.y;
+      const right = new THREE.Vector3();
+      camera.getWorldDirection(right);
+      right.cross(camera.up).normalize();
+      const spd = sph.r * 0.003;
+      lookAtTgt.addScaledVector(right, -dx*spd);
+      lookAtTgt.addScaledVector(camera.up, dy*spd);
+    }
+    touchLastDist = dist;
+    touchLastMid  = mid;
+  }
+  touchPrev = Array.from(t);
+},{passive:false});
+
+canvas.addEventListener('touchend', e=>{
+  touchPrev     = Array.from(e.touches);
+  touchLastDist = 0;
+  touchLastMid  = null;
+},{passive:true});
 
 /* ═══════════════════════════════════════════════════════
    LAYER + MATERIAL SYSTEM
