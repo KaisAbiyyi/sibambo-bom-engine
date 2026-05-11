@@ -109,7 +109,13 @@ module BOMEngine
         return
       end
 
-      tex_dir = settings[:export_textures] ? out_path.gsub(".json", "_textures") : nil
+      # Append export level suffix before .json extension
+      level_tag = settings[:export_level].to_s
+      level_tag = "visual" unless %w[visual standard full].include?(level_tag)
+      out_path  = out_path.sub(/\.json$/i, "_#{level_tag}.json")
+      settings  = settings.merge(output_path: out_path)
+
+      tex_dir = settings[:export_textures] ? out_path.sub(/\.json$/i, "_textures") : nil
 
       mode_label = selection_only ? "selection" : "full model"
       Logger.info("Export started [#{mode_label}] → #{out_path}")
