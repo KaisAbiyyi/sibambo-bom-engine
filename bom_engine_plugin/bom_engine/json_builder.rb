@@ -6,7 +6,7 @@ module BOMEngine
 
     SCHEMA_VERSION = "2.0"
 
-    # Build the complete export hash.
+    # Build the export hash, content varies by export_level.
     #
     # @param model     [Sketchup::Model]
     # @param entities  [Array<Hash>]
@@ -15,38 +15,48 @@ module BOMEngine
     # @param settings  [Hash]
     # @return          [Hash]
     def self.build(model:, entities:, materials:, spatial:, settings:)
-      opts = model.options
+      level = settings[:export_level].to_s
+      level = "full" unless %w[visual standard full].include?(level)
 
-      {
+      base = {
         schema_version: SCHEMA_VERSION,
+        export_level:   level,
         exported_at:    Time.now.utc.iso8601,
-        software:       "SketchUp #{Sketchup.version}",
-        plugin_version: BOMEngine::PLUGIN_VERSION,
-
-        metadata: {
-          name:                   model.name,
-          description:            model.description,
-          filepath:               model.path,
-          guid:                   model.guid,
-          attribute_dictionaries: Traversal.extract_dicts(model)
-        },
-
-        units: {
-          length_unit_id:   opts["UnitsOptions"]["LengthUnit"],
-          length_unit_name: unit_name(opts["UnitsOptions"]["LengthUnit"]),
-          precision:        opts["UnitsOptions"]["LengthPrecision"],
-          angle_unit:       opts["UnitsOptions"]["AngleUnits"] == 0 ? "degrees" : "radians",
-          output_unit:      "meters"
-        },
-
-        shadow_settings:        build_shadow(model),
-        tags:                   build_tags(model),
-        scenes:                 build_scenes(model),
-        component_definitions:  build_definitions(model),
-        materials:              settings[:include_materials] == false ? [] : materials,
-        spatial_analysis:       spatial,
-        entities:               entities
+        entities:       entities
       }
+
+      return base if level == "visual"
+
+      # ── Standard: add metadata, units, tags, scenes ─────────
+      opts = model.options
+      base[:metadata] = {
+        name:        model.name,
+        description: model.description,
+        guid:        model.guid
+      }
+      base[:units] = {
+        length_unit_name: unit_name(opts["UnitsOptions"]["LengthUnit"]),
+        output_unit:      "meters"
+      }
+      base[:tags]   = build_tags(model)
+      base[:scenes] = build_scenes_minimal(model)
+
+      return base if level == "standard"
+
+      # ── Full: everything ─────────────────────────────────────
+      base[:software]              = "SketchUp #{Sketchup.version}"
+      base[:plugin_version]        = BOMEngine::PLUGIN_VERSION
+      base[:metadata][:filepath]   = model.path
+      base[:metadata][:attribute_dictionaries] = Traversal.extract_dicts(model)
+      base[:units][:length_unit_id]  = opts["UnitsOptions"]["LengthUnit"]
+      base[:units][:precision]       = opts["UnitsOptions"]["LengthPrecision"]
+      base[:units][:angle_unit]      = opts["UnitsOptions"]["AngleUnits"] == 0 ? "degrees" : "radians"
+      base[:shadow_settings]         = build_shadow(model)
+      base[:scenes]                  = build_scenes(model)
+      base[:component_definitions]   = build_definitions(model)
+      base[:materials]               = settings[:include_materials] == false ? [] : materials
+      base[:spatial_analysis]        = spatial
+      base
     end
 
     private
@@ -60,10 +70,10 @@ module BOMEngine
     def self.build_shadow(model)
       si = model.shadow_info
       {
-        shadows_enabled:      si["DisplayShadows"],
-        use_sun_for_shading:  si["UseSunForAllShading"],
-        light_intensity:      si["Light"],
-        dark_intensity:       si["Dark"]
+        shadows_enabled:     si["DisplayShadows"],
+        use_sun_for_shading: si["UseSunForAllShading"],
+        light_intensity:     si["Light"],
+        dark_intensity:      si["Dark"]
       }
     rescue
       {}
@@ -82,6 +92,22 @@ module BOMEngine
                    end
         }
       end
+    end
+
+    # Minimal scenes — camera position only (for Standard level)
+    def self.build_scenes_minimal(model)
+      model.pages.map do |page|
+        cam = page.camera
+        {
+          name: page.name,
+          camera: {
+            eye:    Traversal.pt_to_m(cam.eye),
+            target: Traversal.pt_to_m(cam.target)
+          }
+        }
+      end
+    rescue
+      []
     end
 
     def self.build_scenes(model)

@@ -20,9 +20,9 @@ module BOMEngine
         scrollable:   false,
         resizable:    false,
         width:        480,
-        height:       460,
+        height:       560,
         min_width:    400,
-        min_height:   380,
+        min_height:   480,
         style:        UI::HtmlDialog::STYLE_DIALOG
       )
 

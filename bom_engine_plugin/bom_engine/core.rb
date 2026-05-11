@@ -118,34 +118,38 @@ module BOMEngine
       model.start_operation("BOM Engine Export", true)
 
       begin
-        # Phase 1: texture writer (needed for UV extraction and texture export).
-        # Some SketchUp builds do not expose an allocator for TextureWriter —
-        # fall back to nil so the rest of the export still works without textures.
-        tw = begin
-          Sketchup::TextureWriter.new
-        rescue => e
-          Logger.warn("TextureWriter tidak tersedia (#{e.message}). Tekstur dilewati.")
-          nil
+        level = settings[:export_level].to_s
+        level = "full" unless %w[visual standard full].include?(level)
+
+        # Phase 1: texture writer — only needed for Full level UV extraction/export
+        tw = nil
+        if level == "full"
+          tw = begin
+            Sketchup::TextureWriter.new
+          rescue => e
+            Logger.warn("TextureWriter tidak tersedia (#{e.message}). Tekstur dilewati.")
+            nil
+          end
         end
 
-        # Disable texture export if TextureWriter is unavailable
-        tex_dir = nil if tw.nil?
+        # Disable texture export if not full or TextureWriter unavailable
+        tex_dir = nil if level != "full" || tw.nil?
 
-        # Phase 2: material library
-        materials = MaterialExtractor.extract(model, tw, tex_dir)
+        # Phase 2: material library — only for Full level
+        materials = (level == "full") ? MaterialExtractor.extract(model, tw, tex_dir) : []
 
         # Phase 3: entity tree walk — selection or full model
-        walk_opts = { include_edges: settings[:include_edges] }
+        walk_opts = { include_edges: settings[:include_edges], export_level: level }
 
         if selection_only
           context_tf = active_context_transform(model)
           entities   = Traversal.walk(model.selection, tw, context_tf, 0, walk_opts)
-          spatial    = SpatialAnalyzer.analyze_entities(model.selection, context_tf)
+          spatial    = (level == "full") ? SpatialAnalyzer.analyze_entities(model.selection, context_tf) : {}
           Logger.info("Selection: #{model.selection.length} top-level entities")
         else
-          identity = Geom::Transformation.new
-          entities = Traversal.walk(model.entities, tw, identity, 0, walk_opts)
-          spatial  = SpatialAnalyzer.analyze(model)
+          identity  = Geom::Transformation.new
+          entities  = Traversal.walk(model.entities, tw, identity, 0, walk_opts)
+          spatial   = (level == "full") ? SpatialAnalyzer.analyze(model) : {}
         end
 
         # Phase 4: assemble JSON payload
@@ -224,22 +228,26 @@ module BOMEngine
     SETTINGS_KEY = "BOMEngine_LastSettings"
 
     def self.save_last_settings(settings)
-      Sketchup.write_default(SETTINGS_KEY, "output_path",      settings[:output_path].to_s)
-      Sketchup.write_default(SETTINGS_KEY, "export_textures",  settings[:export_textures].to_s)
-      Sketchup.write_default(SETTINGS_KEY, "include_edges",    settings[:include_edges].to_s)
+      Sketchup.write_default(SETTINGS_KEY, "output_path",       settings[:output_path].to_s)
+      Sketchup.write_default(SETTINGS_KEY, "export_level",      settings[:export_level].to_s)
+      Sketchup.write_default(SETTINGS_KEY, "export_textures",   settings[:export_textures].to_s)
+      Sketchup.write_default(SETTINGS_KEY, "include_edges",     settings[:include_edges].to_s)
       Sketchup.write_default(SETTINGS_KEY, "include_materials", settings[:include_materials].to_s)
-      Sketchup.write_default(SETTINGS_KEY, "pretty_print",     settings[:pretty_print].to_s)
+      Sketchup.write_default(SETTINGS_KEY, "pretty_print",      settings[:pretty_print].to_s)
     end
 
     def self.load_last_settings
       path = Sketchup.read_default(SETTINGS_KEY, "output_path")
       return nil if path.nil? || path.empty?
+      level = Sketchup.read_default(SETTINGS_KEY, "export_level").to_s
+      level = "visual" unless %w[visual standard full].include?(level)
       {
-        output_path:      path,
-        export_textures:  Sketchup.read_default(SETTINGS_KEY, "export_textures")  == "true",
-        include_edges:    Sketchup.read_default(SETTINGS_KEY, "include_edges")    == "true",
+        output_path:       path,
+        export_level:      level,
+        export_textures:   Sketchup.read_default(SETTINGS_KEY, "export_textures")   == "true",
+        include_edges:     Sketchup.read_default(SETTINGS_KEY, "include_edges")     == "true",
         include_materials: Sketchup.read_default(SETTINGS_KEY, "include_materials") != "false",
-        pretty_print:     Sketchup.read_default(SETTINGS_KEY, "pretty_print")     != "false"
+        pretty_print:      Sketchup.read_default(SETTINGS_KEY, "pretty_print")      != "false"
       }
     end
 

@@ -75,6 +75,52 @@
     letter-spacing: 0.1em;
   }
 
+  /* ── Level selector ── */
+  .level-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .level-card {
+    background: #1e2229;
+    border: 1.5px solid #2e3340;
+    border-radius: 7px;
+    padding: 10px 10px 8px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    position: relative;
+  }
+  .level-card:hover { border-color: #4fffb055; }
+  .level-card input[type=radio] {
+    position: absolute;
+    opacity: 0;
+    width: 0; height: 0;
+  }
+  .level-card.selected {
+    border-color: #4fffb0;
+    background: #1a2820;
+  }
+  .level-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: #c0ccd8;
+    margin-bottom: 3px;
+  }
+  .level-card.selected .level-name { color: #4fffb0; }
+  .level-size {
+    font-size: 10px;
+    color: #556677;
+    margin-bottom: 5px;
+    font-family: monospace;
+  }
+  .level-card.selected .level-size { color: #3ab888; }
+  .level-desc {
+    font-size: 10px;
+    color: #445566;
+    line-height: 1.45;
+  }
+  .level-card.selected .level-desc { color: #7a9988; }
+
   .checkbox-row {
     display: flex;
     align-items: center;
@@ -103,6 +149,10 @@
     margin-top: 5px;
     line-height: 1.5;
   }
+
+  /* hide options that don't apply to visual level */
+  .full-only { transition: opacity 0.2s; }
+  .full-only.dimmed { opacity: 0.35; pointer-events: none; }
 
   .actions {
     display: flex;
@@ -151,17 +201,47 @@
     </div>
   </div>
 
+  <!-- ── Export Level ── -->
   <div class="section">
-    <h3>Opsi Export</h3>
-    <div class="checkbox-row">
+    <h3>Level Export</h3>
+    <div class="level-grid">
+
+      <label class="level-card selected" id="card-visual" onclick="selectLevel('visual')">
+        <input type="radio" name="exportLevel" value="visual" checked>
+        <div class="level-name">&#9679; Visual</div>
+        <div class="level-size">~5–8 MB</div>
+        <div class="level-desc">Geometri saja. Cukup untuk web viewer 3D.</div>
+      </label>
+
+      <label class="level-card" id="card-standard" onclick="selectLevel('standard')">
+        <input type="radio" name="exportLevel" value="standard">
+        <div class="level-name">&#9679; Standard</div>
+        <div class="level-size">~15–20 MB</div>
+        <div class="level-desc">+ Warna material, area, hierarki dasar.</div>
+      </label>
+
+      <label class="level-card" id="card-full" onclick="selectLevel('full')">
+        <input type="radio" name="exportLevel" value="full">
+        <div class="level-name">&#9679; Full BIM</div>
+        <div class="level-size">~45–50 MB</div>
+        <div class="level-desc">Semua data: UV, atribut, analisis spasial.</div>
+      </label>
+
+    </div>
+  </div>
+
+  <!-- ── Opsi Export (beberapa hanya relevan untuk Full) ── -->
+  <div class="section">
+    <h3>Opsi Tambahan</h3>
+    <div class="checkbox-row full-only" id="opt-textures">
       <input type="checkbox" id="exportTextures" checked>
       <label for="exportTextures">Export tekstur ke subfolder /textures</label>
     </div>
-    <div class="checkbox-row">
+    <div class="checkbox-row full-only" id="opt-edges">
       <input type="checkbox" id="includeEdges">
       <label for="includeEdges">Sertakan edge entities (memperbesar ukuran file)</label>
     </div>
-    <div class="checkbox-row">
+    <div class="checkbox-row full-only" id="opt-materials">
       <input type="checkbox" id="includeMaterials" checked>
       <label for="includeMaterials">Sertakan library material lengkap</label>
     </div>
@@ -180,24 +260,29 @@
     <p class="info" id="selectionInfo">Pilih objek di SketchUp terlebih dahulu untuk mengaktifkan opsi ini.</p>
   </div>
 
-  <div class="section">
-    <h3>Sistem Koordinat</h3>
-    <div class="checkbox-row">
-      <input type="checkbox" id="useWorldSpace" checked disabled>
-      <label for="useWorldSpace">Semua koordinat dalam world space (absolut, meter)</label>
-    </div>
-    <p class="info">
-      Semua vertex diekspor dalam koordinat world-space (satuan: meter, SI).<br>
-      Konversi: SketchUp inches &times; 0.0254. Sumbu Y SketchUp = sumbu Y JSON.
-    </p>
-  </div>
-
   <div class="actions">
     <button class="btn btn-cancel" onclick="sketchup.cancel()">Batal</button>
     <button class="btn btn-export" onclick="doExport()">Export JSON</button>
   </div>
 
 <script>
+  var currentLevel = 'visual';
+
+  function selectLevel(level) {
+    currentLevel = level;
+    ['visual','standard','full'].forEach(function(l) {
+      var card = document.getElementById('card-' + l);
+      card.classList.toggle('selected', l === level);
+      card.querySelector('input[type=radio]').checked = (l === level);
+    });
+    // Dim full-only options when not on full level
+    var isFullOrStandard = (level === 'full');
+    var isVisual = (level === 'visual');
+    document.querySelectorAll('.full-only').forEach(function(el) {
+      el.classList.toggle('dimmed', isVisual);
+    });
+  }
+
   function setDefaultPath(path) {
     document.getElementById('outputPath').value = path;
   }
@@ -206,9 +291,6 @@
     document.getElementById('outputPath').value = path;
   }
 
-  // Called by Ruby after dialog ready — configures the selection checkbox state.
-  // hasSelection: ada objek diseleksi di SketchUp
-  // forceSelection: dibuka via "Export Selection..." sehingga langsung dicentang & dikunci
   function setSelectionState(hasSelection, forceSelection) {
     var cb    = document.getElementById('selectionOnly');
     var info  = document.getElementById('selectionInfo');
@@ -219,7 +301,7 @@
       label.style.color = '#c0ccd8';
       if (forceSelection) {
         cb.checked  = true;
-        cb.disabled = true;  // lock: opened from "Export Selection" menu
+        cb.disabled = true;
         info.textContent = 'Hanya komponen yang sedang diseleksi yang akan diekspor.';
         info.style.color = '#4fffb0';
       } else {
@@ -241,6 +323,7 @@
     }
     var settings = {
       output_path:       outputPath,
+      export_level:      currentLevel,
       export_textures:   document.getElementById('exportTextures').checked,
       include_edges:     document.getElementById('includeEdges').checked,
       include_materials: document.getElementById('includeMaterials').checked,
@@ -252,6 +335,7 @@
 
   window.onload = function() {
     sketchup.onReady();
+    selectLevel('visual'); // default
   };
 </script>
 

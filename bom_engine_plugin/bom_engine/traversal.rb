@@ -12,11 +12,12 @@ module BOMEngine
     # @param tw        [Sketchup::TextureWriter, nil]
     # @param parent_tf [Geom::Transformation] accumulated world transform
     # @param depth     [Integer] recursion depth (safety guard)
-    # @param opts      [Hash]  :include_edges => Boolean
+    # @param opts      [Hash]  :include_edges => Boolean, :export_level => String
     # @return          [Array<Hash>]
     def self.walk(entities, tw, parent_tf, depth = 0, opts = {})
       result        = []
       include_edges = opts.fetch(:include_edges, Constants::INCLUDE_EDGES)
+      level         = opts.fetch(:export_level, "full")
 
       if depth > Constants::MAX_RECURSION_DEPTH
         Logger.warn("Max recursion depth #{Constants::MAX_RECURSION_DEPTH} reached. Skipping subtree.")
@@ -28,68 +29,76 @@ module BOMEngine
 
         case entity
         when Sketchup::Face
-          result << build_face(entity, tw, parent_tf)
+          result << build_face(entity, tw, parent_tf, level)
 
         when Sketchup::Edge
-          result << build_edge(entity, parent_tf) if include_edges
+          result << build_edge(entity, parent_tf) if include_edges && level == "full"
 
         when Sketchup::Group
-          child_tf    = parent_tf * entity.transformation
-          face_count  = count_faces(entity.entities)
-          edge_count  = include_edges ? count_edges(entity.entities) : 0
-          result << {
-            type:           "Group",
-            id:             entity.persistent_id.to_s,
-            name:           entity.name.empty? ? "(Group)" : entity.name,
-            layer:          safe_layer_name(entity),
-            guid:           entity.guid,
-            transform:      entity.transformation.to_a,
-            transform_data: decompose_transform(entity.transformation),
-            bounding_box:   bbox_hash(entity.bounds, parent_tf),
-            face_count:     face_count,
-            edge_count:     edge_count,
-            attributes:     extract_dicts(entity),
-            children:       walk(entity.entities, tw, child_tf, depth + 1, opts)
+          child_tf = parent_tf * entity.transformation
+          h = {
+            type:     "Group",
+            name:     entity.name.empty? ? "(Group)" : entity.name,
+            children: walk(entity.entities, tw, child_tf, depth + 1, opts)
           }
+          if level == "standard" || level == "full"
+            h[:layer]      = safe_layer_name(entity)
+            h[:guid]       = entity.guid
+            h[:face_count] = count_faces(entity.entities)
+          end
+          if level == "full"
+            h[:id]             = entity.persistent_id.to_s
+            h[:edge_count]     = include_edges ? count_edges(entity.entities) : 0
+            h[:transform]      = entity.transformation.to_a
+            h[:transform_data] = decompose_transform(entity.transformation)
+            h[:bounding_box]   = bbox_hash(entity.bounds, parent_tf)
+            h[:attributes]     = extract_dicts(entity)
+          end
+          result << h
 
         when Sketchup::ComponentInstance
-          defn        = entity.definition
-          child_tf    = parent_tf * entity.transformation
-          face_count  = count_faces(defn.entities)
-          edge_count  = include_edges ? count_edges(defn.entities) : 0
-          result << {
-            type:               "ComponentInstance",
-            id:                 entity.persistent_id.to_s,
-            name:               entity.name.empty? ? defn.name : entity.name,
-            definition_name:    defn.name,
-            definition_guid:    defn.guid,
-            instance_count:     defn.instances.length,
-            layer:              safe_layer_name(entity),
-            guid:               entity.guid,
-            transform:          entity.transformation.to_a,
-            transform_data:     decompose_transform(entity.transformation),
-            world_center:       pt_to_m(child_tf * defn.bounds.center),
-            bounding_box:       bbox_hash(entity.bounds, parent_tf),
-            face_count:         face_count,
-            edge_count:         edge_count,
-            dynamic_attributes: extract_dynamic_attrs(entity),
-            attributes:         extract_dicts(entity),
-            children:           walk(defn.entities, tw, child_tf, depth + 1, opts)
+          defn     = entity.definition
+          child_tf = parent_tf * entity.transformation
+          h = {
+            type:            "ComponentInstance",
+            name:            entity.name.empty? ? defn.name : entity.name,
+            definition_name: defn.name,
+            children:        walk(defn.entities, tw, child_tf, depth + 1, opts)
           }
+          if level == "standard" || level == "full"
+            h[:layer]          = safe_layer_name(entity)
+            h[:guid]           = entity.guid
+            h[:instance_count] = defn.instances.length
+            h[:face_count]     = count_faces(defn.entities)
+            h[:world_center]   = pt_to_m(child_tf * defn.bounds.center)
+          end
+          if level == "full"
+            h[:id]                 = entity.persistent_id.to_s
+            h[:definition_guid]    = defn.guid
+            h[:edge_count]         = include_edges ? count_edges(defn.entities) : 0
+            h[:transform]          = entity.transformation.to_a
+            h[:transform_data]     = decompose_transform(entity.transformation)
+            h[:bounding_box]       = bbox_hash(entity.bounds, parent_tf)
+            h[:dynamic_attributes] = extract_dynamic_attrs(entity)
+            h[:attributes]         = extract_dicts(entity)
+          end
+          result << h
 
         when Sketchup::Image
-          result << build_image(entity, parent_tf)
+          result << build_image(entity, parent_tf) if level == "full"
 
         when Sketchup::Text
-          next if entity.point.nil?
-          result << {
-            type:     "Text",
-            text:     entity.text,
-            position: pt_to_m(parent_tf * entity.point)
-          }
+          if level == "full"
+            next if entity.point.nil?
+            result << {
+              type:     "Text",
+              text:     entity.text,
+              position: pt_to_m(parent_tf * entity.point)
+            }
+          end
 
         when Sketchup::ConstructionLine
-          if Constants::INCLUDE_CONSTRUCTION_LINES
+          if level == "full" && Constants::INCLUDE_CONSTRUCTION_LINES
             result << {
               type:  "ConstructionLine",
               start: pt_to_m(parent_tf * entity.start),
@@ -103,46 +112,71 @@ module BOMEngine
       result
     end
 
-    # ── Face builder ────────────────────────────────────────────────
+    # ── Face builder ────────────────────────────────────────────
 
-    def self.build_face(face, tw, tf)
+    def self.build_face(face, tw, tf, level = "full")
       normal_world = face.normal.transform(tf).normalize
       surface_type = Classifier.classify(normal_world)
-      uv_helper    = face.get_UVHelper(true, true, tw) rescue nil
+      area_m2      = (face.area * Constants::IN2_TO_M2).round(4)
+
+      # ── Visual: minimal — only what the web viewer needs ────
+      if level == "visual"
+        vertices = face.outer_loop.vertices.map do |v|
+          { position: pt_to_m(tf * v.position) }
+        end
+        return {
+          type:         "Face",
+          layer:        safe_layer_name(face),
+          surface_type: surface_type,
+          normal:       vec_hash(normal_world),
+          area_m2:      area_m2,
+          vertices:     vertices
+        }
+      end
+
+      # ── Standard: adds holes, simplified material color ──────
+      uv_helper = (level == "full") ? (face.get_UVHelper(true, true, tw) rescue nil) : nil
 
       outer_vertices = face.outer_loop.vertices.map do |v|
         world_pt = tf * v.position
-        uv       = extract_uv(uv_helper, v.position)
-        { position: pt_to_m(world_pt), uv: uv }
+        h = { position: pt_to_m(world_pt) }
+        h[:uv] = extract_uv(uv_helper, v.position) if level == "full"
+        h
       end
 
       holes = face.loops.reject(&:outer?).map do |loop|
         loop.vertices.map { |v| pt_to_m(tf * v.position) }
       end
 
-      area_m2   = (face.area * Constants::IN2_TO_M2).round(4)
-      mat_front = material_hash(face.material)
-      mat_back  = material_hash(face.back_material)
-
-      {
-        type:           "Face",
-        id:             face.persistent_id.to_s,
-        layer:          safe_layer_name(face),
-        surface_type:   surface_type,
-        surface_simple: Classifier.simplified(normal_world),
-        vertices:       outer_vertices,
-        holes:          holes,
-        has_holes:      !holes.empty?,
-        hole_count:     holes.length,
-        normal:         vec_hash(normal_world),
-        area_m2:        area_m2,
-        material_front: mat_front,
-        material_back:  mat_back,
-        attributes:     extract_dicts(face)
+      h = {
+        type:         "Face",
+        layer:        safe_layer_name(face),
+        surface_type: surface_type,
+        area_m2:      area_m2,
+        normal:       vec_hash(normal_world),
+        vertices:     outer_vertices,
+        holes:        holes,
+        has_holes:    !holes.empty?,
+        hole_count:   holes.length
       }
+
+      if level == "standard"
+        # Include only the hex color of front material
+        m = face.material
+        h[:mat_color] = m ? "#%02x%02x%02x" % [m.color.red, m.color.green, m.color.blue] : nil
+        return h
+      end
+
+      # ── Full: everything ─────────────────────────────────────
+      h[:id]              = face.persistent_id.to_s
+      h[:surface_simple]  = Classifier.simplified(normal_world)
+      h[:material_front]  = material_hash(face.material)
+      h[:material_back]   = material_hash(face.back_material)
+      h[:attributes]      = extract_dicts(face)
+      h
     end
 
-    # ── Edge builder ────────────────────────────────────────────────
+    # ── Edge builder ────────────────────────────────────────────
 
     def self.build_edge(edge, tf)
       {
@@ -158,10 +192,9 @@ module BOMEngine
       }
     end
 
-    # ── Image entity builder ────────────────────────────────────────
+    # ── Image entity builder ────────────────────────────────────
 
     def self.build_image(img, tf)
-      # Sketchup::Image#filename removed in SU2018+; use image_rep.file instead.
       fname = begin
         if img.respond_to?(:image_rep)
           img.image_rep.file rescue nil
@@ -182,40 +215,33 @@ module BOMEngine
       }
     end
 
-    # ── Transform decomposition ─────────────────────────────────────
+    # ── Transform decomposition ─────────────────────────────────
 
-    # Decompose a Geom::Transformation into position, scale, and raw 4×4 matrix.
-    # The raw matrix is the flat 16-element column-major array from SketchUp.
-    # Coordinates are converted to meters.
     def self.decompose_transform(tf)
-      m = tf.to_a  # column-major, 16 elements, in inches
+      m = tf.to_a
 
-      # Translation — columns 12,13,14 (convert to meters)
       tx = (m[12] * Constants::IN_TO_M).round(5)
       ty = (m[13] * Constants::IN_TO_M).round(5)
       tz = (m[14] * Constants::IN_TO_M).round(5)
 
-      # Scale from column vector lengths (unitless)
       sx = Math.sqrt(m[0]**2 + m[1]**2  + m[2]**2).round(6)
       sy = Math.sqrt(m[4]**2 + m[5]**2  + m[6]**2).round(6)
       sz = Math.sqrt(m[8]**2 + m[9]**2  + m[10]**2).round(6)
 
-      # Normalized rotation matrix columns (divide by scale)
       rx = sx > 0 ? [m[0]/sx, m[1]/sx,  m[2]/sx]  : [1,0,0]
       ry = sy > 0 ? [m[4]/sy, m[5]/sy,  m[6]/sy]  : [0,1,0]
       rz = sz > 0 ? [m[8]/sz, m[9]/sz,  m[10]/sz] : [0,0,1]
 
       {
-        position: { x: tx, y: ty, z: tz },
-        scale:    { x: sx, y: sy, z: sz },
+        position:      { x: tx, y: ty, z: tz },
+        scale:         { x: sx, y: sy, z: sz },
         rotation_cols: { x: rx, y: ry, z: rz },
         raw_matrix:    m.map { |v| v.round(8) }
       }
     end
 
-    # ── Count helpers ───────────────────────────────────────────────
+    # ── Count helpers ───────────────────────────────────────────
 
-    # Count all Face entities recursively within entities.
     def self.count_faces(entities, depth = 0)
       return 0 if depth > Constants::MAX_RECURSION_DEPTH
       entities.inject(0) do |sum, e|
@@ -229,7 +255,6 @@ module BOMEngine
       end
     end
 
-    # Count all Edge entities recursively.
     def self.count_edges(entities, depth = 0)
       return 0 if depth > Constants::MAX_RECURSION_DEPTH
       entities.inject(0) do |sum, e|
@@ -243,7 +268,7 @@ module BOMEngine
       end
     end
 
-    # ── Coordinate helpers ──────────────────────────────────────────
+    # ── Coordinate helpers ──────────────────────────────────────
 
     def self.pt_to_m(pt)
       {
@@ -272,7 +297,7 @@ module BOMEngine
       { min: nil, max: nil }
     end
 
-    # ── Entity attribute helpers ────────────────────────────────────
+    # ── Entity attribute helpers ────────────────────────────────
 
     def self.safe_layer_name(entity)
       entity.respond_to?(:layer) && entity.layer ? entity.layer.name : "Layer0"
