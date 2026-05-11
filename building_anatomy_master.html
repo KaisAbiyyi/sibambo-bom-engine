@@ -544,7 +544,7 @@ canvas.addEventListener('touchmove', e=>{
     const dx = t[0].clientX - touchPrev[0].clientX;
     const dy = t[0].clientY - touchPrev[0].clientY;
     sphTgt.theta -= dx * 0.007;
-    sphTgt.phi = Math.max(0.08, Math.min(Math.PI-0.08, sphTgt.phi + dy*0.007));
+    sphTgt.phi = Math.max(0.08, Math.min(Math.PI-0.08, sphTgt.phi - dy*0.007));
   } else if(t.length===2){
     const dist = touchDist(t);
     const mid  = touchMid(t);
@@ -933,27 +933,6 @@ function generateScrollSections(){
   scrollSections = [];
   progressDots   = [];
 
-  const introZone = document.createElement('div');
-  introZone.id = 'intro-explode-zone';
-  introZone.style.cssText = [
-    'min-height:240vh',
-    'display:flex',
-    'flex-direction:column',
-    'justify-content:center',
-    'padding:80px clamp(28px,4vw,64px) 80px clamp(32px,5vw,80px)',
-    'position:relative',
-  ].join(';');
-  introZone.innerHTML = `
-    <div style="font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--text3);margin-bottom:20px">Model Bangunan Lengkap</div>
-    <h2 style="font-size:clamp(28px,4vw,52px);font-weight:900;line-height:1.05;letter-spacing:-.02em;margin-bottom:16px">Scroll untuk<br>Menjelajahi<br>Lapisan Konstruksi</h2>
-    <p style="font-size:13px;color:var(--text2);line-height:1.8;max-width:360px;margin-bottom:40px">Setiap komponen bangunan akan terpisah satu per satu seiring scrollmu — dari puncak atap hingga tiang pancang terdalam.</p>
-    <div style="display:flex;align-items:center;gap:10px;color:var(--text3);font-size:10px;letter-spacing:.14em;text-transform:uppercase">
-      <div style="width:1px;height:32px;background:linear-gradient(to bottom,var(--text3),transparent)"></div>
-      Scroll ke bawah
-    </div>
-  `;
-  scrollCol.appendChild(introZone);
-
   const activeCfgs = SECTION_CONFIG.filter(cfg=>{
     if(cfg.id==='wall') return WALL_KEYS.some(k=>layerRegistry[k]&&layerRegistry[k].meshes.length>0);
     return layerRegistry[cfg.id] && layerRegistry[cfg.id].meshes.length>0;
@@ -1066,16 +1045,6 @@ function setupScrollObserver(activeCfgs){
   ioOff.observe(document.getElementById('hero'));
 }
 
-window.addEventListener('scroll', ()=>{
-  if(!modelLoaded || currentSectionIdx !== -1) return;
-  const zone = document.getElementById('intro-explode-zone');
-  if(!zone) return;
-  const rect = zone.getBoundingClientRect();
-  const scrollable = zone.offsetHeight - window.innerHeight;
-  if(scrollable <= 0) return;
-  const progress = Math.max(0, Math.min(1, -rect.top / scrollable));
-  explodeFactorTgt = progress * MAX_EXPLODE;
-}, {passive:true});
 
 /* ═══════════════════════════════════════════════════════
    AUTO-LOAD Model_SBMBOOST_bom.json
@@ -1146,10 +1115,6 @@ function animate(){
   lerpCamStep();
   sphereToCart();
   updateAnnLabelPos();
-  if(modelLoaded && currentSectionIdx === -1){
-    explodeFactor += (explodeFactorTgt - explodeFactor) * 0.07;
-    applyExplode(explodeFactor);
-  }
   renderer.render(scene, camera);
 }
 animate();
