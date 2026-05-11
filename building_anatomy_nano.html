@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anatomi Bangunan · Nano · Sibambo</title>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#07090f;--surface:#0d1120;--border:#182030;--border2:#22304a;
+      --text:#e8ecf5;--text2:#7e8aa0;--text3:#3a4560;--accent:#4f8ef0;
+    }
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);
+         font-family:'Segoe UI',system-ui,sans-serif;overflow-x:hidden}
+
+    .hero{height:100vh;display:flex;flex-direction:column;align-items:center;
+          justify-content:center;text-align:center;padding:40px 24px;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;inset:0;pointer-events:none;
+      background:radial-gradient(ellipse 70% 50% at 50% 55%,rgba(79,142,240,.07) 0%,transparent 70%)}
+    .hero-eyebrow{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+                  color:var(--text3);margin-bottom:18px}
+    .hero-title{font-size:clamp(48px,9vw,104px);font-weight:900;line-height:1.0;letter-spacing:-.025em;
+                background:linear-gradient(135deg,#e8ecf5 0%,#6a80a0 100%);
+                -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .hero-sub{margin-top:20px;font-size:clamp(13px,1.8vw,16px);line-height:1.75;
+              color:var(--text2);max-width:460px}
+    .hero-scroll{margin-top:64px;display:flex;flex-direction:column;align-items:center;gap:6px;
+                 color:var(--text3);font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+    .scroll-bar{width:1px;height:42px;background:linear-gradient(to bottom,var(--text3),transparent);
+                animation:scrollPulse 1.8s ease-in-out infinite}
+    @keyframes scrollPulse{0%,100%{opacity:.3;transform:scaleY(.5) translateY(-4px)}
+                            50%{opacity:1;transform:scaleY(1) translateY(4px)}}
+
+    #load-overlay{position:fixed;inset:0;background:rgba(7,9,15,.96);display:flex;
+                  flex-direction:column;align-items:center;justify-content:center;gap:20px;
+                  z-index:200;backdrop-filter:blur(8px);transition:opacity .6s}
+    #load-overlay.hidden{opacity:0;pointer-events:none}
+    .spinner{width:44px;height:44px;border:3px solid var(--border2);border-top-color:var(--accent);
+             border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .load-title{font-size:clamp(22px,4vw,36px);font-weight:900;letter-spacing:-.02em;margin-bottom:4px}
+    .load-sub{font-size:12px;color:var(--text2);letter-spacing:.05em}
+    #load-progress{font-size:11px;color:var(--text3);margin-top:6px;font-family:monospace}
+    #load-error{display:none;font-size:12px;color:#e05050;text-align:center;max-width:320px;
+                line-height:1.6;padding:16px 20px;border:1px solid rgba(224,80,80,.3);
+                border-radius:10px;background:rgba(224,80,80,.06)}
+
+    .main-wrap{display:flex;align-items:flex-start;max-width:1600px;margin:0 auto}
+    .scroll-col{width:50%;flex-shrink:0;padding:0 clamp(28px,4vw,64px) 120px clamp(32px,5vw,80px)}
+    .viewer-col{width:50%;position:sticky;top:0;height:100vh;display:flex;
+                flex-direction:column;align-items:stretch;justify-content:center;background:#f3f4f6}
+
+    #canvas-wrap{position:relative;width:100%;height:100%}
+    #canvas3d{display:block;width:100%;height:100%;touch-action:none}
+
+    #ann-label{position:absolute;pointer-events:none;transition:opacity .4s,left .05s,top .05s;
+               opacity:0;transform:translate(-50%,-50%)}
+    #ann-label.show{opacity:1}
+    .ann-label-inner{background:rgba(255,255,255,.92)!important;border:1px solid #c8cdd6;
+                     border-radius:8px;padding:8px 14px;backdrop-filter:blur(10px);
+                     white-space:nowrap;position:relative}
+    .ann-label-name{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+                    color:#1a202c!important}
+    .ann-label-sub{font-size:10px;color:#4a5568!important;margin-top:2px}
+    .ann-label-line{position:absolute;bottom:-16px;left:50%;width:1px;height:16px;
+                    background:#c8cdd6;transform:translateX(-50%)}
+    .ann-label-dot{position:absolute;bottom:-22px;left:50%;width:6px;height:6px;
+                   border-radius:50%;background:var(--accent);transform:translate(-50%,-50%)}
+
+    #section-badge{position:absolute;top:20px;left:20px;z-index:10;opacity:0;
+                   transition:opacity .4s;pointer-events:none}
+    #section-badge.show{opacity:1}
+    .sb-cat{font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+            color:#8090a8;margin-bottom:4px}
+    .sb-name{font-size:14px;font-weight:800;color:#1a202c}
+
+    /* Touch hint */
+    #touch-hint{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+                display:flex;gap:14px;align-items:center;background:rgba(0,0,0,.55);
+                backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);
+                border-radius:999px;padding:8px 18px;pointer-events:none;
+                opacity:0;transition:opacity .4s;z-index:20}
+    #touch-hint.show{opacity:1}
+    .th-item{display:flex;align-items:center;gap:6px;font-size:10px;
+             color:rgba(255,255,255,.7);letter-spacing:.04em;white-space:nowrap}
+    .th-sep{width:1px;height:14px;background:rgba(255,255,255,.15)}
+
+    /* Stats badge */
+    #stats-badge{position:absolute;top:16px;right:16px;z-index:10;
+                 background:rgba(255,255,255,.85);border:1px solid #c8cdd6;
+                 border-radius:8px;padding:6px 12px;font-size:10px;color:#4a5568;
+                 backdrop-filter:blur(6px);line-height:1.6}
+
+    .scroll-section{min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+                    padding:60px 0;opacity:.25;transition:opacity .5s}
+    .scroll-section.is-active{opacity:1}
+    .comp-badge{display:inline-flex;align-items:center;gap:7px;font-size:10px;font-weight:700;
+                letter-spacing:.18em;text-transform:uppercase;color:var(--text3);margin-bottom:16px;
+                transition:color .4s}
+    .is-active .comp-badge{color:var(--comp-color,var(--accent))}
+    .comp-badge-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+    .comp-num{font-size:clamp(64px,8vw,100px);font-weight:900;line-height:1;color:var(--border);
+              user-select:none;margin-bottom:-8px;transition:color .4s}
+    .is-active .comp-num{color:var(--comp-color,var(--border));opacity:.2}
+    .comp-title{font-size:clamp(26px,3.5vw,42px);font-weight:800;line-height:1.1;
+                letter-spacing:-.01em;margin-bottom:6px;transition:color .4s}
+    .is-active .comp-title{color:var(--comp-color,var(--text))}
+    .comp-subtitle{font-size:13px;color:var(--text2);margin-bottom:22px;font-style:italic}
+    .comp-desc{font-size:14px;line-height:1.8;color:var(--text2);margin-bottom:28px}
+    .spec-grid{border-top:1px solid var(--border);padding-top:14px}
+    .spec-row{display:flex;justify-content:space-between;align-items:center;
+              padding:9px 0;border-bottom:1px solid var(--border);font-size:12px}
+    .spec-key{color:var(--text2)}
+    .spec-val{color:var(--text);font-weight:600;font-family:monospace;font-size:11px}
+
+    .progress-track{position:fixed;right:18px;top:50%;transform:translateY(-50%);
+                    display:flex;flex-direction:column;gap:5px;z-index:100}
+    .prog-dot{width:5px;height:5px;border-radius:50%;background:var(--border2);cursor:pointer;
+              transition:background .3s,transform .3s}
+    .prog-dot.active{background:var(--dot-color,var(--accent));transform:scale(1.8)}
+
+    .complete-section{min-height:80vh;display:flex;flex-direction:column;align-items:center;
+                      justify-content:center;text-align:center;padding:80px 40px}
+    .chip-wrap{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;
+               max-width:720px;margin-top:36px}
+    .comp-chip{display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:999px;
+               border:1px solid var(--border2);font-size:11px;color:var(--text2)}
+    .chip-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+    @media(max-width:860px){
+      .main-wrap{flex-direction:column}
+      .viewer-col{width:100%;height:50vw;min-height:240px;max-height:380px;
+                  position:sticky;top:0;z-index:10;border-bottom:1px solid var(--border)}
+      .scroll-col{width:100%;padding:0 24px 80px}
+      .progress-track{display:none}
+    }
+  </style>
+</head>
+<body>
+
+<div id="load-overlay">
+  <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">
+    Sibambo · BOM Engine · Nano
+  </div>
+  <div class="load-title">Anatomi Bangunan</div>
+  <div class="load-sub">Memuat bom_nano.json…</div>
+  <div class="spinner"></div>
+  <div id="load-progress">Menghubungi server…</div>
+  <div id="load-error"></div>
+</div>
+
+<section class="hero" id="hero">
+  <div class="hero-eyebrow">Sibambo · BOM Engine · Nano Viewer</div>
+  <h1 class="hero-title">Anatomi<br>Bangunan</h1>
+  <p class="hero-sub">Eksplorasi setiap lapisan konstruksi — dari pondasi terdalam hingga puncak atap — dalam representasi 3D ringan berbasis bounding box.</p>
+  <div class="hero-scroll">
+    <span>Scroll untuk menjelajahi</span>
+    <div class="scroll-bar"></div>
+  </div>
+</section>
+
+<div class="main-wrap" id="main-wrap">
+  <div class="scroll-col" id="scroll-col"></div>
+  <div class="viewer-col">
+    <div id="canvas-wrap">
+      <canvas id="canvas3d"></canvas>
+      <div id="section-badge">
+        <div class="sb-cat" id="sb-cat"></div>
+        <div class="sb-name" id="sb-name"></div>
+      </div>
+      <div id="ann-label">
+        <div class="ann-label-inner">
+          <div class="ann-label-name" id="ann-name"></div>
+          <div class="ann-label-sub" id="ann-sub"></div>
+          <div class="ann-label-line"></div>
+          <div class="ann-label-dot"></div>
+        </div>
+      </div>
+      <div id="stats-badge" style="display:none"></div>
+      <div id="touch-hint">
+        <div class="th-item">☝️ rotasi</div>
+        <div class="th-sep"></div>
+        <div class="th-item">🤏 zoom</div>
+        <div class="th-sep"></div>
+        <div class="th-item">✌️ pan</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="progress-track" id="progress-track"></div>
+
+<section class="complete-section" id="complete-section" style="display:none;visibility:hidden">
+  <div style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--text3);margin-bottom:16px">Konstruksi Selesai</div>
+  <h2 style="font-size:clamp(30px,5vw,60px);font-weight:900;letter-spacing:-.02em;line-height:1.05">Bangunan Utuh</h2>
+  <p style="margin-top:14px;font-size:14px;color:var(--text2);max-width:440px;line-height:1.75">
+    Setiap lapisan bekerja bersama membentuk struktur yang kuat, fungsional, dan efisien.
+  </p>
+  <div class="chip-wrap" id="chip-wrap"></div>
+  <div style="margin-top:56px;color:var(--text3);font-size:11px">Sibambo · BOM Engine Nano v2.0</div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+
+/* ═══════════════════════════════════════════════════════
+   NANO LAYER META — colors per category
+   ═══════════════════════════════════════════════════════ */
+const LAYER_META = {
+  'wall':          {label:'Dinding',          color:'#e07050'},
+  'atap':          {label:'Atap',             color:'#7065c0'},
+  'plafon':        {label:'Plafon',           color:'#d0b050'},
+  'pintu':         {label:'Pintu',            color:'#c07030'},
+  'jendela':       {label:'Jendela',          color:'#30c0d0'},
+  'kolom':         {label:'Kolom',            color:'#d03030'},
+  'balok':         {label:'Balok',            color:'#e05050'},
+  'sloof':         {label:'Sloof',            color:'#c09030'},
+  'pondasi_batu':  {label:'Pondasi Batu',     color:'#908050'},
+  'cerucuk':       {label:'Cerucuk',          color:'#8B6914'},
+  'urugan':        {label:'Urugan',           color:'#786040'},
+  'pondasi':       {label:'Pondasi Lainnya',  color:'#806030'},
+  'cor_lantai':    {label:'Cor Lantai',       color:'#a0a0a0'},
+  'keramik_lantai':{label:'Keramik Lantai',   color:'#e0d0b0'},
+  'furniture':     {label:'Furniture',        color:'#c070e0'},
+  'other':         {label:'Lainnya',          color:'#888888'},
+};
+
+/* ═══════════════════════════════════════════════════════
+   SECTION CONFIG
+   ═══════════════════════════════════════════════════════ */
+const SECTION_CONFIG = [
+  { id:'atap', category:'ATAP', color:'#A090E0',
+    title:'Atap', subtitle:'Perabung, Spandek, Listplank',
+    desc:'Sistem penutup atap baja ringan bergelombang dengan perabung di puncak dan listplank di tepi tritisan. Kemiringan minimal 15° memastikan aliran air hujan yang optimal.',
+    specStatic:[['Sistem','Metal roof / Spandek'],['Kemiringan','≥ 15°'],['Insulasi','Alumunium foil']],
+    cam:{ theta:0.5, phi:0.28, rFactor:0.85, targetYBias:0.40 },
+    show:['atap'], context:['wall','plafon'] },
+
+  { id:'plafon', category:'PLAFON', color:'#D4B830',
+    title:'Plafon', subtitle:'Piri-Piri & Lambrisering',
+    desc:'Bilah kayu tipis berderet sebagai penutup langit-langit interior. Memberikan insulasi termal-akustik sekaligus estetika hangat pada ruangan.',
+    specStatic:[['Material','Bilah kayu / tripleks'],['Tinggi','± 2.8 m dari lantai']],
+    cam:{ theta:0.85, phi:0.33, rFactor:1.05, targetYBias:0.18 },
+    show:['plafon'], context:['wall','kolom'] },
+
+  { id:'jendela', category:'BUKAAN', color:'#38B2D0',
+    title:'Jendela', subtitle:'Jendela Aluminium',
+    desc:'Bukaan jendela aluminium 2 daun untuk sirkulasi udara dan pencahayaan alami. Profil aluminium ringan, tahan karat, mudah perawatan.',
+    specStatic:[['Material','Profil aluminium + kaca 5 mm'],['Tipe','2 Daun Geser']],
+    cam:{ theta:0.12, phi:0.88, rFactor:0.90, targetYBias:0.05 },
+    show:['jendela'], context:['wall','pintu'] },
+
+  { id:'pintu', category:'BUKAAN', color:'#B06030',
+    title:'Pintu', subtitle:'Pintu Panel Kayu',
+    desc:'Pintu panel kayu solid dengan konstruksi 3D. Kusen kayu mahoni dipasang dengan angkur ke kolom atau dinding bata.',
+    specStatic:[['Material','Kayu kamper / meranti'],['Ukuran','80 × 240 cm']],
+    cam:{ theta:0.05, phi:0.86, rFactor:0.82, targetYBias:0.02 },
+    show:['pintu'], context:['wall','jendela'] },
+
+  { id:'wall', category:'DINDING', color:'#C49060',
+    title:'Dinding', subtitle:'Bata + Plester + Cat',
+    desc:'Penutup vertikal dari bata bermortir 1:4, diplester halus, dan dicat. Membentuk ruang, privasi, dan isolasi termal bangunan.',
+    specStatic:[['Mortar','1 PC : 4 PP'],['Plester','Tebal 2.5 cm'],['Finishing','Cat tembok']],
+    cam:{ theta:0.0, phi:0.87, rFactor:1.22, targetYBias:0.05 },
+    show:['wall'], context:['kolom','keramik_lantai','jendela','pintu'] },
+
+  { id:'balok', category:'STRUKTUR', color:'#E04040',
+    title:'Balok Ring', subtitle:'Balok Cincin 20×30 cm',
+    desc:'Balok beton bertulang yang mengikat puncak seluruh kolom. Mendistribusikan beban atap ke kolom dan mencegah dinding membuka akibat tekanan lateral.',
+    specStatic:[['Dimensi','20 × 30 cm'],['Mutu Beton','K-225'],['Tulangan','4D13 + sengkang Ø8-200']],
+    cam:{ theta:1.0, phi:0.52, rFactor:1.08, targetYBias:0.12 },
+    show:['balok'], context:['kolom','keramik_lantai'] },
+
+  { id:'kolom', category:'STRUKTUR', color:'#D03030',
+    title:'Kolom', subtitle:'Kolom K1 — 20×20 cm',
+    desc:'Elemen vertikal utama penerima dan penyalur beban dari balok ke pondasi. Rangka kolom memperlihatkan jalur distribusi gaya bangunan.',
+    specStatic:[['Dimensi','20 × 20 cm'],['Mutu Beton','K-225'],['Tulangan','4D12 + sengkang Ø8-150']],
+    cam:{ theta:1.35, phi:0.86, rFactor:0.98, targetYBias:0.02 },
+    show:['kolom'], context:['balok','keramik_lantai','sloof'] },
+
+  { id:'keramik_lantai', category:'LANTAI', color:'#C8A870',
+    title:'Keramik Lantai', subtitle:'Finishing Lantai Keramik',
+    desc:'Lapisan finishing keramik di atas pelat beton menggunakan mortar perekat. Permukaan keras, tahan aus, mudah dibersihkan.',
+    specStatic:[['Ukuran','40 × 40 cm'],['Perekat','Mortar 1:3 + tile adhesive']],
+    cam:{ theta:0.05, phi:0.62, rFactor:0.95, targetYBias:-0.18 },
+    show:['keramik_lantai'], context:['cor_lantai','kolom'] },
+
+  { id:'cor_lantai', category:'LANTAI', color:'#909090',
+    title:'Cor Lantai', subtitle:'Pelat Beton Lantai Dasar',
+    desc:'Pelat beton cor dasar struktural lantai di atas urugan yang telah dipadatkan. Penahan beban hidup dan bidang datar untuk pemasangan finishing.',
+    specStatic:[['Tebal','10–12 cm'],['Mutu Beton','K-225'],['Tulangan','Wiremesh M6-150']],
+    cam:{ theta:0.05, phi:0.72, rFactor:0.88, targetYBias:-0.23 },
+    show:['cor_lantai'], context:['keramik_lantai','urugan'] },
+
+  { id:'urugan', category:'PONDASI', color:'#B8903C',
+    title:'Urugan', subtitle:'Pasir & Tanah Urug',
+    desc:'Lapisan pengisi dan pemadat antara pondasi dan pelat lantai. Pasir dipadatkan berlapis 20 cm untuk menghindari penurunan.',
+    specStatic:[['Material','Pasir urug + tanah pilihan'],['Pemadatan','Per lapis 20 cm']],
+    cam:{ theta:0.07, phi:1.05, rFactor:0.88, targetYBias:-0.30 },
+    show:['urugan'], context:['sloof','cor_lantai','pondasi_batu'] },
+
+  { id:'sloof', category:'PONDASI', color:'#9C8668',
+    title:'Sloof', subtitle:'Ground Beam — Pengikat Pondasi',
+    desc:'Balok beton bertulang penghubung seluruh kepala pondasi. Mendistribusikan beban kolom secara merata dan mencegah pergerakan diferensial.',
+    specStatic:[['Dimensi','20 × 30 cm'],['Mutu Beton','K-225']],
+    cam:{ theta:0.07, phi:1.18, rFactor:0.88, targetYBias:-0.36 },
+    show:['sloof'], context:['pondasi_batu','cerucuk','urugan'] },
+
+  { id:'pondasi_batu', category:'PONDASI', color:'#8C8070',
+    title:'Pondasi Batu Kali', subtitle:'Batu Kali & Batu Kosong',
+    desc:'Pondasi trapesium batu kali bermortir yang meneruskan beban ke tanah dasar. Batu kosong di lapisan bawah sebagai bantalan drainase.',
+    specStatic:[['Material','Batu kali + mortar 1:4'],['Kedalaman','60–80 cm']],
+    cam:{ theta:0.07, phi:1.28, rFactor:0.82, targetYBias:-0.42 },
+    show:['pondasi_batu'], context:['cerucuk','sloof'] },
+
+  { id:'cerucuk', category:'PONDASI', color:'#8B6914',
+    title:'Cerucuk', subtitle:'Tiang Pancang Kayu',
+    desc:'Tiang kayu keras dipancangkan ke tanah lunak. Beban disalurkan melalui gesekan permukaan kayu dengan lapisan tanah hingga strata padat.',
+    specStatic:[['Material','Kayu ulin / keras lokal'],['Dimensi','Ø 8–12 cm × 2–4 m']],
+    cam:{ theta:0.06, phi:1.38, rFactor:0.72, targetYBias:-0.48 },
+    show:['cerucuk'], context:['pondasi_batu'] },
+];
+
+/* ═══════════════════════════════════════════════════════
+   THREE.JS SETUP
+   ═══════════════════════════════════════════════════════ */
+const canvas   = document.getElementById('canvas3d');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
+renderer.setClearColor(0xf3f4f6);
+
+const scene = new THREE.Scene();
+scene.fog   = new THREE.Fog(0xf3f4f6, 60, 200);
+
+const camera = new THREE.PerspectiveCamera(45, 1, 0.05, 300);
+camera.position.set(12, 8, 14);
+camera.lookAt(0, 2, 0);
+
+const hemi = new THREE.HemisphereLight(0xfff8f0, 0x8090a8, 0.75);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff4e0, 1.3);
+sun.position.set(15, 22, 10);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.near=0.5; sun.shadow.camera.far=80;
+sun.shadow.camera.left=sun.shadow.camera.bottom=-25;
+sun.shadow.camera.right=sun.shadow.camera.top=25;
+scene.add(sun);
+const fill = new THREE.DirectionalLight(0xc0d8ff, 0.45);
+fill.position.set(-10, 6, -8);
+scene.add(fill);
+
+let gridHelper = new THREE.GridHelper(20, 20, 0xb8c4cc, 0xd4dbe2);
+gridHelper.userData.noClip = true;
+scene.add(gridHelper);
+
+let groundMesh;
+{
+  const geo = new THREE.PlaneGeometry(40,40);
+  const mat = new THREE.MeshLambertMaterial({color:0xe8ecf0});
+  groundMesh = new THREE.Mesh(geo,mat);
+  groundMesh.rotation.x = -Math.PI/2;
+  groundMesh.position.y = -0.01;
+  groundMesh.receiveShadow = true;
+  groundMesh.userData.noClip = true;
+  scene.add(groundMesh);
+}
+
+/* ═══════════════════════════════════════════════════════
+   CAMERA LERP
+   ═══════════════════════════════════════════════════════ */
+const sph    = {theta:0.8, phi:0.7, r:18};
+const sphTgt = {theta:0.8, phi:0.7, r:18};
+const lookAt    = new THREE.Vector3(0,2,0);
+const lookAtTgt = new THREE.Vector3(0,2,0);
+const LERP = 0.055;
+
+function sphereToCart(){
+  camera.position.set(
+    lookAt.x + sph.r * Math.sin(sph.phi) * Math.sin(sph.theta),
+    lookAt.y + sph.r * Math.cos(sph.phi),
+    lookAt.z + sph.r * Math.sin(sph.phi) * Math.cos(sph.theta)
+  );
+  camera.lookAt(lookAt);
+}
+function lerpCamStep(){
+  sph.theta += (sphTgt.theta - sph.theta) * LERP;
+  sph.phi   += (sphTgt.phi   - sph.phi)   * LERP;
+  sph.r     += (sphTgt.r     - sph.r)     * LERP;
+  lookAt.lerp(lookAtTgt, LERP);
+}
+
+/* Mouse orbit */
+let isDrag=false, isRMB=false, prev={x:0,y:0};
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('mousedown',e=>{isDrag=true;isRMB=e.button===2;prev={x:e.clientX,y:e.clientY}});
+window.addEventListener('mouseup',()=>{isDrag=false});
+window.addEventListener('mousemove',e=>{
+  if(!isDrag) return;
+  const dx=e.clientX-prev.x, dy=e.clientY-prev.y;
+  prev={x:e.clientX,y:e.clientY};
+  if(isRMB){
+    const right=new THREE.Vector3(); camera.getWorldDirection(right);
+    right.cross(camera.up).normalize();
+    const spd=sph.r*0.001;
+    lookAtTgt.addScaledVector(right,-dx*spd);
+    lookAtTgt.addScaledVector(camera.up,dy*spd);
+  } else {
+    sphTgt.theta -= dx*0.007;
+    sphTgt.phi = Math.max(0.08, Math.min(Math.PI-0.08, sphTgt.phi+dy*0.007));
+  }
+});
+canvas.addEventListener('wheel',e=>{
+  sphTgt.r = Math.max(2, Math.min(80, sphTgt.r+e.deltaY*0.018));
+  e.preventDefault();
+},{passive:false});
+
+/* Touch controls */
+let touchPrev=[], touchLastDist=0, touchLastMid=null;
+function tDist(t){const dx=t[0].clientX-t[1].clientX,dy=t[0].clientY-t[1].clientY;return Math.sqrt(dx*dx+dy*dy);}
+function tMid(t){return{x:(t[0].clientX+t[1].clientX)/2,y:(t[0].clientY+t[1].clientY)/2};}
+let touchHintTimer=null;
+function showTouchHint(){
+  const h=document.getElementById('touch-hint');
+  h.classList.add('show');
+  clearTimeout(touchHintTimer);
+  touchHintTimer=setTimeout(()=>h.classList.remove('show'),2200);
+}
+canvas.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  touchPrev=Array.from(e.touches);
+  if(e.touches.length===2){touchLastDist=tDist(e.touches);touchLastMid=tMid(e.touches);}
+  showTouchHint();
+},{passive:false});
+canvas.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  const t=e.touches;
+  if(t.length===1&&touchPrev.length>=1){
+    const dx=t[0].clientX-touchPrev[0].clientX, dy=t[0].clientY-touchPrev[0].clientY;
+    sphTgt.theta -= dx*0.007;
+    sphTgt.phi = Math.max(0.08,Math.min(Math.PI-0.08,sphTgt.phi-dy*0.007));
+  } else if(t.length===2){
+    const dist=tDist(t), mid=tMid(t);
+    if(touchLastDist>0) sphTgt.r=Math.max(2,Math.min(80,sphTgt.r*(touchLastDist/dist)));
+    if(touchLastMid){
+      const dx=mid.x-touchLastMid.x, dy=mid.y-touchLastMid.y;
+      const right=new THREE.Vector3(); camera.getWorldDirection(right);
+      right.cross(camera.up).normalize();
+      lookAtTgt.addScaledVector(right,-dx*sph.r*0.003);
+      lookAtTgt.addScaledVector(camera.up,dy*sph.r*0.003);
+    }
+    touchLastDist=dist; touchLastMid=mid;
+  }
+  touchPrev=Array.from(t);
+},{passive:false});
+canvas.addEventListener('touchend',e=>{touchPrev=Array.from(e.touches);touchLastDist=0;touchLastMid=null;},{passive:true});
+
+/* ═══════════════════════════════════════════════════════
+   SCENE REGISTRY
+   ═══════════════════════════════════════════════════════ */
+const layerRegistry  = {};
+const origColors     = new Map();
+const pickTargets    = [];
+let sceneBox         = new THREE.Box3();
+let buildingCenter   = new THREE.Vector3();
+let buildingSize     = new THREE.Vector3();
+
+function registerMesh(key, mesh){
+  if(!layerRegistry[key]){
+    const meta = LAYER_META[key]||{label:key,color:'#888'};
+    const grp = new THREE.Group();
+    scene.add(grp);
+    layerRegistry[key]={label:meta.label, color:meta.color, meshes:[], group:grp};
+  }
+  layerRegistry[key].group.add(mesh);
+  layerRegistry[key].meshes.push(mesh);
+}
+
+function makeMat(hexColor){
+  const mat = new THREE.MeshPhongMaterial({
+    color:hexColor, shininess:28, specular:new THREE.Color(0x222222),
+    side:THREE.DoubleSide, transparent:false, opacity:1.0, depthWrite:true,
+  });
+  origColors.set(mat, mat.color.clone());
+  return mat;
+}
+
+function setMeshMode(mesh, mode){
+  if(mode==='hide'){mesh.visible=false;return;}
+  mesh.visible=true;
+  const mat=mesh.material; if(!mat) return;
+  const orig=origColors.get(mat);
+  if(mode==='dim'){
+    if(orig) mat.color.setRGB(orig.r*0.35+0.55,orig.g*0.35+0.55,orig.b*0.35+0.55);
+    mat.transparent=true; mat.opacity=0.25; mat.depthWrite=false;
+  } else {
+    if(orig) mat.color.copy(orig);
+    mat.transparent=false; mat.opacity=1.0; mat.depthWrite=true;
+  }
+  mat.needsUpdate=true;
+}
+
+function applySectionVisibility(cfg){
+  const show=new Set(cfg.show||[]), ctx=new Set(cfg.context||[]);
+  Object.keys(layerRegistry).forEach(key=>{
+    const mode=show.has(key)?'show':ctx.has(key)?'dim':'hide';
+    layerRegistry[key].meshes.forEach(m=>setMeshMode(m,mode));
+  });
+}
+
+function showAllLayers(){
+  Object.keys(layerRegistry).forEach(key=>{
+    layerRegistry[key].meshes.forEach(m=>{
+      m.visible=true; const mat=m.material; if(!mat) return;
+      const orig=origColors.get(mat);
+      if(orig) mat.color.copy(orig);
+      mat.transparent=false; mat.opacity=1.0; mat.depthWrite=true; mat.needsUpdate=true;
+    });
+  });
+}
+
+function clearScene(){
+  pickTargets.length=0;
+  Object.keys(layerRegistry).forEach(k=>{
+    const reg=layerRegistry[k];
+    if(reg.group){
+      reg.meshes.forEach(m=>{m.geometry.dispose();if(m.material)m.material.dispose();});
+      scene.remove(reg.group);
+    }
+    delete layerRegistry[k];
+  });
+  origColors.clear();
+}
+
+/* ═══════════════════════════════════════════════════════
+   BBOX MESH BUILDER
+   ═══════════════════════════════════════════════════════ */
+function buildBBoxMesh(entry){
+  const cat  = entry.category||'other';
+  const meta = LAYER_META[cat]||{color:'#888888'};
+  const hex  = parseInt(meta.color.replace('#',''),16);
+  const mat  = makeMat(hex);
+  const sz   = entry.size;
+  // SketchUp Z = up → Three.js Y; SketchUp Y → Three.js -Z
+  const geo  = new THREE.BoxGeometry(
+    Math.max(sz.w, 0.02),
+    Math.max(sz.h, 0.02),
+    Math.max(sz.d, 0.02)
+  );
+  const mesh = new THREE.Mesh(geo, mat);
+  const c = entry.center;
+  mesh.position.set(c.x, c.z, -c.y);
+  mesh.castShadow    = true;
+  mesh.receiveShadow = true;
+  mesh.userData = {type:'BBox', category:cat, name:entry.name, size:sz};
+  registerMesh(cat, mesh);
+  pickTargets.push(mesh);
+}
+
+/* ═══════════════════════════════════════════════════════
+   GRID / GROUND FIT
+   ═══════════════════════════════════════════════════════ */
+function fitGrid(box){
+  const size=box.getSize(new THREE.Vector3());
+  const center=box.getCenter(new THREE.Vector3());
+  const footW=Math.max(size.x,size.z);
+  const gridSz=Math.ceil(footW)+8;
+  scene.remove(gridHelper);
+  gridHelper=new THREE.GridHelper(gridSz,Math.max(gridSz,6),0xb8c4cc,0xd4dbe2);
+  gridHelper.userData.noClip=true;
+  gridHelper.position.set(center.x,Math.max(box.min.y-0.01,-0.01),center.z);
+  scene.add(gridHelper);
+  scene.remove(groundMesh);
+  groundMesh.geometry.dispose();
+  groundMesh.geometry=new THREE.PlaneGeometry(gridSz+2,gridSz+2);
+  groundMesh.position.set(center.x,Math.max(box.min.y-0.01,-0.01),center.z);
+  scene.add(groundMesh);
+}
+
+/* ═══════════════════════════════════════════════════════
+   BUILD FROM JSON
+   ═══════════════════════════════════════════════════════ */
+let modelLoaded = false;
+
+function buildFromJSON(data){
+  clearScene();
+  modelLoaded = false;
+
+  const entities = data.entities||[];
+  let count = 0;
+  entities.forEach(e=>{ if(e.type==='BBox'){ buildBBoxMesh(e); count++; } });
+
+  // Compute bounding box
+  sceneBox.makeEmpty();
+  scene.traverse(obj=>{
+    if(obj.isMesh&&!obj.userData.noClip)
+      sceneBox.union(new THREE.Box3().setFromObject(obj));
+  });
+
+  if(sceneBox.isEmpty()){
+    document.getElementById('load-error').style.display='block';
+    document.getElementById('load-error').textContent='Tidak ada BBox entity ditemukan dalam file JSON.';
+    document.querySelector('.spinner').style.display='none';
+    document.getElementById('load-progress').textContent='';
+    return;
+  }
+
+  sceneBox.getCenter(buildingCenter);
+  sceneBox.getSize(buildingSize);
+  fitGrid(sceneBox);
+
+  // Fit camera
+  const footprint = Math.max(buildingSize.x, buildingSize.z);
+  const fitR = (footprint/2)/Math.tan(22.5*Math.PI/180)*1.35 + buildingSize.y*0.4;
+  sph.theta=sphTgt.theta=0.0;
+  sph.phi=sphTgt.phi=1.60;
+  sph.r=sphTgt.r=fitR;
+  lookAt.set(buildingCenter.x, buildingCenter.y*0.45, buildingCenter.z);
+  lookAtTgt.copy(lookAt);
+  sphereToCart();
+
+  // Compute yCenter per layer for potential explode
+  Object.keys(layerRegistry).forEach(key=>{
+    const reg=layerRegistry[key]; if(!reg.meshes.length) return;
+    const box=new THREE.Box3();
+    reg.meshes.forEach(m=>box.union(new THREE.Box3().setFromObject(m)));
+    box.getCenter(new THREE.Vector3());
+    const ctr=new THREE.Vector3(); box.getCenter(ctr);
+    reg.yCenter=ctr.y;
+  });
+
+  // Stats badge
+  const statsBadge = document.getElementById('stats-badge');
+  const cats = Object.keys(layerRegistry).length;
+  statsBadge.textContent = `${count} komponen · ${cats} kategori`;
+  statsBadge.style.display = 'block';
+
+  modelLoaded = true;
+  showAllLayers();
+  generateScrollSections();
+}
+
+/* ═══════════════════════════════════════════════════════
+   CAMERA PER SECTION
+   ═══════════════════════════════════════════════════════ */
+function computeSectionCamera(cfg){
+  const footprint = Math.max(buildingSize.x, buildingSize.z);
+  const r = Math.max(footprint * cfg.cam.rFactor, 4);
+  const ty = buildingCenter.y + buildingSize.y * cfg.cam.targetYBias;
+  return {
+    theta: cfg.cam.theta, phi: cfg.cam.phi, r,
+    target: new THREE.Vector3(buildingCenter.x, ty, buildingCenter.z),
+  };
+}
+
+/* ═══════════════════════════════════════════════════════
+   ANNOTATION LABEL
+   ═══════════════════════════════════════════════════════ */
+const annLabel  = document.getElementById('ann-label');
+const annNameEl = document.getElementById('ann-name');
+const annSubEl  = document.getElementById('ann-sub');
+let annWorldPos = new THREE.Vector3();
+let annActive   = false;
+
+function setAnnotation(cfg){
+  const reg = layerRegistry[cfg.id];
+  if(!reg||reg.meshes.length===0){annLabel.classList.remove('show');annActive=false;return;}
+  const box=new THREE.Box3();
+  reg.meshes.forEach(m=>box.union(new THREE.Box3().setFromObject(m)));
+  box.getCenter(annWorldPos);
+  annNameEl.textContent=cfg.title; annSubEl.textContent=cfg.subtitle;
+  annLabel.querySelector('.ann-label-dot').style.background=cfg.color;
+  annActive=true; annLabel.classList.add('show');
+}
+
+function updateAnnLabelPos(){
+  if(!annActive) return;
+  const v=annWorldPos.clone().project(camera);
+  const hw=canvas.clientWidth, hh=canvas.clientHeight;
+  const x=(v.x*0.5+0.5)*hw, y=(-v.y*0.5+0.5)*hh;
+  if(x<0||x>hw||y<0||y>hh){annLabel.style.opacity='0';return;}
+  annLabel.style.opacity='1';
+  annLabel.style.left=x+'px'; annLabel.style.top=y+'px';
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCROLL SECTIONS
+   ═══════════════════════════════════════════════════════ */
+function buildDynamicSpecs(cfg){
+  const rows=[...cfg.specStatic];
+  const reg=layerRegistry[cfg.id];
+  if(reg&&reg.meshes.length>0){
+    rows.push(['Jumlah objek', reg.meshes.length.toLocaleString('id')]);
+    // total volume estimate
+    const vol = reg.meshes.reduce((s,m)=>{
+      const sz=m.userData.size;
+      return sz ? s+(sz.w*sz.d*sz.h) : s;
+    },0);
+    if(vol>0) rows.push(['Vol. bbox', vol.toFixed(2)+' m³']);
+  }
+  return rows;
+}
+
+const scrollCol     = document.getElementById('scroll-col');
+const progressTrack = document.getElementById('progress-track');
+const chipWrap      = document.getElementById('chip-wrap');
+let scrollSections=[], progressDots=[];
+
+function generateScrollSections(){
+  scrollCol.innerHTML=''; progressTrack.innerHTML=''; chipWrap.innerHTML='';
+  scrollSections=[]; progressDots=[];
+
+  // Intro zone
+  const intro = document.createElement('div');
+  intro.style.cssText='min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:80px clamp(28px,4vw,64px) 80px clamp(32px,5vw,80px)';
+  intro.innerHTML=`
+    <div style="font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--text3);margin-bottom:20px">Model BBox — Nano</div>
+    <h2 style="font-size:clamp(28px,4vw,52px);font-weight:900;line-height:1.05;letter-spacing:-.02em;margin-bottom:16px">Eksplorasi<br>Model 3D<br>Interaktif</h2>
+    <p style="font-size:13px;color:var(--text2);line-height:1.8;max-width:360px;margin-bottom:40px">Putar dan zoom model di sebelah kanan. Scroll ke bawah untuk menjelajahi setiap lapisan konstruksi.</p>
+    <div style="display:flex;align-items:center;gap:10px;color:var(--text3);font-size:10px;letter-spacing:.14em;text-transform:uppercase">
+      <div style="width:1px;height:32px;background:linear-gradient(to bottom,var(--text3),transparent)"></div>
+      Scroll untuk menjelajahi
+    </div>`;
+  scrollCol.appendChild(intro);
+
+  const activeCfgs = SECTION_CONFIG.filter(cfg=>layerRegistry[cfg.id]&&layerRegistry[cfg.id].meshes.length>0);
+
+  activeCfgs.forEach((cfg,i)=>{
+    const sec=document.createElement('div');
+    sec.className='scroll-section';
+    sec.dataset.index=i; sec.dataset.cfgId=cfg.id;
+    sec.style.setProperty('--comp-color',cfg.color);
+
+    const specs=buildDynamicSpecs(cfg);
+    const specsHtml=specs.map(([k,v])=>`<div class="spec-row"><span class="spec-key">${k}</span><span class="spec-val">${v}</span></div>`).join('');
+    sec.innerHTML=`
+      <div class="comp-badge"><span class="comp-badge-dot" style="background:${cfg.color}"></span>${cfg.category}</div>
+      <div class="comp-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="comp-title">${cfg.title}</div>
+      <div class="comp-subtitle">${cfg.subtitle}</div>
+      <p class="comp-desc">${cfg.desc}</p>
+      <div class="spec-grid">${specsHtml}</div>`;
+    scrollCol.appendChild(sec);
+    scrollSections.push({el:sec,cfg});
+
+    const dot=document.createElement('div');
+    dot.className='prog-dot'; dot.title=cfg.title;
+    dot.style.setProperty('--dot-color',cfg.color);
+    dot.addEventListener('click',()=>sec.scrollIntoView({behavior:'smooth',block:'center'}));
+    progressTrack.appendChild(dot); progressDots.push(dot);
+
+    const chip=document.createElement('div');
+    chip.className='comp-chip';
+    chip.innerHTML=`<span class="chip-dot" style="background:${cfg.color}"></span>${cfg.title}`;
+    chipWrap.appendChild(chip);
+  });
+
+  setupScrollObserver(activeCfgs);
+  document.getElementById('load-overlay').classList.add('hidden');
+
+  if(activeCfgs.length===0){
+    const msg=document.createElement('div');
+    msg.style.cssText='padding:60px 40px;color:var(--text2);font-size:14px;line-height:2';
+    msg.innerHTML='<strong style="color:var(--text)">Model termuat.</strong><br>Tidak ada kategori yang cocok ditemukan.<br>Periksa nama komponen di SketchUp.';
+    scrollCol.appendChild(msg);
+    document.getElementById('load-overlay').classList.add('hidden');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   INTERSECTION OBSERVER
+   ═══════════════════════════════════════════════════════ */
+let currentSectionIdx=-1, sectionObserver=null;
+const badge=document.getElementById('section-badge');
+const sbCat=document.getElementById('sb-cat');
+const sbName=document.getElementById('sb-name');
+
+function activateSection(idx,cfg){
+  if(idx===currentSectionIdx) return;
+  currentSectionIdx=idx;
+  scrollSections.forEach((s,i)=>s.el.classList.toggle('is-active',i===idx));
+  progressDots.forEach((d,i)=>d.classList.toggle('active',i===idx));
+  const cam=computeSectionCamera(cfg);
+  sphTgt.theta=cam.theta; sphTgt.phi=cam.phi; sphTgt.r=cam.r;
+  lookAtTgt.copy(cam.target);
+  applySectionVisibility(cfg);
+  setAnnotation(cfg);
+  sbCat.textContent=cfg.category; sbName.textContent=cfg.title;
+  sbName.style.color=cfg.color; badge.classList.add('show');
+}
+
+function deactivateAll(){
+  currentSectionIdx=-1;
+  scrollSections.forEach(s=>s.el.classList.remove('is-active'));
+  progressDots.forEach(d=>d.classList.remove('active'));
+  showAllLayers(); annLabel.classList.remove('show'); annActive=false;
+  badge.classList.remove('show');
+  const footprint=Math.max(buildingSize.x,buildingSize.z);
+  const fitR=(footprint/2)/Math.tan(22.5*Math.PI/180)*1.35+buildingSize.y*0.4;
+  sphTgt.theta=0.0; sphTgt.phi=1.60; sphTgt.r=fitR;
+  lookAtTgt.set(buildingCenter.x, buildingCenter.y*0.45, buildingCenter.z);
+}
+
+function setupScrollObserver(activeCfgs){
+  if(sectionObserver) sectionObserver.disconnect();
+  sectionObserver=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        const idx=parseInt(entry.target.dataset.index);
+        activateSection(idx,activeCfgs[idx]);
+      }
+    });
+  },{threshold:0.4,rootMargin:'0px 0px -10% 0px'});
+  scrollSections.forEach(s=>sectionObserver.observe(s.el));
+  const ioOff=new IntersectionObserver(entries=>{
+    if(entries[0].isIntersecting&&modelLoaded) deactivateAll();
+  },{threshold:0.25});
+  ioOff.observe(document.getElementById('hero'));
+}
+
+/* ═══════════════════════════════════════════════════════
+   AUTO-LOAD bom_nano.json
+   ═══════════════════════════════════════════════════════ */
+const loadProgress = document.getElementById('load-progress');
+const loadError    = document.getElementById('load-error');
+
+async function autoLoadModel(){
+  try {
+    loadProgress.textContent = 'Mengunduh bom_nano.json…';
+    const resp = await fetch('bom_nano.json');
+    if(!resp.ok) throw new Error(`HTTP ${resp.status} — bom_nano.json tidak ditemukan`);
+
+    const total = parseInt(resp.headers.get('Content-Length')||'0');
+    const reader = resp.body.getReader();
+    const chunks = []; let received = 0;
+    while(true){
+      const {done,value} = await reader.read();
+      if(done) break;
+      chunks.push(value); received+=value.length;
+      if(total>0){
+        loadProgress.textContent=`Mengunduh… ${Math.round(received/total*100)}% (${(received/1024).toFixed(0)} KB)`;
+      } else {
+        loadProgress.textContent=`Mengunduh… ${(received/1024).toFixed(0)} KB`;
+      }
+    }
+
+    loadProgress.textContent='Memproses data…';
+    await new Promise(r=>setTimeout(r,0));
+    const text = await new Blob(chunks).text();
+    const data = JSON.parse(text);
+
+    if(!data.entities||data.entities.length===0)
+      throw new Error('File JSON tidak memiliki entities. Pastikan export menggunakan level Nano.');
+
+    loadProgress.textContent='Membangun model 3D…';
+    await new Promise(r=>setTimeout(r,0));
+    buildFromJSON(data);
+
+  } catch(err){
+    loadError.style.display='block';
+    loadError.textContent='Gagal memuat: '+err.message;
+    loadProgress.textContent='';
+    document.querySelector('.spinner').style.display='none';
+    console.error(err);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESIZE + RENDER LOOP
+   ═══════════════════════════════════════════════════════ */
+function onResize(){
+  const wrap=document.getElementById('canvas-wrap');
+  const w=wrap.clientWidth, h=wrap.clientHeight;
+  renderer.setSize(w,h,false);
+  camera.aspect=w/h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize',onResize);
+onResize();
+
+function animate(){
+  requestAnimationFrame(animate);
+  lerpCamStep(); sphereToCart(); updateAnnLabelPos();
+  renderer.render(scene,camera);
+}
+animate();
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',autoLoadModel);
+} else {
+  autoLoadModel();
+}
+</script>
+</body>
+</html>
