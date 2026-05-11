@@ -206,18 +206,11 @@
     <h3>Level Export</h3>
     <div class="level-grid">
 
-      <label class="level-card selected" id="card-nano" onclick="selectLevel('nano')">
-        <input type="radio" name="exportLevel" value="nano" checked>
-        <div class="level-name">&#9679; Nano</div>
-        <div class="level-size">&lt;1 MB</div>
-        <div class="level-desc">BBox per komponen. Paling ringan untuk viewer.</div>
-      </label>
-
-      <label class="level-card" id="card-visual" onclick="selectLevel('visual')">
-        <input type="radio" name="exportLevel" value="visual">
+      <label class="level-card selected" id="card-visual" onclick="selectLevel('visual')">
+        <input type="radio" name="exportLevel" value="visual" checked>
         <div class="level-name">&#9679; Visual</div>
         <div class="level-size">~5–8 MB</div>
-        <div class="level-desc">Geometri polygon lengkap per face.</div>
+        <div class="level-desc">Geometri polygon lengkap per face. Ringan untuk viewer 3D.</div>
       </label>
 
       <label class="level-card" id="card-standard" onclick="selectLevel('standard')">
@@ -253,9 +246,10 @@
       <label for="includeMaterials">Sertakan library material lengkap</label>
     </div>
     <div class="checkbox-row">
-      <input type="checkbox" id="prettyPrint" checked>
+      <input type="checkbox" id="prettyPrint">
       <label for="prettyPrint">Pretty-print JSON (mudah dibaca manusia)</label>
     </div>
+    <p class="info" style="margin-top:-4px;margin-bottom:6px">&#9888; Pretty-print menambah spasi &amp; baris baru — ukuran file bisa <strong style="color:#ffaa44">2–3× lebih besar</strong>. Nonaktifkan untuk produksi.</p>
   </div>
 
   <div class="section">
@@ -273,20 +267,17 @@
   </div>
 
 <script>
-  var currentLevel = 'nano';
+  var currentLevel = 'visual';
 
   function selectLevel(level) {
     currentLevel = level;
-    ['nano','visual','standard','full'].forEach(function(l) {
+    ['visual','standard','full'].forEach(function(l) {
       var card = document.getElementById('card-' + l);
       card.classList.toggle('selected', l === level);
       card.querySelector('input[type=radio]').checked = (l === level);
     });
-    // Dim full-only options when not on full level
-    var isFullOrStandard = (level === 'full');
-    var isVisual = (level === 'visual');
     document.querySelectorAll('.full-only').forEach(function(el) {
-      el.classList.toggle('dimmed', isVisual);
+      el.classList.toggle('dimmed', level === 'visual');
     });
   }
 
@@ -342,7 +333,7 @@
 
   window.onload = function() {
     sketchup.onReady();
-    selectLevel('nano'); // default
+    selectLevel('visual'); // default
   };
 </script>
 

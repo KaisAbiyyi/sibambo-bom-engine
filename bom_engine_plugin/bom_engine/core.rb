@@ -119,7 +119,7 @@ module BOMEngine
 
       begin
         level = settings[:export_level].to_s
-        level = "full" unless %w[nano visual standard full].include?(level)
+        level = "full" unless %w[visual standard full].include?(level)
 
         # Phase 1: texture writer — only needed for Full level UV extraction/export
         tw = nil
@@ -139,29 +139,17 @@ module BOMEngine
         materials = (level == "full") ? MaterialExtractor.extract(model, tw, tex_dir) : []
 
         # Phase 3: entity tree walk — selection or full model
-        identity = Geom::Transformation.new
+        identity  = Geom::Transformation.new
+        walk_opts = { include_edges: settings[:include_edges], export_level: level }
 
-        if level == "nano"
-          # Nano: bounding box per named component, no face geometry
-          if selection_only
-            context_tf = active_context_transform(model)
-            entities   = Traversal.walk_nano(model.selection, context_tf)
-            Logger.info("Nano selection: #{model.selection.length} top-level entities")
-          else
-            entities = Traversal.walk_nano(model.entities, identity)
-          end
-          spatial = {}
+        if selection_only
+          context_tf = active_context_transform(model)
+          entities   = Traversal.walk(model.selection, tw, context_tf, 0, walk_opts)
+          spatial    = (level == "full") ? SpatialAnalyzer.analyze_entities(model.selection, context_tf) : {}
+          Logger.info("Selection: #{model.selection.length} top-level entities")
         else
-          walk_opts = { include_edges: settings[:include_edges], export_level: level }
-          if selection_only
-            context_tf = active_context_transform(model)
-            entities   = Traversal.walk(model.selection, tw, context_tf, 0, walk_opts)
-            spatial    = (level == "full") ? SpatialAnalyzer.analyze_entities(model.selection, context_tf) : {}
-            Logger.info("Selection: #{model.selection.length} top-level entities")
-          else
-            entities = Traversal.walk(model.entities, tw, identity, 0, walk_opts)
-            spatial  = (level == "full") ? SpatialAnalyzer.analyze(model) : {}
-          end
+          entities = Traversal.walk(model.entities, tw, identity, 0, walk_opts)
+          spatial  = (level == "full") ? SpatialAnalyzer.analyze(model) : {}
         end
 
         # Phase 4: assemble JSON payload
@@ -252,7 +240,7 @@ module BOMEngine
       path = Sketchup.read_default(SETTINGS_KEY, "output_path")
       return nil if path.nil? || path.empty?
       level = Sketchup.read_default(SETTINGS_KEY, "export_level").to_s
-      level = "nano" unless %w[nano visual standard full].include?(level)
+      level = "visual" unless %w[visual standard full].include?(level)
       {
         output_path:       path,
         export_level:      level,
