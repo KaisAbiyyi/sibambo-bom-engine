@@ -933,6 +933,26 @@ function generateScrollSections(){
   scrollSections = [];
   progressDots   = [];
 
+  // ── Intro zone — model utuh, bisa diinteraksi, tanpa animasi terpisah ──
+  const introZone = document.createElement('div');
+  introZone.style.cssText = [
+    'min-height:100vh',
+    'display:flex',
+    'flex-direction:column',
+    'justify-content:center',
+    'padding:80px clamp(28px,4vw,64px) 80px clamp(32px,5vw,80px)',
+  ].join(';');
+  introZone.innerHTML = `
+    <div style="font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--text3);margin-bottom:20px">Model Bangunan Lengkap · SBMBOOST</div>
+    <h2 style="font-size:clamp(28px,4vw,52px);font-weight:900;line-height:1.05;letter-spacing:-.02em;margin-bottom:16px">Eksplorasi<br>Model 3D<br>Interaktif</h2>
+    <p style="font-size:13px;color:var(--text2);line-height:1.8;max-width:360px;margin-bottom:40px">Putar dan zoom model menggunakan sentuhan. Scroll ke bawah untuk menjelajahi setiap lapisan konstruksi satu per satu.</p>
+    <div style="display:flex;align-items:center;gap:10px;color:var(--text3);font-size:10px;letter-spacing:.14em;text-transform:uppercase">
+      <div style="width:1px;height:32px;background:linear-gradient(to bottom,var(--text3),transparent)"></div>
+      Scroll untuk menjelajahi komponen
+    </div>
+  `;
+  scrollCol.appendChild(introZone);
+
   const activeCfgs = SECTION_CONFIG.filter(cfg=>{
     if(cfg.id==='wall') return WALL_KEYS.some(k=>layerRegistry[k]&&layerRegistry[k].meshes.length>0);
     return layerRegistry[cfg.id] && layerRegistry[cfg.id].meshes.length>0;
