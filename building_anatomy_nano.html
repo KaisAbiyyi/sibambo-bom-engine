@@ -45,6 +45,14 @@
     #load-error{display:none;font-size:12px;color:#e05050;text-align:center;max-width:320px;
                 line-height:1.6;padding:16px 20px;border:1px solid rgba(224,80,80,.3);
                 border-radius:10px;background:rgba(224,80,80,.06)}
+    #file-picker-wrap{display:none;flex-direction:column;align-items:center;gap:14px;
+                      text-align:center;max-width:340px}
+    #file-picker-wrap p{font-size:12px;color:var(--text2);line-height:1.7}
+    #btn-pick-file{padding:12px 28px;background:var(--accent);color:#fff;border:none;
+                   border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;
+                   letter-spacing:.04em;transition:background .15s}
+    #btn-pick-file:hover{background:#3a7ddf}
+    #file-input{display:none}
 
     .main-wrap{display:flex;align-items:flex-start;max-width:1600px;margin:0 auto}
     .scroll-col{width:50%;flex-shrink:0;padding:0 clamp(28px,4vw,64px) 120px clamp(32px,5vw,80px)}
@@ -144,10 +152,17 @@
     Sibambo · BOM Engine · Nano
   </div>
   <div class="load-title">Anatomi Bangunan</div>
-  <div class="load-sub">Memuat bom_nano.json…</div>
-  <div class="spinner"></div>
+  <div class="load-sub" id="load-sub">Memuat bom_nano.json…</div>
+  <div class="spinner" id="spinner"></div>
   <div id="load-progress">Menghubungi server…</div>
   <div id="load-error"></div>
+  <div id="file-picker-wrap">
+    <p>Buka file lokal ini via server, atau pilih file JSON secara manual:</p>
+    <button id="btn-pick-file" onclick="document.getElementById('file-input').click()">
+      Pilih bom_nano.json
+    </button>
+    <input type="file" id="file-input" accept=".json">
+  </div>
 </div>
 
 <section class="hero" id="hero">
@@ -824,10 +839,34 @@ function setupScrollObserver(activeCfgs){
 /* ═══════════════════════════════════════════════════════
    AUTO-LOAD bom_nano.json
    ═══════════════════════════════════════════════════════ */
-const loadProgress = document.getElementById('load-progress');
-const loadError    = document.getElementById('load-error');
+const loadProgress   = document.getElementById('load-progress');
+const loadError      = document.getElementById('load-error');
+const spinner        = document.getElementById('spinner');
+const filePickerWrap = document.getElementById('file-picker-wrap');
+const fileInput      = document.getElementById('file-input');
+
+function showFilePicker(reason){
+  spinner.style.display='none';
+  loadProgress.textContent='';
+  document.getElementById('load-sub').textContent='Pilih file bom_nano.json:';
+  filePickerWrap.style.display='flex';
+  if(reason){ loadError.style.display='block'; loadError.textContent=reason; }
+}
+
+async function processJSON(data){
+  if(!data.entities||data.entities.length===0)
+    throw new Error('File JSON tidak memiliki entities. Pastikan export menggunakan level Nano.');
+  loadProgress.textContent='Membangun model 3D…';
+  await new Promise(r=>setTimeout(r,0));
+  buildFromJSON(data);
+}
 
 async function autoLoadModel(){
+  if(location.protocol==='file:'){
+    showFilePicker(null);
+    document.getElementById('load-sub').textContent='Pilih file bom_nano.json untuk memulai.';
+    return;
+  }
   try {
     loadProgress.textContent = 'Mengunduh bom_nano.json…';
     const resp = await fetch('bom_nano.json');
@@ -846,27 +885,34 @@ async function autoLoadModel(){
         loadProgress.textContent=`Mengunduh… ${(received/1024).toFixed(0)} KB`;
       }
     }
-
     loadProgress.textContent='Memproses data…';
     await new Promise(r=>setTimeout(r,0));
     const text = await new Blob(chunks).text();
     const data = JSON.parse(text);
-
-    if(!data.entities||data.entities.length===0)
-      throw new Error('File JSON tidak memiliki entities. Pastikan export menggunakan level Nano.');
-
-    loadProgress.textContent='Membangun model 3D…';
-    await new Promise(r=>setTimeout(r,0));
-    buildFromJSON(data);
+    await processJSON(data);
 
   } catch(err){
-    loadError.style.display='block';
-    loadError.textContent='Gagal memuat: '+err.message;
-    loadProgress.textContent='';
-    document.querySelector('.spinner').style.display='none';
+    showFilePicker('Gagal auto-load: '+err.message);
     console.error(err);
   }
 }
+
+fileInput.addEventListener('change', async e=>{
+  const file = e.target.files[0]; if(!file) return;
+  filePickerWrap.style.display='none';
+  loadError.style.display='none';
+  spinner.style.display='block';
+  loadProgress.textContent='Membaca file…';
+  document.getElementById('load-sub').textContent='Memuat '+file.name+'…';
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    await processJSON(data);
+  } catch(err){
+    showFilePicker('Gagal membaca file: '+err.message);
+    console.error(err);
+  }
+});
 
 /* ═══════════════════════════════════════════════════════
    RESIZE + RENDER LOOP
