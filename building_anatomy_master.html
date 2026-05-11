@@ -1207,7 +1207,7 @@ function setupScrollObserver(activeCfgs){
 
 
 /* ═══════════════════════════════════════════════════════
-   AUTO-LOAD Model_SBMBOOST_bom.json
+   AUTO-LOAD Model_SBMBOOST_bom_visual_nonPretty-print.json
    ═══════════════════════════════════════════════════════ */
 const loadProgress = document.getElementById('load-progress');
 const loadError    = document.getElementById('load-error');
@@ -1215,7 +1215,7 @@ const loadError    = document.getElementById('load-error');
 async function autoLoadModel(){
   try {
     loadProgress.textContent = 'Mengunduh data model…';
-    const resp = await fetch('Model_SBMBOOST_bom.json');
+    const resp = await fetch('Model_SBMBOOST_bom_visual_nonPretty-print.json');
     if(!resp.ok) throw new Error(`HTTP ${resp.status} — file tidak ditemukan`);
 
     const total = parseInt(resp.headers.get('Content-Length') || '0');
