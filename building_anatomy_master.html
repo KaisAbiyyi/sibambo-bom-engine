@@ -403,6 +403,110 @@ const SECTION_CONFIG = [
 ];
 
 /* ═══════════════════════════════════════════════════════
+   NANO SECTION CONFIG — simplified categories for BBox format
+   ═══════════════════════════════════════════════════════ */
+const SECTION_CONFIG_NANO = [
+  { id:'atap',         category:'ATAP',     color:'#A090E0',
+    title:'Atap',           subtitle:'Perabung, Spandek, Listplank',
+    desc:'Sistem penutup atap baja ringan bergelombang dengan perabung di puncak dan listplank di tepi tritisan.',
+    specStatic:[['Sistem','Metal roof']],
+    cam:{ theta:0.5, phi:0.28, rFactor:0.85, targetYBias:0.40 },
+    show:['atap'], context:['wall','plafon'] },
+  { id:'plafon',       category:'PLAFON',   color:'#D4B830',
+    title:'Plafon',         subtitle:'Piri-Piri & Lambrisering',
+    desc:'Bilah kayu tipis berderet sebagai penutup langit-langit interior, insulasi termal dan akustik.',
+    specStatic:[['Material','Bilah kayu / tripleks']],
+    cam:{ theta:0.85, phi:0.33, rFactor:1.05, targetYBias:0.18 },
+    show:['plafon'], context:['wall','kolom'] },
+  { id:'jendela',      category:'BUKAAN',   color:'#38B2D0',
+    title:'Jendela',        subtitle:'Jendela Aluminium',
+    desc:'Bukaan jendela aluminium untuk sirkulasi udara dan pencahayaan alami.',
+    specStatic:[['Material','Profil aluminium + kaca 5 mm']],
+    cam:{ theta:0.12, phi:0.88, rFactor:0.90, targetYBias:0.05 },
+    show:['jendela'], context:['wall','pintu'] },
+  { id:'pintu',        category:'BUKAAN',   color:'#B06030',
+    title:'Pintu',          subtitle:'Pintu Panel Kayu',
+    desc:'Pintu panel kayu solid dengan kusen mahoni.',
+    specStatic:[['Material','Kayu kamper / meranti']],
+    cam:{ theta:0.05, phi:0.86, rFactor:0.82, targetYBias:0.02 },
+    show:['pintu'], context:['wall','jendela'] },
+  { id:'wall',         category:'DINDING',  color:'#C49060',
+    title:'Dinding',        subtitle:'Dinding Bata + Plester + Cat',
+    desc:'Penutup vertikal dari bata bermortir, diplester dan dicat.',
+    specStatic:[['Mortar','1 PC : 4 PP']],
+    cam:{ theta:0.0, phi:0.87, rFactor:1.22, targetYBias:0.05 },
+    show:['wall'], context:['kolom','keramik_lantai','jendela','pintu'] },
+  { id:'balok',        category:'STRUKTUR', color:'#E04040',
+    title:'Balok Ring',     subtitle:'Balok Cincin 20×30 cm',
+    desc:'Balok beton bertulang pengikat puncak kolom.',
+    specStatic:[['Dimensi','20 × 30 cm'],['Mutu','K-225']],
+    cam:{ theta:1.0, phi:0.52, rFactor:1.08, targetYBias:0.12 },
+    show:['balok'], context:['kolom','keramik_lantai'] },
+  { id:'kolom',        category:'STRUKTUR', color:'#D03030',
+    title:'Kolom',          subtitle:'Kolom K1 — 20×20 cm',
+    desc:'Elemen vertikal penerima dan penyalur beban dari balok ke pondasi.',
+    specStatic:[['Dimensi','20 × 20 cm'],['Mutu','K-225']],
+    cam:{ theta:1.35, phi:0.86, rFactor:0.98, targetYBias:0.02 },
+    show:['kolom'], context:['balok','keramik_lantai','sloof'] },
+  { id:'keramik_lantai', category:'LANTAI', color:'#C8A870',
+    title:'Keramik Lantai', subtitle:'Finishing Lantai Keramik',
+    desc:'Lapisan finishing keramik di atas pelat beton.',
+    specStatic:[['Ukuran','40 × 40 cm']],
+    cam:{ theta:0.05, phi:0.62, rFactor:0.95, targetYBias:-0.18 },
+    show:['keramik_lantai'], context:['cor_lantai','kolom'] },
+  { id:'cor_lantai',   category:'LANTAI',   color:'#909090',
+    title:'Cor Lantai',     subtitle:'Pelat Beton Lantai Dasar',
+    desc:'Pelat beton cor dasar struktural lantai di atas urugan.',
+    specStatic:[['Tebal','10–12 cm'],['Mutu','K-225']],
+    cam:{ theta:0.05, phi:0.72, rFactor:0.88, targetYBias:-0.23 },
+    show:['cor_lantai'], context:['keramik_lantai','urugan'] },
+  { id:'urugan',       category:'PONDASI',  color:'#B8903C',
+    title:'Urugan',         subtitle:'Pasir & Tanah Urug',
+    desc:'Lapisan pengisi dan pemadat antara pondasi dan pelat lantai.',
+    specStatic:[['Material','Pasir urug + tanah pilihan']],
+    cam:{ theta:0.07, phi:1.05, rFactor:0.88, targetYBias:-0.30 },
+    show:['urugan'], context:['sloof','cor_lantai','pondasi_batu'] },
+  { id:'sloof',        category:'PONDASI',  color:'#9C8668',
+    title:'Sloof',          subtitle:'Ground Beam',
+    desc:'Balok beton penghubung kepala pondasi.',
+    specStatic:[['Dimensi','20 × 30 cm']],
+    cam:{ theta:0.07, phi:1.18, rFactor:0.88, targetYBias:-0.36 },
+    show:['sloof'], context:['pondasi_batu','cerucuk','urugan'] },
+  { id:'pondasi_batu', category:'PONDASI',  color:'#8C8070',
+    title:'Pondasi Batu',   subtitle:'Batu Kali & Batu Kosong',
+    desc:'Pondasi trapesium batu kali bermortir.',
+    specStatic:[['Material','Batu kali + mortar 1:4']],
+    cam:{ theta:0.07, phi:1.28, rFactor:0.82, targetYBias:-0.42 },
+    show:['pondasi_batu'], context:['cerucuk','sloof'] },
+  { id:'cerucuk',      category:'PONDASI',  color:'#8B6914',
+    title:'Cerucuk',        subtitle:'Tiang Pancang Kayu',
+    desc:'Tiang kayu keras yang dipancangkan ke tanah lunak.',
+    specStatic:[['Material','Kayu ulin / keras lokal']],
+    cam:{ theta:0.06, phi:1.38, rFactor:0.72, targetYBias:-0.48 },
+    show:['cerucuk'], context:['pondasi_batu'] },
+];
+
+// Colors for nano bbox categories
+const LAYER_META_NANO = {
+  'wall':         {label:'Dinding',         color:'#e07050'},
+  'atap':         {label:'Atap',            color:'#7065c0'},
+  'plafon':       {label:'Plafon',          color:'#d0b050'},
+  'pintu':        {label:'Pintu',           color:'#c07030'},
+  'jendela':      {label:'Jendela',         color:'#30c0d0'},
+  'kolom':        {label:'Kolom',           color:'#d03030'},
+  'balok':        {label:'Balok',           color:'#e05050'},
+  'sloof':        {label:'Sloof',           color:'#c09030'},
+  'pondasi_batu': {label:'Pondasi Batu',    color:'#908050'},
+  'cerucuk':      {label:'Cerucuk',         color:'#8B6914'},
+  'urugan':       {label:'Urugan',          color:'#786040'},
+  'pondasi':      {label:'Pondasi Lainnya', color:'#806030'},
+  'cor_lantai':   {label:'Cor Lantai',      color:'#a0a0a0'},
+  'keramik_lantai':{label:'Keramik Lantai', color:'#e0d0b0'},
+  'furniture':    {label:'Furniture',       color:'#c070e0'},
+  'other':        {label:'Lainnya',         color:'#888888'},
+};
+
+/* ═══════════════════════════════════════════════════════
    THREE.JS SETUP
    ═══════════════════════════════════════════════════════ */
 const canvas    = document.getElementById('canvas3d');
@@ -775,6 +879,33 @@ function walkEntities(entities, parentVG=null){
   });
 }
 
+/* BBox mesh builder for nano format */
+function buildBBoxMesh(entry){
+  const cat  = entry.category || 'other';
+  const meta = LAYER_META_NANO[cat] || {color:'#888888'};
+  const hex  = parseInt(meta.color.replace('#',''), 16);
+  const mat  = makeMat(hex);
+  const sz   = entry.size;
+  const geo  = new THREE.BoxGeometry(
+    Math.max(sz.w, 0.01),
+    Math.max(sz.h, 0.01),
+    Math.max(sz.d, 0.01)
+  );
+  const mesh = new THREE.Mesh(geo, mat);
+  // SketchUp coords → Three.js: x=x, y=z(up), z=-y
+  const c = entry.center;
+  mesh.position.set(c.x, c.z, -c.y);
+  mesh.castShadow    = true;
+  mesh.receiveShadow = true;
+  mesh.userData = { type:'BBox', category:cat, name:entry.name };
+  registerMesh(cat, mesh);
+  pickTargets.push(mesh);
+}
+
+function buildNanoEntities(entities){
+  entities.forEach(e=>{ if(e.type==='BBox') buildBBoxMesh(e); });
+}
+
 function clearScene(){
   pickTargets.length=0;
   Object.keys(componentMap).forEach(k=>delete componentMap[k]);
@@ -819,8 +950,15 @@ const MAX_EXPLODE    = 5.5;
 function buildFromJSON(data){
   clearScene();
   modelLoaded = false;
-  const entities = data.entities||[];
-  walkEntities(entities, null);
+  const entities   = data.entities||[];
+  const exportLevel = data.export_level || 'full';
+  const isNano     = exportLevel === 'nano';
+
+  if(isNano){
+    buildNanoEntities(entities);
+  } else {
+    walkEntities(entities, null);
+  }
 
   sceneBox.makeEmpty();
   scene.traverse(obj=>{
@@ -853,7 +991,7 @@ function buildFromJSON(data){
 
   modelLoaded = true;
   showAllLayers();
-  generateScrollSections();
+  generateScrollSections(isNano ? SECTION_CONFIG_NANO : SECTION_CONFIG);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -926,7 +1064,8 @@ const chipWrap      = document.getElementById('chip-wrap');
 let   scrollSections = [];
 let   progressDots   = [];
 
-function generateScrollSections(){
+function generateScrollSections(sectionConfig){
+  sectionConfig = sectionConfig || SECTION_CONFIG;
   scrollCol.innerHTML     = '';
   progressTrack.innerHTML = '';
   chipWrap.innerHTML      = '';
@@ -953,8 +1092,9 @@ function generateScrollSections(){
   `;
   scrollCol.appendChild(introZone);
 
-  const activeCfgs = SECTION_CONFIG.filter(cfg=>{
-    if(cfg.id==='wall') return WALL_KEYS.some(k=>layerRegistry[k]&&layerRegistry[k].meshes.length>0);
+  const activeCfgs = sectionConfig.filter(cfg=>{
+    if(cfg.id==='wall' && sectionConfig === SECTION_CONFIG)
+      return WALL_KEYS.some(k=>layerRegistry[k]&&layerRegistry[k].meshes.length>0);
     return layerRegistry[cfg.id] && layerRegistry[cfg.id].meshes.length>0;
   });
 

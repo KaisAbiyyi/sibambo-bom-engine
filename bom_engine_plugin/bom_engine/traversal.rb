@@ -240,6 +240,99 @@ module BOMEngine
       }
     end
 
+    # ── Nano walk — bounding box per named component ────────────
+    #
+    # Classfies each named Group/ComponentInstance into a category,
+    # outputs its axis-aligned bounding box in world space.
+    # Recurses into unnamed/unclassified groups until it finds
+    # classifiable components or bottoms out.
+    #
+    # @param entities  [Sketchup::Entities or Sketchup::Selection]
+    # @param parent_tf [Geom::Transformation] accumulated world transform
+    # @param depth     [Integer]
+    # @return          [Array<Hash>]
+    def self.walk_nano(entities, parent_tf, depth = 0)
+      result = []
+      return result if depth > Constants::MAX_RECURSION_DEPTH
+
+      entities.each do |entity|
+        next if entity.nil? || entity.deleted?
+
+        case entity
+        when Sketchup::Group
+          name = entity.name
+          cat  = classify_nano(name)
+          if cat
+            result << nano_bbox(entity.bounds, parent_tf, cat, name)
+          else
+            child_tf = parent_tf * entity.transformation
+            result.concat(walk_nano(entity.entities, child_tf, depth + 1))
+          end
+
+        when Sketchup::ComponentInstance
+          defn = entity.definition
+          name = entity.name.empty? ? defn.name : entity.name
+          cat  = classify_nano(name)
+          if cat
+            result << nano_bbox(entity.bounds, parent_tf, cat, name)
+          else
+            child_tf = parent_tf * entity.transformation
+            result.concat(walk_nano(defn.entities, child_tf, depth + 1))
+          end
+        end
+      end
+
+      result
+    end
+
+    # Category patterns for nano classification (order matters — first match wins)
+    NANO_PATTERNS = [
+      [/kulkas|dispenser|sofa|meja|kursi|lemari|tempat.tidur|kasur/, 'furniture'],
+      [/plafon|piri|lambrisering/,                                   'plafon'],
+      [/perabung|bubungan|listplank|atap|spandek|tritisan/,          'atap'],
+      [/^J\d{4}|jendela|window/,                                     'jendela'],
+      [/^P\d{4}|pintu|door/,                                         'pintu'],
+      [/kolom|column/,                                               'kolom'],
+      [/sloof/,                                                      'sloof'],
+      [/balok|beam/,                                                 'balok'],
+      [/cerucuk/,                                                    'cerucuk'],
+      [/batu.kali|batu.kosong/,                                      'pondasi_batu'],
+      [/urugan|urug|tanah.timbun|tanah.urug|penggali/,               'urugan'],
+      [/pondasi/,                                                    'pondasi'],
+      [/cor.lantai/,                                                 'cor_lantai'],
+      [/keramik.lantai|lantai.keramik|ubin|parket/,                  'keramik_lantai'],
+      [/dinding|wall/,                                               'wall'],
+    ].freeze
+
+    def self.classify_nano(name)
+      return nil if name.nil? || name.empty?
+      n = name.downcase
+      NANO_PATTERNS.each do |pat, cat|
+        return cat if pat.match?(n) || pat.match?(name)
+      end
+      nil
+    end
+
+    # Build a bounding-box entry in world space.
+    # entity.bounds is already in parent coordinate space.
+    def self.nano_bbox(bounds, parent_tf, category, name)
+      min_w = parent_tf * bounds.min
+      max_w = parent_tf * bounds.max
+      ctr   = parent_tf * bounds.center
+
+      {
+        type:     "BBox",
+        category: category,
+        name:     name,
+        center:   pt_to_m(ctr),
+        size: {
+          w: ((max_w.x - min_w.x).abs * Constants::IN_TO_M).round(4),
+          d: ((max_w.y - min_w.y).abs * Constants::IN_TO_M).round(4),
+          h: ((max_w.z - min_w.z).abs * Constants::IN_TO_M).round(4)
+        }
+      }
+    end
+
     # ── Count helpers ───────────────────────────────────────────
 
     def self.count_faces(entities, depth = 0)

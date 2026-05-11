@@ -16,7 +16,7 @@ module BOMEngine
     # @return          [Hash]
     def self.build(model:, entities:, materials:, spatial:, settings:)
       level = settings[:export_level].to_s
-      level = "full" unless %w[visual standard full].include?(level)
+      level = "full" unless %w[nano visual standard full].include?(level)
 
       base = {
         schema_version: SCHEMA_VERSION,
@@ -25,7 +25,7 @@ module BOMEngine
         entities:       entities
       }
 
-      return base if level == "visual"
+      return base if level == "nano" || level == "visual"
 
       # ── Standard: add metadata, units, tags, scenes ─────────
       opts = model.options

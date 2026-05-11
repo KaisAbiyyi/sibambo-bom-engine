@@ -78,7 +78,7 @@
   /* ── Level selector ── */
   .level-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
   }
   .level-card {
@@ -206,11 +206,18 @@
     <h3>Level Export</h3>
     <div class="level-grid">
 
-      <label class="level-card selected" id="card-visual" onclick="selectLevel('visual')">
-        <input type="radio" name="exportLevel" value="visual" checked>
+      <label class="level-card selected" id="card-nano" onclick="selectLevel('nano')">
+        <input type="radio" name="exportLevel" value="nano" checked>
+        <div class="level-name">&#9679; Nano</div>
+        <div class="level-size">&lt;1 MB</div>
+        <div class="level-desc">BBox per komponen. Paling ringan untuk viewer.</div>
+      </label>
+
+      <label class="level-card" id="card-visual" onclick="selectLevel('visual')">
+        <input type="radio" name="exportLevel" value="visual">
         <div class="level-name">&#9679; Visual</div>
         <div class="level-size">~5–8 MB</div>
-        <div class="level-desc">Geometri saja. Cukup untuk web viewer 3D.</div>
+        <div class="level-desc">Geometri polygon lengkap per face.</div>
       </label>
 
       <label class="level-card" id="card-standard" onclick="selectLevel('standard')">
@@ -266,11 +273,11 @@
   </div>
 
 <script>
-  var currentLevel = 'visual';
+  var currentLevel = 'nano';
 
   function selectLevel(level) {
     currentLevel = level;
-    ['visual','standard','full'].forEach(function(l) {
+    ['nano','visual','standard','full'].forEach(function(l) {
       var card = document.getElementById('card-' + l);
       card.classList.toggle('selected', l === level);
       card.querySelector('input[type=radio]').checked = (l === level);
@@ -335,7 +342,7 @@
 
   window.onload = function() {
     sketchup.onReady();
-    selectLevel('visual'); // default
+    selectLevel('nano'); // default
   };
 </script>
 
