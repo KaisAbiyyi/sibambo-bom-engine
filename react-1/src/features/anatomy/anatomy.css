@@ -1,0 +1,626 @@
+/* Anatomy Story owns the scroll presentation styles for UI Draft 01. */
+
+body.anatomy-mode {
+  overflow: auto;
+  background: #f4f7f6;
+}
+
+body.anatomy-mode #root,
+body.anatomy-mode .app-shell {
+  height: auto;
+  min-height: 100%;
+}
+
+body.anatomy-mode .app-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.anatomy-story {
+  --app-header-height: 58px;
+  --paper: #f4f7f6;
+  --paper-panel: rgba(255, 255, 255, 0.88);
+  --paper-panel-strong: rgba(255, 255, 255, 0.96);
+  --ink: #16201d;
+  --muted-ink: #63736f;
+  --line: rgba(22, 32, 29, 0.16);
+  --line-strong: rgba(22, 32, 29, 0.28);
+  --blueprint: rgba(34, 88, 122, 0.16);
+  --accent-story: #0f766e;
+  --font-serif: "Georgia", "Times New Roman", serif;
+
+  position: relative;
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+}
+
+.anatomy-stage {
+  position: fixed;
+  top: var(--app-header-height);
+  left: 0;
+  width: 100%;
+  height: calc(100vh - var(--app-header-height));
+  z-index: 1;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 72% 44%, rgba(15, 118, 110, 0.11), transparent 34%),
+    linear-gradient(180deg, #f9fbfa 0%, var(--paper) 100%);
+}
+
+.anatomy-stage .viewer-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 360ms ease;
+}
+
+.anatomy-story.model-ready .anatomy-stage .viewer-canvas {
+  opacity: 1;
+}
+
+.anatomy-stage .viewer-canvas:active {
+  cursor: grabbing;
+}
+
+.anatomy-story .loading-overlay {
+  z-index: 24;
+  background: rgba(244, 247, 246, 0.78);
+  color: var(--ink);
+}
+
+.anatomy-story .loading-overlay::after {
+  content: "";
+  width: 180px;
+  height: 1px;
+  margin-top: 4px;
+  background: linear-gradient(90deg, transparent, var(--accent-story), transparent);
+  animation: draftingSweep 1.35s infinite ease-in-out;
+}
+
+.anatomy-story .loading-title {
+  color: var(--ink);
+}
+
+.anatomy-story .loading-subtitle {
+  color: var(--muted-ink);
+}
+
+.loading-progress {
+  width: min(260px, 52vw);
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(22, 32, 29, 0.12);
+}
+
+.loading-progress span {
+  display: block;
+  height: 100%;
+  background: var(--accent-story);
+  transition: width 180ms ease;
+}
+
+.stage-blueprint-grid,
+.stage-guides,
+.stage-ruler {
+  animation: paperLayerIn 900ms ease both;
+}
+
+.stage-blueprint-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.16;
+  background-image:
+    linear-gradient(var(--blueprint) 1px, transparent 1px),
+    linear-gradient(90deg, var(--blueprint) 1px, transparent 1px);
+  background-position: center center;
+  background-size: 92px 92px;
+}
+
+.stage-guides {
+  position: absolute;
+  inset: 40px;
+  z-index: 3;
+  pointer-events: none;
+  animation-delay: 180ms;
+}
+
+.guide-h,
+.guide-v {
+  position: absolute;
+  background: var(--line);
+}
+
+.guide-h {
+  left: -40px;
+  right: -40px;
+  height: 1px;
+}
+
+.guide-h.top {
+  top: 0;
+}
+
+.guide-h.bottom {
+  bottom: 0;
+}
+
+.guide-v {
+  top: -40px;
+  bottom: -40px;
+  width: 1px;
+}
+
+.guide-v.left {
+  left: 0;
+}
+
+.guide-v.right {
+  right: 0;
+}
+
+.stage-ruler {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0.32;
+  animation-delay: 260ms;
+}
+
+.top-ruler {
+  top: 40px;
+  right: 40px;
+  left: 40px;
+  height: 6px;
+  background-image: linear-gradient(90deg, var(--ink) 1px, transparent 1px);
+  background-size: 10px 100%;
+}
+
+.left-ruler {
+  top: 40px;
+  bottom: 40px;
+  left: 40px;
+  width: 6px;
+  background-image: linear-gradient(var(--ink) 1px, transparent 1px);
+  background-size: 100% 10px;
+}
+
+.stage-badge-layer {
+  position: absolute;
+  bottom: 34px;
+  left: clamp(28px, 5vw, 72px);
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.badge-eyebrow {
+  color: var(--muted-ink);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.badge-title {
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.anatomy-progress {
+  position: absolute;
+  top: 50%;
+  right: clamp(14px, 2vw, 28px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: flex-end;
+  transform: translateY(-50%);
+}
+
+.progress-dot {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.64);
+  color: var(--ink);
+  box-shadow: 0 3px 10px rgba(22, 32, 29, 0.08);
+  cursor: pointer;
+  transition: width 180ms ease, height 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+
+.progress-dot:hover,
+.progress-dot.active {
+  width: 18px;
+  height: 18px;
+  border-color: var(--accent-story);
+  background: var(--accent-story);
+}
+
+.dot-label,
+.dot-title {
+  position: absolute;
+  top: 50%;
+  right: 26px;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.dot-label {
+  color: var(--muted-ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.dot-title {
+  right: 54px;
+  max-width: 180px;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+}
+
+.progress-dot:hover .dot-label,
+.progress-dot:hover .dot-title,
+.progress-dot.active .dot-label,
+.progress-dot.active .dot-title {
+  opacity: 1;
+  transform: translate(-2px, -50%);
+}
+
+.anatomy-content-overlay {
+  position: relative;
+  z-index: 12;
+  pointer-events: none;
+}
+
+.anatomy-scroll-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 clamp(24px, 5vw, 72px);
+  pointer-events: none;
+}
+
+.anatomy-hero,
+.anatomy-section {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: min(420px, calc(100vw - 48px));
+  min-height: calc(100vh - var(--app-header-height));
+  pointer-events: none;
+}
+
+.section-content-box {
+  width: 100%;
+  padding: 28px 32px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper-panel);
+  box-shadow: 0 18px 50px rgba(20, 27, 25, 0.08);
+  color: var(--ink);
+  opacity: 0;
+  pointer-events: auto;
+  transform: translateY(24px);
+  transition: opacity 520ms ease, transform 520ms ease, background 180ms ease;
+}
+
+.anatomy-section:not(.active) .section-content-box {
+  pointer-events: none;
+}
+
+.anatomy-section.active .section-content-box {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.anatomy-hero .hero-box {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  opacity: 1;
+  padding: 0;
+  transform: none;
+  animation: heroTextIn 850ms 180ms ease both;
+}
+
+.hero-metadata,
+.section-header,
+.category-eyebrow,
+.spec-row,
+.focus-affordance,
+.scroll-indicator {
+  display: flex;
+  align-items: center;
+}
+
+.hero-metadata {
+  gap: 12px;
+  margin-bottom: 18px;
+  color: var(--accent-story);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.hero-metadata .separator {
+  width: 42px;
+  height: 1px;
+  background: var(--line-strong);
+}
+
+.hero-title {
+  max-width: 420px;
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: clamp(48px, 7vw, 86px);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 0.98;
+}
+
+.hero-subtitle {
+  margin: 22px 0 0;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.hero-desc {
+  max-width: 390px;
+  margin: 12px 0 32px;
+  color: var(--muted-ink);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.scroll-indicator {
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.scroll-indicator .line {
+  display: block;
+  width: 1px;
+  height: 44px;
+  background: var(--accent-story);
+  transform-origin: top;
+  animation: heightPulse 2s infinite ease-in-out;
+}
+
+.section-header {
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.section-index {
+  color: color-mix(in srgb, var(--section-color) 60%, var(--ink));
+  font-family: var(--font-serif);
+  font-size: 48px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1;
+  opacity: 0.45;
+}
+
+.category-eyebrow {
+  gap: 8px;
+  min-width: 0;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.category-eyebrow .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.section-title {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.16;
+}
+
+.section-subtitle {
+  margin: 0 0 18px;
+  color: var(--muted-ink);
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.section-desc {
+  margin: 0 0 28px;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.spec-table {
+  margin-bottom: 28px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.spec-row {
+  justify-content: space-between;
+  gap: 18px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: 12px;
+}
+
+.spec-key {
+  color: var(--muted-ink);
+}
+
+.spec-val {
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-align: right;
+}
+
+.focus-affordance {
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: color-mix(in srgb, var(--section-color) 72%, var(--ink));
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.focus-affordance:hover {
+  color: var(--ink);
+}
+
+@keyframes paperLayerIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroTextIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heightPulse {
+  0% {
+    opacity: 0.25;
+    transform: scaleY(0.22);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  100% {
+    opacity: 0.25;
+    transform: scaleY(0.22);
+  }
+}
+
+@keyframes draftingSweep {
+  0% {
+    opacity: 0.2;
+    transform: scaleX(0.25);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0.2;
+    transform: scaleX(0.25);
+  }
+}
+
+@media (max-width: 860px) {
+  body.anatomy-mode .app-header {
+    position: relative;
+  }
+
+  .anatomy-story {
+    --app-header-height: 0px;
+  }
+
+  .anatomy-stage {
+    position: sticky;
+    top: 0;
+    height: 50vh;
+  }
+
+  .stage-blueprint-grid,
+  .stage-guides,
+  .stage-ruler,
+  .stage-badge-layer {
+    display: none;
+  }
+
+  .anatomy-progress {
+    display: none;
+  }
+
+  .anatomy-content-overlay {
+    background: var(--paper);
+  }
+
+  .anatomy-scroll-container {
+    padding: 0 20px;
+  }
+
+  .anatomy-hero,
+  .anatomy-section {
+    width: 100%;
+    min-height: auto;
+    padding: 64px 0;
+  }
+
+  .section-content-box {
+    padding: 24px;
+  }
+
+  .hero-title {
+    font-size: 46px;
+  }
+}
