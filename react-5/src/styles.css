@@ -1,0 +1,471 @@
+:root {
+  --blueprint: #071b2f;
+  --panel: #0b2742;
+  --deep: #04111f;
+  --grid: rgba(221, 236, 255, 0.14);
+  --line: rgba(221, 236, 255, 0.28);
+  --ink: #eaf4ff;
+  --muted: #9db5c9;
+  --paper: #f5eedc;
+  --paper-ink: #1d232a;
+  --red: #d95c4b;
+  --gold: #d6a84f;
+  --green: #67b26f;
+  font-family: "Segoe UI", "Aptos", "Helvetica Neue", system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--blueprint);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background: var(--blueprint);
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.atlas-sheet {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 47%, rgba(99, 164, 255, 0.16), transparent 30%),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+    var(--blueprint);
+  background-size: auto, 38px 38px, 38px 38px, auto;
+}
+
+.atlas-sheet::before,
+.atlas-sheet::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.atlas-sheet::before {
+  inset: 18px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(90deg, transparent calc(100% - 8px), rgba(221, 236, 255, 0.18) calc(100% - 8px)),
+    linear-gradient(transparent calc(100% - 8px), rgba(221, 236, 255, 0.18) calc(100% - 8px));
+  z-index: 1;
+}
+
+.atlas-sheet::after {
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 55px, rgba(221, 236, 255, 0.06) 55px 56px),
+    repeating-linear-gradient(90deg, transparent 0 55px, rgba(221, 236, 255, 0.05) 55px 56px);
+  opacity: 0.45;
+  z-index: 0;
+}
+
+.atlas-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sheet-header {
+  position: absolute;
+  top: 28px;
+  left: 30px;
+  z-index: 3;
+  display: grid;
+  gap: 5px;
+  max-width: 460px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--gold);
+  background: linear-gradient(90deg, rgba(11, 39, 66, 0.94), rgba(11, 39, 66, 0.36));
+}
+
+.sheet-header strong {
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.sheet-header span,
+.sheet-header em,
+.detail-note > p,
+.title-block span,
+.sheet-mode-readout span {
+  color: var(--muted);
+  font-family: "Consolas", "Cascadia Mono", monospace;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.sheet-header div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.sheet-header em {
+  padding: 5px 7px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.leader-lines {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.leader-lines line {
+  stroke: rgba(221, 236, 255, 0.28);
+  stroke-width: 0.12;
+  vector-effect: non-scaling-stroke;
+}
+
+.leader-lines line.connected {
+  stroke: rgba(214, 168, 79, 0.52);
+  stroke-width: 0.16;
+}
+
+.leader-lines line.active {
+  stroke: var(--red);
+  stroke-width: 0.26;
+}
+
+.callout-field {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.atlas-callout {
+  --x: 50%;
+  --y: 50%;
+  --step-color: var(--ink);
+  position: absolute;
+  left: clamp(210px, var(--x), calc(100vw - 190px));
+  top: clamp(118px, var(--y), calc(100vh - 132px));
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  max-width: 190px;
+  min-height: 34px;
+  padding: 5px 9px 5px 5px;
+  border: 1px solid rgba(234, 244, 255, 0.32);
+  background: rgba(4, 17, 31, 0.7);
+  color: var(--muted);
+  pointer-events: auto;
+  transform: translate(-50%, -50%);
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.atlas-callout span {
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  color: var(--ink);
+  font-family: "Consolas", "Cascadia Mono", monospace;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.atlas-callout strong {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.atlas-callout.connected {
+  border-color: rgba(214, 168, 79, 0.55);
+  color: var(--ink);
+}
+
+.atlas-callout.active {
+  border-color: var(--red);
+  background: rgba(217, 92, 75, 0.18);
+  color: var(--ink);
+  transform: translate(-50%, -50%) scale(1.05);
+}
+
+.atlas-callout.active span {
+  border-color: var(--gold);
+  background: var(--red);
+}
+
+.atlas-callout:hover {
+  border-color: var(--gold);
+  color: var(--ink);
+  transform: translate(-50%, -50%) scale(1.04);
+}
+
+.detail-note {
+  position: absolute;
+  z-index: 4;
+  left: 34px;
+  top: 118px;
+  width: min(342px, calc(100vw - 68px));
+  padding: 18px;
+  border: 1px solid rgba(29, 35, 42, 0.24);
+  background:
+    linear-gradient(rgba(29, 35, 42, 0.035) 1px, transparent 1px),
+    var(--paper);
+  background-size: 100% 28px;
+  color: var(--paper-ink);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+  transform: rotate(-0.6deg);
+}
+
+.note-pin {
+  position: absolute;
+  top: -9px;
+  left: 18px;
+  width: 46px;
+  height: 16px;
+  background: var(--red);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.detail-note > p {
+  margin: 0 0 9px;
+  color: #6f5542;
+}
+
+.detail-note h1 {
+  margin: 0 0 12px;
+  font-size: 29px;
+  line-height: 0.98;
+}
+
+.detail-note dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0 0 13px;
+}
+
+.detail-note dl div {
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid rgba(29, 35, 42, 0.16);
+  background: rgba(255, 253, 247, 0.58);
+}
+
+.detail-note dl div:nth-child(3),
+.detail-note dl div:nth-child(4) {
+  grid-column: 1 / -1;
+}
+
+.detail-note dt {
+  color: #6f5542;
+  font-family: "Consolas", "Cascadia Mono", monospace;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.detail-note dd {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.note-copy {
+  margin: 0;
+  color: #4c5660;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.sheet-controls {
+  position: absolute;
+  left: 34px;
+  bottom: 30px;
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: min(470px, calc(100vw - 68px));
+  padding: 10px;
+  border: 1px solid var(--line);
+  background: rgba(4, 17, 31, 0.72);
+}
+
+.sheet-controls button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  background: rgba(11, 39, 66, 0.82);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.02em;
+}
+
+.sheet-controls button:hover:not(:disabled) {
+  border-color: var(--gold);
+  background: rgba(214, 168, 79, 0.16);
+}
+
+.title-block {
+  position: absolute;
+  right: 30px;
+  bottom: 28px;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: 1.6fr 0.85fr;
+  width: min(430px, calc(100vw - 60px));
+  border: 1px solid var(--line);
+  background: rgba(4, 17, 31, 0.82);
+}
+
+.title-block div {
+  min-height: 46px;
+  padding: 8px 10px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.title-block div:nth-child(2n) {
+  border-right: 0;
+}
+
+.title-block div:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+.title-block strong {
+  display: block;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.title-block span {
+  display: block;
+  margin-top: 4px;
+}
+
+.sheet-mode-readout {
+  position: absolute;
+  z-index: 4;
+  right: 30px;
+  top: 30px;
+  min-width: 230px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--gold);
+  background: rgba(4, 17, 31, 0.78);
+  text-align: right;
+}
+
+.sheet-mode-readout strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--ink);
+  font-size: 16px;
+}
+
+@media (max-width: 980px) {
+  body {
+    overflow: auto;
+  }
+
+  .atlas-sheet {
+    min-height: 960px;
+  }
+
+  .sheet-header {
+    right: 20px;
+    max-width: none;
+  }
+
+  .callout-field {
+    top: 88px;
+    right: 16px;
+    left: 16px;
+    display: flex;
+    gap: 8px;
+    height: 58px;
+    overflow-x: auto;
+    pointer-events: auto;
+  }
+
+  .atlas-callout {
+    position: static;
+    flex: 0 0 auto;
+    transform: none;
+  }
+
+  .atlas-callout.active,
+  .atlas-callout:hover {
+    transform: none;
+  }
+
+  .leader-lines {
+    display: none;
+  }
+
+  .detail-note {
+    top: auto;
+    right: 16px;
+    bottom: 164px;
+    left: 16px;
+    width: auto;
+    max-height: 38vh;
+    overflow: auto;
+    transform: none;
+  }
+
+  .sheet-controls {
+    left: 16px;
+    bottom: 96px;
+    width: calc(100vw - 32px);
+  }
+
+  .title-block {
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+    width: auto;
+  }
+
+  .sheet-mode-readout {
+    display: none;
+  }
+}
