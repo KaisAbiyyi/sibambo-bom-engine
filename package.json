@@ -1,0 +1,10 @@
+{
+  "name": "sibambo-bom-engine-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:index": "npm --prefix index-app run dev -- --host 127.0.0.1 --port 5200",
+    "build:index": "npm --prefix index-app run build"
+  }
+}
