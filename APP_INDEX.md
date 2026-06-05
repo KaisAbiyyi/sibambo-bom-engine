@@ -1,41 +1,28 @@
-# Sibambo Native Svelte Pages
+# Sibambo Model Viewer App Index
 
-`index-app` is the native Svelte host app.
+`model-viewer` is the canonical host for all legacy viewer prototypes.
 
-It does not iframe or link out to `svelte1`-`svelte5` or `react-1`-`react-5`. The source from each original project is copied under:
-
-```text
-index-app/src/embedded/svelte1
-index-app/src/embedded/svelte2
-index-app/src/embedded/svelte3
-index-app/src/embedded/svelte4
-index-app/src/embedded/svelte5
-index-app/src/embedded/react-1
-index-app/src/embedded/react-2
-index-app/src/embedded/react-3
-index-app/src/embedded/react-4
-index-app/src/embedded/react-5
-```
+The standalone `svelte1`-`svelte5` and `react-1`-`react-5` apps were removed. Their runtime source is preserved inside one wrapper app and exposed as native routes.
 
 ## Routes
 
-| Route | Native source |
+| Route | Source |
 | --- | --- |
-| `/svelte1` | `index-app/src/embedded/svelte1/Page.svelte` |
-| `/svelte2` | `index-app/src/embedded/svelte2/Page.svelte` |
-| `/svelte3` | `index-app/src/embedded/svelte3/Page.svelte` |
-| `/svelte4` | `index-app/src/embedded/svelte4/Page.svelte` |
-| `/svelte5` | `index-app/src/embedded/svelte5/Page.svelte` |
-| `/react-1` | `index-app/src/embedded/react-1/Page.svelte` |
-| `/react-2` | `index-app/src/embedded/react-2/Page.svelte` |
-| `/react-3` | `index-app/src/embedded/react-3/Page.svelte` |
-| `/react-4` | `index-app/src/embedded/react-4/Page.svelte` |
-| `/react-5` | `index-app/src/embedded/react-5/Page.svelte` |
+| `/svelte1` | `model-viewer/src/embedded/svelte1/Page.svelte` |
+| `/svelte2` | `model-viewer/src/embedded/svelte2/Page.svelte` |
+| `/svelte3` | `model-viewer/src/embedded/svelte3/Page.svelte` |
+| `/svelte4` | `model-viewer/src/embedded/svelte4/Page.svelte` |
+| `/svelte5` | `model-viewer/src/embedded/svelte5/Page.svelte` |
+| `/react-1` | `model-viewer/src/embedded/react-1/Page.svelte` |
+| `/react-2` | `model-viewer/src/embedded/react-2/Page.svelte` |
+| `/react-3` | `model-viewer/src/embedded/react-3/Page.svelte` |
+| `/react-4` | `model-viewer/src/embedded/react-4/Page.svelte` |
+| `/react-5` | `model-viewer/src/embedded/react-5/Page.svelte` |
 
 ## Run
 
 ```powershell
-npm.cmd run dev:index
+npm run dev:model-viewer
 ```
 
 Open:
@@ -48,11 +35,11 @@ http://127.0.0.1:5200/react-5
 ## Build
 
 ```powershell
-npm.cmd run build:index
+npm run build:model-viewer
 ```
 
-The shared model JSON is served from:
+Shared visual model:
 
 ```text
-index-app/public/Model_SBMBOOST_bom_visual_nonPretty-print.json
+model-viewer/public/Model_SBMBOOST_bom_visual_nonPretty-print.json
 ```
