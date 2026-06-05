@@ -1,0 +1,531 @@
+:root {
+  --paper: #f3efe6;
+  --canvas: #f8f5ee;
+  --panel: #fffdf7;
+  --ink: #1d232a;
+  --muted: #68717a;
+  --line: #d8d0c2;
+  --orange: #e86f2d;
+  --yellow: #d8a31a;
+  --blue: #2563eb;
+  --brown: #7a4a24;
+  --green: #15803d;
+  --shadow: 0 24px 60px rgba(70, 58, 42, 0.18);
+  font-family: "Segoe UI", "Aptos", "Helvetica Neue", system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(90, 75, 52, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(90, 75, 52, 0.05) 1px, transparent 1px),
+    var(--paper);
+  background-size: 42px 42px;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.inspection-board {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 52% 44%, rgba(232, 111, 45, 0.1), transparent 30%),
+    var(--canvas);
+}
+
+.inspection-board::before,
+.inspection-board::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.inspection-board::before {
+  background:
+    linear-gradient(rgba(29, 35, 42, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(29, 35, 42, 0.035) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: linear-gradient(180deg, #000, transparent 92%);
+}
+
+.inspection-board::after {
+  inset: 18px;
+  border: 1px solid rgba(122, 74, 36, 0.2);
+  background:
+    linear-gradient(90deg, transparent calc(100% - 10px), rgba(232, 111, 45, 0.38) calc(100% - 10px)),
+    linear-gradient(transparent calc(100% - 10px), rgba(232, 111, 45, 0.3) calc(100% - 10px));
+}
+
+.inspection-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.project-strip,
+.layer-tags,
+.inspection-dossier,
+.sequence-dial,
+.stack-map,
+.active-callout {
+  position: absolute;
+  z-index: 2;
+  border: 1px solid rgba(122, 74, 36, 0.2);
+  background: rgba(255, 253, 247, 0.9);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+}
+
+.project-strip {
+  top: 18px;
+  left: 22px;
+  right: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 54px;
+  padding: 10px 14px;
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+}
+
+.project-strip strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.project-strip span,
+.tags-heading span,
+.dossier-code,
+.stack-map,
+.active-callout span {
+  color: var(--muted);
+  font-family: "Consolas", "Cascadia Mono", monospace;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.project-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.project-chips span {
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  background: rgba(248, 245, 238, 0.82);
+  color: var(--ink);
+}
+
+.layer-tags {
+  top: 92px;
+  left: 24px;
+  width: min(410px, calc(100vw - 48px));
+  padding: 13px;
+  transform: rotate(-0.6deg);
+}
+
+.tags-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.tags-heading strong {
+  color: var(--orange);
+  font-family: "Consolas", "Cascadia Mono", monospace;
+  font-size: 12px;
+}
+
+.tag-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.layer-tag {
+  --tag-color: var(--orange);
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  min-height: 38px;
+  padding: 8px;
+  border: 1px solid rgba(29, 35, 42, 0.13);
+  border-left: 4px solid var(--tag-color);
+  background: rgba(248, 245, 238, 0.72);
+  color: var(--muted);
+  text-align: left;
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.layer-tag span {
+  font-family: "Consolas", "Cascadia Mono", monospace;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.layer-tag strong {
+  overflow: hidden;
+  color: inherit;
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.layer-tag.inspected {
+  background: rgba(216, 208, 194, 0.55);
+  color: #4b535b;
+}
+
+.layer-tag.active {
+  grid-column: span 2;
+  min-height: 48px;
+  border-color: rgba(232, 111, 45, 0.55);
+  background: #fff8ed;
+  color: var(--ink);
+  transform: translateY(-1px) rotate(0.3deg);
+}
+
+.layer-tag.pending {
+  opacity: 0.66;
+}
+
+.layer-tag:hover {
+  border-color: rgba(232, 111, 45, 0.46);
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+
+.inspection-dossier {
+  right: 28px;
+  bottom: 34px;
+  width: min(382px, calc(100vw - 56px));
+  max-height: min(640px, calc(100vh - 150px));
+  overflow: auto;
+  padding: 18px;
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%);
+}
+
+.dossier-code {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.dossier-code em {
+  color: var(--orange);
+  font-style: normal;
+}
+
+.inspection-dossier h1 {
+  margin: 0 0 13px;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.dossier-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.dossier-meta div {
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid var(--line);
+  background: rgba(248, 245, 238, 0.72);
+}
+
+.dossier-meta div:last-child {
+  grid-column: 1 / -1;
+}
+
+.dossier-meta span,
+.inspection-dossier h2,
+.checkpoint span {
+  display: block;
+  color: var(--muted);
+  font-family: "Consolas", "Cascadia Mono", monospace;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dossier-meta strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 13px;
+}
+
+.inspection-dossier section {
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.inspection-dossier h2 {
+  margin: 0 0 6px;
+}
+
+.inspection-dossier p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.inspection-dossier ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.inspection-dossier li {
+  position: relative;
+  padding-left: 18px;
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.inspection-dossier li::before {
+  content: "";
+  position: absolute;
+  top: 0.55em;
+  left: 2px;
+  width: 8px;
+  height: 2px;
+  background: var(--orange);
+}
+
+.checkpoint {
+  margin-top: 12px;
+  padding: 11px;
+  border: 1px solid rgba(232, 111, 45, 0.32);
+  background: #fff3e8;
+}
+
+.checkpoint strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.sequence-dial {
+  left: 26px;
+  bottom: 30px;
+  display: grid;
+  grid-template-columns: 86px 1fr;
+  gap: 12px;
+  width: min(390px, calc(100vw - 52px));
+  padding: 14px;
+}
+
+.dial-ring {
+  --progress: 8%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, var(--panel) 58%, transparent 59%),
+    conic-gradient(var(--orange) var(--progress), #ded4c4 0);
+}
+
+.dial-ring strong {
+  font-family: "Consolas", "Cascadia Mono", monospace;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.dial-ring span {
+  color: var(--muted);
+  font-family: "Consolas", "Cascadia Mono", monospace;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.dial-actions,
+.dial-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.dial-secondary {
+  grid-column: 2;
+  margin-top: -32px;
+}
+
+.dial-actions button,
+.dial-secondary button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  background: #fffdf7;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.dial-actions button {
+  min-width: 62px;
+}
+
+.dial-secondary button {
+  padding: 0 10px;
+  color: var(--muted);
+}
+
+.dial-actions button:hover:not(:disabled),
+.dial-secondary button:hover {
+  border-color: rgba(232, 111, 45, 0.55);
+  color: var(--ink);
+}
+
+.stack-map {
+  top: 92px;
+  right: 26px;
+  display: grid;
+  gap: 7px;
+  width: 168px;
+  padding: 12px;
+}
+
+.stack-map div {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+}
+
+.stack-map span {
+  width: 18px;
+  height: 4px;
+  background: var(--line);
+}
+
+.stack-map div.active {
+  color: var(--ink);
+}
+
+.stack-map div.active span {
+  background: var(--orange);
+}
+
+.active-callout {
+  left: 50%;
+  top: 110px;
+  min-width: 210px;
+  padding: 10px 13px;
+  transform: translateX(-50%);
+  border-left: 4px solid var(--callout-color, var(--orange));
+}
+
+.active-callout strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 14px;
+}
+
+@media (max-width: 980px) {
+  body {
+    overflow: auto;
+  }
+
+  .inspection-board {
+    min-height: 900px;
+  }
+
+  .project-strip {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .layer-tags {
+    top: 116px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+    transform: none;
+  }
+
+  .tag-grid {
+    display: flex;
+    overflow-x: auto;
+  }
+
+  .layer-tag,
+  .layer-tag.active {
+    grid-column: auto;
+    min-width: 118px;
+  }
+
+  .stack-map {
+    display: none;
+  }
+
+  .inspection-dossier {
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+    width: auto;
+    max-height: 42vh;
+  }
+
+  .sequence-dial {
+    left: 16px;
+    bottom: calc(42vh + 30px);
+  }
+
+  .active-callout {
+    top: 250px;
+  }
+}

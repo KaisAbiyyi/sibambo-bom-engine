@@ -1,0 +1,13 @@
+{
+  "name": "sibambo-bom-engine-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "GPL-3.0-only",
+  "scripts": {
+    "dev:model-viewer": "npm --prefix model-viewer run dev -- --host 127.0.0.1 --port 5200",
+    "build:model-viewer": "npm --prefix model-viewer run build",
+    "dev:model-eval": "npm --prefix model-eval run dev -- --host 127.0.0.1 --port 5300",
+    "build:model-eval": "npm --prefix model-eval run build"
+  }
+}

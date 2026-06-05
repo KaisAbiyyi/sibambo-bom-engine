@@ -3,3 +3,7 @@
 *.skp
 *.rbz
 *.docx
+node_modules/
+dist/
+*.log
+.*-dev.*.log
