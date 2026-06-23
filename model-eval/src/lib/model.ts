@@ -12,7 +12,18 @@ export type SurfaceKey =
 	| 'furniture'
 	| 'other';
 
-export type PartKey = 'roof' | 'walls' | 'floor' | 'ceiling' | 'openings' | 'structure' | 'foundation' | 'furniture' | 'other';
+export type PartKey =
+	| 'roof'
+	| 'walls'
+	| 'floor'
+	| 'ceiling'
+	| 'doors'
+	| 'windows'
+	| 'openings'
+	| 'structure'
+	| 'foundation'
+	| 'furniture'
+	| 'other';
 
 export type AnalysisKind = 'lighting' | 'ac' | 'ottv' | 'thermal' | 'people' | 'wind';
 
@@ -45,8 +56,13 @@ export type BomVertex = {
 
 export type BomMaterial = {
 	name?: string;
+	display_name?: string;
 	color?: {
 		hex?: string;
+	};
+	texture?: {
+		filename?: string;
+		source_path?: string;
 	};
 	reflectance?: number;
 };
@@ -58,7 +74,9 @@ export type BomEntity = {
 	type?: string;
 	children?: BomEntity[];
 	vertices?: BomVertex[];
+	holes?: BomVector[][];
 	material_front?: BomMaterial | null;
+	mat_color?: string | null;
 	surface_type?: string;
 	area_m2?: number;
 	layer?: string;
@@ -80,8 +98,38 @@ export type BomModelJson = {
 	export_level?: string;
 	exported_at?: string;
 	entities?: BomEntity[];
+	mesh?: CompactMesh;
 	materials?: Record<string, BomMaterial> | BomMaterial[];
 	metadata?: Record<string, unknown>;
+	geometry_format?: string;
+};
+
+export type CompactMeshMaterial = {
+	name?: string;
+	display_name?: string;
+	color?: {
+		hex?: string;
+	};
+	texture?: {
+		filename?: string;
+		source_path?: string;
+	};
+};
+
+export type CompactMesh = {
+	version?: number;
+	position_scale?: number;
+	area_scale?: number;
+	normal_scale?: number;
+	face_stride?: number;
+	binary_layout?: string;
+	position_count?: number;
+	face_int_count?: number;
+	surfaces?: string[];
+	layers?: string[];
+	materials?: CompactMeshMaterial[];
+	positions?: ArrayLike<number>;
+	faces?: ArrayLike<number>;
 };
 
 export type FaceRecord = {
@@ -93,6 +141,9 @@ export type FaceRecord = {
 	partKey: PartKey;
 	areaM2: number;
 	vertices: Point3[];
+	holes: Point3[][];
+	color?: string;
+	textureName?: string;
 	center: Point3;
 	bounds: Bounds3;
 };
@@ -162,6 +213,74 @@ export type ParsedBuildingModel = {
 	confidence: number;
 	warnings: string[];
 };
+
+const BOME_MAGIC = 'BOME1\n';
+const BOME_PREFIX_BYTES = new TextEncoder().encode(BOME_MAGIC);
+const BOME_BINARY_LAYOUT = 'positions_then_faces_v2_int_counts';
+
+export async function readBomModelFile(file: File, maxDecompressedBytes: number) {
+	const buffer = await readModelArrayBuffer(file, maxDecompressedBytes);
+	return new TextDecoder().decode(buffer);
+}
+
+export async function readBomModelData(file: File, maxDecompressedBytes: number) {
+	const buffer = await readModelArrayBuffer(file, maxDecompressedBytes);
+	return isBomeBuffer(buffer) ? parseBomeBuffer(buffer) : (JSON.parse(new TextDecoder().decode(buffer)) as BomModelJson);
+}
+
+async function readModelArrayBuffer(file: File, maxDecompressedBytes: number) {
+	const gzip = file.name.toLowerCase().endsWith('.gz') || file.type === 'application/gzip';
+	const stream = gzip ? file.stream().pipeThrough(new DecompressionStream('gzip')) : file.stream();
+	const buffer = await new Response(stream).arrayBuffer();
+	if (buffer.byteLength > maxDecompressedBytes) {
+		throw new Error(`Isi model terlalu besar setelah ekstraksi. Maksimum ${Math.round(maxDecompressedBytes / 1024 / 1024)} MB.`);
+	}
+	return buffer;
+}
+
+function isBomeBuffer(buffer: ArrayBuffer) {
+	if (buffer.byteLength < BOME_PREFIX_BYTES.length + 20) return false;
+	const bytes = new Uint8Array(buffer, 0, BOME_PREFIX_BYTES.length);
+	return BOME_PREFIX_BYTES.every((value, index) => bytes[index] === value);
+}
+
+function parseBomeBuffer(buffer: ArrayBuffer): BomModelJson {
+	if (!isBomeBuffer(buffer)) throw new Error('File BOME tidak valid.');
+	const view = new DataView(buffer);
+	let offset = BOME_PREFIX_BYTES.length;
+	const headerBytes = view.getUint32(offset, true);
+	offset += 4;
+	const positionCount = view.getUint32(offset, true);
+	offset += 4;
+	const faceIntCount = view.getUint32(offset, true);
+	offset += 4;
+	const positionBytes = view.getUint32(offset, true);
+	offset += 4;
+	const faceBytes = view.getUint32(offset, true);
+	offset += 4;
+	const expectedByteLength = offset + headerBytes + positionBytes + faceBytes;
+	if (expectedByteLength !== buffer.byteLength) {
+		throw new Error('File BOME terpotong atau header tidak valid.');
+	}
+	const header = JSON.parse(new TextDecoder().decode(new Uint8Array(buffer, offset, headerBytes))) as BomModelJson;
+	offset += headerBytes;
+	const positions =
+		offset % 4 === 0 ? new Int32Array(buffer, offset, positionBytes / Int32Array.BYTES_PER_ELEMENT) : new Int32Array(buffer.slice(offset, offset + positionBytes));
+	offset += positionBytes;
+	const faces =
+		offset % 4 === 0 ? new Int32Array(buffer, offset, faceBytes / Int32Array.BYTES_PER_ELEMENT) : new Int32Array(buffer.slice(offset, offset + faceBytes));
+	if (positions.length !== positionCount || faces.length !== faceIntCount) {
+		throw new Error('Ukuran array BOME tidak cocok dengan header.');
+	}
+	if (!header.mesh) throw new Error('Header BOME tidak punya mesh metadata.');
+	if (header.mesh.binary_layout !== BOME_BINARY_LAYOUT) {
+		throw new Error('File BOME dibuat oleh exporter lama. Export ulang model dengan plugin BOM Engine terbaru.');
+	}
+	header.geometry_format = 'compact_mesh_v1';
+	header.mesh.positions = positions;
+	header.mesh.faces = faces;
+	return header;
+}
 
 export type ProjectInputs = {
 	roomFunction: RoomFunctionKey;
@@ -241,7 +360,9 @@ export const PART_META: Record<PartKey, { label: string; color: string; order: n
 	walls: { label: 'Dinding', color: '#557b72', order: 20 },
 	floor: { label: 'Lantai', color: '#c6a96b', order: 30 },
 	ceiling: { label: 'Plafon', color: '#d7cfaa', order: 40 },
-	openings: { label: 'Pintu/Jendela', color: '#5ca6c9', order: 50 },
+	doors: { label: 'Pintu', color: '#9b6b3d', order: 50 },
+	windows: { label: 'Jendela', color: '#5ca6c9', order: 55 },
+	openings: { label: 'Bukaan', color: '#5ca6c9', order: 57 },
 	structure: { label: 'Struktur', color: '#8b5a54', order: 60 },
 	foundation: { label: 'Fondasi', color: '#7d6a4e', order: 70 },
 	furniture: { label: 'Furnitur', color: '#75685e', order: 80 },
@@ -343,10 +464,9 @@ export const DEFAULT_INPUTS: ProjectInputs = {
 
 const SURFACE_KEYS = new Set(Object.keys(SURFACE_META));
 const PARSE_LIMITS = {
-	maxEntities: 250000,
+	maxEntities: 750000,
 	maxDepth: 80,
-	maxVerticesPerFace: 256,
-	maxTotalVertices: 1500000,
+	maxTotalVertices: 3000000,
 	maxCoordinateAbs: 100000
 };
 const DIRECTION_ANGLE: Record<WindDirection, number> = {
@@ -430,6 +550,14 @@ function toWorld(vertex: BomVertex): Point3 {
 	};
 }
 
+function vectorToWorld(position: BomVector): Point3 {
+	return {
+		x: finiteCoordinate(position.x),
+		y: finiteCoordinate(position.z),
+		z: -finiteCoordinate(position.y)
+	};
+}
+
 function normalizeSurface(surface?: string | null, name = ''): SurfaceKey {
 	if (surface && SURFACE_KEYS.has(surface)) return surface as SurfaceKey;
 	const lower = name.toLowerCase();
@@ -450,22 +578,165 @@ function isWallLikeFace(bounds: Bounds3, surface: SurfaceKey) {
 	const longPlanSpan = Math.max(bounds.size.x, bounds.size.z);
 	const shortPlanSpan = Math.min(bounds.size.x, bounds.size.z);
 	const thinPlane = shortPlanSpan <= 0.42 || shortPlanSpan / Math.max(longPlanSpan, 0.001) <= 0.08;
-	return (surface.startsWith('wall') || thinPlane) && verticalSpan >= 1.6 && verticalSpan <= 6.8 && longPlanSpan >= 0.8;
+	if (surface.startsWith('wall')) return verticalSpan >= 0.35 && longPlanSpan >= 0.15;
+	return thinPlane && verticalSpan >= 1.6 && longPlanSpan >= 0.8;
 }
 
-function detectPartKey(path: string, surface: SurfaceKey, bounds: Bounds3): PartKey {
-	const lower = path.toLowerCase();
+function hasWallMaterialSignal(lower: string) {
+	return /color_000|color_001|color_002|color_003|siding|cladding|weatherboard|lap|plaster|concrete|cement|cream/.test(lower);
+}
+
+function hasOpeningMaterialSignal(lower: string) {
+	return /glass|kaca|translucent|window|jendela|door|pintu|kusen|wood|cherry|color_007|color_008|#1e1e1e|#333333/.test(lower);
+}
+
+function hasFrameMaterialSignal(lower: string) {
+	return /kusen|frame|wood|cherry|aluminium|aluminum|metal|color_007|color_008|material11|#1e1e1e|#333333|#98562a|#537689/.test(lower);
+}
+
+function hasFloorMaterialSignal(lower: string) {
+	return /lantai|floor|keramik|ubin|tile|parket|sand|ground|grass|paver|paving|brick/.test(lower);
+}
+
+function hasCeilingMaterialSignal(lower: string) {
+	return /plafon|ceiling|gypsum|langit/.test(lower);
+}
+
+function detectPartKey(path: string, surface: SurfaceKey, bounds: Bounds3, textureName = '', color = ''): PartKey {
+	const lower = `${path} ${textureName} ${color}`.toLowerCase();
 	if (/atap|roof|perabung|spandek|listplank|piri/.test(lower)) return 'roof';
 	if (/pondasi|penggali|batu kali|batu kosong|urug|tanah|cerucuk|sloof/.test(lower)) return 'foundation';
-	if (/^j\d|jendela|window|kusen/.test(lower) || surface === 'window') return 'openings';
-	if (/^p\d|pintu|door/.test(lower) || surface === 'door') return 'openings';
+	if (/^p\d|pintu|door/.test(lower) || surface === 'door') return 'doors';
+	if (/^j\d|jendela|window|kusen|glass|kaca|translucent/.test(lower) || surface === 'window') return 'windows';
 	if (/kulkas|dispenser|sofa|meja|kursi|lemari|furniture|sree/.test(lower) || surface === 'furniture') return 'furniture';
 	if (/kolom|balok|struktur|structure|beton/.test(lower) || surface === 'structure') return 'structure';
+	if (surface.startsWith('wall') && hasWallMaterialSignal(lower)) return 'walls';
 	if (isWallLikeFace(bounds, surface)) return 'walls';
-	if (surface === 'floor' || (isHorizontalFace(bounds) && /floor|lantai|keramik|ubin|parket/.test(lower))) return 'floor';
-	if (surface === 'ceiling' || (isHorizontalFace(bounds) && /ceiling|plafon|langit/.test(lower))) return 'ceiling';
+	if (surface === 'floor' || (isHorizontalFace(bounds) && hasFloorMaterialSignal(lower))) return 'floor';
+	if (surface === 'ceiling' || (isHorizontalFace(bounds) && hasCeilingMaterialSignal(lower))) return 'ceiling';
 	if (surface === 'roof_slope') return 'roof';
 	return 'other';
+}
+
+function estimateFloorLevels(faces: FaceRecord[]) {
+	const buckets = new Map<number, { y: number; areaM2: number }>();
+	const addBucket = (y: number, weight: number) => {
+		const bucket = Math.round(y / 0.25);
+		const current = buckets.get(bucket) || { y, areaM2: 0 };
+		current.y = (current.y * current.areaM2 + y * weight) / Math.max(current.areaM2 + weight, 0.001);
+		current.areaM2 += weight;
+		buckets.set(bucket, current);
+	};
+	faces.forEach((face) => {
+		const lower = `${face.path} ${face.textureName || ''} ${face.color || ''}`.toLowerCase();
+		if (isHorizontalFace(face.bounds) && (face.partKey === 'floor' || face.surface === 'floor') && !hasCeilingMaterialSignal(lower) && face.areaM2 >= 0.05) {
+			addBucket(face.bounds.center.y, face.areaM2);
+		}
+		if (
+			face.surface.startsWith('wall') &&
+			face.bounds.size.y >= 1.2 &&
+			face.areaM2 >= 0.03 &&
+			!hasOpeningMaterialSignal(lower) &&
+			!hasFrameMaterialSignal(lower)
+		) {
+			addBucket(face.bounds.min.y, Math.min(face.areaM2, 3));
+		}
+	});
+	return [...buckets.values()]
+		.sort((a, b) => b.areaM2 - a.areaM2)
+		.slice(0, 18)
+		.map((bucket) => bucket.y)
+		.sort((a, b) => a - b);
+}
+
+function nearestFloorDelta(face: FaceRecord, floorLevels: number[], modelBounds: Bounds3) {
+	const levels = floorLevels.length ? floorLevels : [modelBounds.min.y];
+	const candidates = levels.map((level) => face.bounds.min.y - level).filter((delta) => delta >= -0.35);
+	return candidates.length ? Math.min(...candidates.map((delta) => Math.abs(delta))) : Infinity;
+}
+
+function touchesFloorLevel(face: FaceRecord, floorLevels: number[], modelBounds: Bounds3) {
+	return nearestFloorDelta(face, floorLevels, modelBounds) <= 0.65;
+}
+
+function isOpeningOrFrameCandidate(face: FaceRecord) {
+	const lower = `${face.path} ${face.textureName || ''} ${face.color || ''}`.toLowerCase();
+	const vertical = face.surface.startsWith('wall') && face.bounds.size.y >= 0.18;
+	const smallPlan = Math.max(face.bounds.size.x, face.bounds.size.z) <= 1.6 || Math.min(face.bounds.size.x, face.bounds.size.z) <= 0.08;
+	return vertical && smallPlan && (face.partKey === 'doors' || face.partKey === 'windows' || hasOpeningMaterialSignal(lower) || hasFrameMaterialSignal(lower));
+}
+
+function planeDistance(a: FaceRecord, b: FaceRecord) {
+	const aXPlane = a.bounds.size.x <= a.bounds.size.z;
+	const bXPlane = b.bounds.size.x <= b.bounds.size.z;
+	if (aXPlane !== bXPlane) return Infinity;
+	return aXPlane ? Math.abs(a.center.x - b.center.x) : Math.abs(a.center.z - b.center.z);
+}
+
+function openingDistance(a: FaceRecord, b: FaceRecord) {
+	const plane = planeDistance(a, b);
+	if (plane > 0.35) return Infinity;
+	const aAxis = a.bounds.size.x <= a.bounds.size.z ? 'z' : 'x';
+	const horizontal = aAxis === 'z' ? Math.abs(a.center.z - b.center.z) : Math.abs(a.center.x - b.center.x);
+	const verticalGap = Math.max(0, Math.max(a.bounds.min.y, b.bounds.min.y) - Math.min(a.bounds.max.y, b.bounds.max.y));
+	return plane * 2 + horizontal + verticalGap;
+}
+
+function refineOpeningClusters(faces: FaceRecord[], floorLevels: number[], modelBounds: Bounds3) {
+	const candidates = faces.filter(isOpeningOrFrameCandidate);
+	const anchors = candidates.filter((face) => face.partKey === 'doors' || face.partKey === 'windows');
+	candidates.forEach((face) => {
+		const tallDoorLike = face.bounds.size.y >= 1.45 && face.bounds.size.y <= 3.4 && touchesFloorLevel(face, floorLevels, modelBounds);
+		if (tallDoorLike) {
+			face.partKey = 'doors';
+			return;
+		}
+		let nearestPartKey: PartKey | null = null;
+		let nearestDistance = Infinity;
+		anchors.forEach((anchor) => {
+			const distance = openingDistance(face, anchor);
+			if (distance < nearestDistance) {
+				nearestPartKey = anchor.partKey;
+				nearestDistance = distance;
+			}
+		});
+		if (nearestPartKey && nearestDistance <= 1.2) {
+			face.partKey = nearestPartKey;
+		} else if (face.partKey === 'other') {
+			face.partKey = 'windows';
+		}
+	});
+}
+
+function refinePartKey(face: FaceRecord, modelBounds: Bounds3, floorLevels: number[]): PartKey {
+	const lower = `${face.path} ${face.textureName || ''} ${face.color || ''}`.toLowerCase();
+	const touchesFloor = touchesFloorLevel(face, floorLevels, modelBounds);
+	const vertical = face.bounds.size.y >= 0.35 && face.surface.startsWith('wall');
+	const openingSized = face.bounds.size.y <= 4.5 && Math.max(face.bounds.size.x, face.bounds.size.z) <= 12;
+	const doorSized = face.bounds.size.y >= 1.55 && face.bounds.size.y <= 3.8;
+
+	if (face.partKey === 'openings') {
+		return touchesFloor && doorSized ? 'doors' : 'windows';
+	}
+	if ((face.partKey === 'windows' || (vertical && openingSized && hasOpeningMaterialSignal(lower))) && touchesFloor && doorSized) {
+		return 'doors';
+	}
+	if (vertical && openingSized && hasOpeningMaterialSignal(lower)) {
+		return 'windows';
+	}
+
+	if ((face.surface === 'floor' || face.surface === 'ceiling') && isHorizontalFace(face.bounds)) {
+		if (hasCeilingMaterialSignal(lower)) return 'ceiling';
+		if (hasFloorMaterialSignal(lower)) return 'floor';
+		const levels = floorLevels.length ? floorLevels : [modelBounds.min.y];
+		const nearestLevelDistance = Math.min(...levels.map((level) => Math.abs(face.bounds.center.y - level)));
+		if (nearestLevelDistance <= 0.35) return 'floor';
+		const below = levels.filter((level) => level <= face.bounds.center.y + 0.2).pop();
+		const heightAboveFloor = below === undefined ? Infinity : face.bounds.center.y - below;
+		if (heightAboveFloor >= 2 && heightAboveFloor <= 4.2) return 'ceiling';
+	}
+
+	return face.partKey;
 }
 
 function detectNameKind(name: string): keyof ComponentDetection | null {
@@ -753,8 +1024,9 @@ function materialRows(materials: BomModelJson['materials']) {
 }
 
 export function parseBomModelJson(data: BomModelJson, sourceName: string, defaultHeight = DEFAULT_INPUTS.roomHeightM): ParsedBuildingModel {
-	if (!Array.isArray(data.entities)) {
-		throw new Error('JSON model harus punya array entities.');
+	const compactMesh = data.geometry_format === 'compact_mesh_v1' ? data.mesh : null;
+	if (!compactMesh && !Array.isArray(data.entities)) {
+		throw new Error('JSON model harus punya array entities atau compact mesh.');
 	}
 
 	const bounds = emptyBounds();
@@ -784,6 +1056,139 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 		components[kind] += 1;
 	}
 
+	function appendFace(record: {
+		id: string;
+		name: string;
+		path: string;
+		layer?: string;
+		surface: SurfaceKey;
+		areaM2: number;
+		vertices: Point3[];
+		holes?: Point3[][];
+		color?: string;
+		textureName?: string;
+	}) {
+		const holes = record.holes || [];
+		const faceBounds = emptyBounds();
+		record.vertices.forEach((point) => {
+			expandBounds(bounds, point);
+			expandBounds(faceBounds, point);
+		});
+		holes.forEach((loop) =>
+			loop.forEach((point) => {
+				expandBounds(bounds, point);
+				expandBounds(faceBounds, point);
+			})
+		);
+		const finalizedFaceBounds = finalizeBounds(faceBounds);
+		const center = averagePoint(record.vertices);
+		const partKey = detectPartKey(record.path, record.surface, finalizedFaceBounds, record.textureName, record.color);
+		const current = surfaceAccumulator.get(record.surface) || { count: 0, areaM2: 0 };
+		current.count += 1;
+		current.areaM2 += record.areaM2;
+		surfaceAccumulator.set(record.surface, current);
+		const partCurrent = partAccumulator.get(partKey) || { count: 0, areaM2: 0 };
+		partCurrent.count += 1;
+		partCurrent.areaM2 += record.areaM2;
+		partAccumulator.set(partKey, partCurrent);
+		vertexCount += record.vertices.length;
+		faces.push({
+			id: record.id,
+			name: record.name,
+			path: record.path,
+			layer: record.layer,
+			surface: record.surface,
+			partKey,
+			areaM2: record.areaM2,
+			vertices: record.vertices,
+			holes,
+			color: record.color,
+			textureName: record.textureName,
+			center,
+			bounds: finalizedFaceBounds
+		});
+	}
+
+	function walkCompactMesh(mesh: CompactMesh) {
+		const positions = mesh.positions || [];
+		const meshFaces = mesh.faces || [];
+		const stride = mesh.face_stride || 9;
+		if (!positions.length || !meshFaces.length || stride < 9) {
+			throw new Error('Compact mesh tidak valid.');
+		}
+		if (positions.length % 3 !== 0 || meshFaces.length % stride !== 0) {
+			throw new Error('Compact mesh korup: ukuran buffer posisi atau face table tidak cocok. Export ulang model dengan plugin terbaru.');
+		}
+		const positionScale = mesh.position_scale || 0.001;
+		const areaScale = mesh.area_scale || 0.0001;
+		const totalPositionVertices = positions.length / 3;
+		const faceRows = meshFaces.length / stride;
+		entitiesTotal = faceRows;
+		if (entitiesTotal > PARSE_LIMITS.maxEntities) {
+			throw new Error(`Terlalu banyak face. Maksimum ${format(PARSE_LIMITS.maxEntities)} face.`);
+		}
+
+		for (let row = 0; row < faceRows; row += 1) {
+			const base = row * stride;
+			const vertexStart = meshFaces[base];
+			const vertexLength = meshFaces[base + 1];
+			const surfaceIndex = meshFaces[base + 2];
+			const materialIndex = meshFaces[base + 3];
+			const layerIndex = meshFaces[base + 4];
+			const compactRowError = (message: string) =>
+				new Error(`Compact mesh korup di face ${row + 1}: ${message}. Export ulang model dengan plugin terbaru.`);
+			if (!Number.isInteger(vertexStart) || !Number.isInteger(vertexLength)) {
+				throw compactRowError('vertex_start atau vertex_count bukan integer');
+			}
+			if (vertexLength < 3) {
+				throw compactRowError('vertex_count kurang dari 3');
+			}
+			if (vertexStart < 0 || vertexStart + vertexLength > totalPositionVertices) {
+				throw compactRowError('face menunjuk vertex di luar position buffer');
+			}
+			if (!Number.isInteger(surfaceIndex) || surfaceIndex < 0 || (mesh.surfaces && surfaceIndex >= mesh.surfaces.length)) {
+				throw compactRowError('surface index di luar dictionary');
+			}
+			if (!Number.isInteger(materialIndex) || materialIndex < -1 || (materialIndex >= 0 && mesh.materials && materialIndex >= mesh.materials.length)) {
+				throw compactRowError('material index di luar dictionary');
+			}
+			if (!Number.isInteger(layerIndex) || layerIndex < -1 || (layerIndex >= 0 && mesh.layers && layerIndex >= mesh.layers.length)) {
+				throw compactRowError('layer index di luar dictionary');
+			}
+			if (vertexCount + vertexLength > PARSE_LIMITS.maxTotalVertices) {
+				throw new Error(`Terlalu banyak vertex. Maksimum ${format(PARSE_LIMITS.maxTotalVertices)} vertex.`);
+			}
+			const vertices: Point3[] = [];
+			for (let offset = 0; offset < vertexLength; offset += 1) {
+				const positionIndex = (vertexStart + offset) * 3;
+				vertices.push(
+					vectorToWorld({
+						x: (positions[positionIndex] || 0) * positionScale,
+						y: (positions[positionIndex + 1] || 0) * positionScale,
+						z: (positions[positionIndex + 2] || 0) * positionScale
+					})
+				);
+			}
+			const surface = normalizeSurface(mesh.surfaces?.[surfaceIndex], '');
+			const material = materialIndex >= 0 ? mesh.materials?.[materialIndex] : undefined;
+			const layer = layerIndex >= 0 ? mesh.layers?.[layerIndex] : undefined;
+			const areaM2 = (meshFaces[base + 5] || 0) * areaScale;
+			const textureName = material?.texture?.filename || material?.texture?.source_path || material?.name || undefined;
+			appendFace({
+				id: `compact-face-${row + 1}`,
+				name: `${surface}-${row + 1}`,
+				path: layer ? `${layer} > ${surface}` : surface,
+				layer,
+				surface,
+				areaM2,
+				vertices,
+				holes: [],
+				color: material?.color?.hex,
+				textureName
+			});
+		}
+	}
+
 	function walk(entity: BomEntity, pathParts: string[], depth = 0) {
 		if (depth > PARSE_LIMITS.maxDepth) {
 			throw new Error(`Struktur JSON terlalu dalam. Maksimum ${PARSE_LIMITS.maxDepth} level.`);
@@ -797,56 +1202,48 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 		recordComponent(entity, path);
 
 		if (entity.type === 'Face' && entity.vertices && entity.vertices.length >= 3) {
-			if (entity.vertices.length > PARSE_LIMITS.maxVerticesPerFace) {
-				throw new Error(`Face punya terlalu banyak vertex. Maksimum ${PARSE_LIMITS.maxVerticesPerFace} vertex per face.`);
-			}
 			if (vertexCount + entity.vertices.length > PARSE_LIMITS.maxTotalVertices) {
 				throw new Error(`Terlalu banyak vertex. Maksimum ${format(PARSE_LIMITS.maxTotalVertices)} vertex.`);
 			}
 			const vertices = entity.vertices.map(toWorld);
-			const faceBounds = emptyBounds();
-			vertices.forEach((point) => {
-				expandBounds(bounds, point);
-				expandBounds(faceBounds, point);
-			});
-			const finalizedFaceBounds = finalizeBounds(faceBounds);
-			const center = averagePoint(vertices);
+			const holes = (entity.holes || []).map((loop) => loop.map(vectorToWorld));
 			const surface = normalizeSurface(entity.surface_type, path);
-			const partKey = detectPartKey(path, surface, finalizedFaceBounds);
 			const areaM2 = Number(entity.area_m2) || 0;
-			const current = surfaceAccumulator.get(surface) || { count: 0, areaM2: 0 };
-			current.count += 1;
-			current.areaM2 += areaM2;
-			surfaceAccumulator.set(surface, current);
-			const partCurrent = partAccumulator.get(partKey) || { count: 0, areaM2: 0 };
-			partCurrent.count += 1;
-			partCurrent.areaM2 += areaM2;
-			partAccumulator.set(partKey, partCurrent);
-			vertexCount += vertices.length;
-			faces.push({
+			const color = entity.mat_color || entity.material_front?.color?.hex || undefined;
+			const textureName = entity.material_front?.texture?.filename || entity.material_front?.texture?.source_path || entity.material_front?.name || undefined;
+			appendFace({
 				id: entity.id || `face-${faces.length + 1}`,
 				name,
 				path,
 				layer: entity.layer,
 				surface,
-				partKey,
 				areaM2,
 				vertices,
-				center,
-				bounds: finalizedFaceBounds
+				holes,
+				color,
+				textureName
 			});
 		}
 
 		entity.children?.forEach((child) => walk(child, pathParts.concat(name), depth + 1));
 	}
 
-	data.entities.forEach((entity) => walk(entity, [], 0));
+	if (compactMesh) {
+		walkCompactMesh(compactMesh);
+	} else {
+		data.entities?.forEach((entity) => walk(entity, [], 0));
+	}
 
 	if (!faces.length) {
 		throw new Error('Tidak ada Face renderable di JSON.');
 	}
 
 	const finalBounds = finalizeBounds(bounds);
+	const floorLevels = estimateFloorLevels(faces);
+	faces.forEach((face) => {
+		face.partKey = refinePartKey(face, finalBounds, floorLevels);
+	});
+	refineOpeningClusters(faces, floorLevels, finalBounds);
 	const surfaceStats = [...surfaceAccumulator.entries()]
 		.map(([key, value]) => ({
 			key,
@@ -856,7 +1253,14 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 			confidence: key === 'other' ? 0.45 : 0.82
 		}))
 		.sort((a, b) => b.areaM2 - a.areaM2);
-	const partStats = [...partAccumulator.entries()]
+	const refinedPartAccumulator = new Map<PartKey, { count: number; areaM2: number }>();
+	faces.forEach((face) => {
+		const current = refinedPartAccumulator.get(face.partKey) || { count: 0, areaM2: 0 };
+		current.count += 1;
+		current.areaM2 += face.areaM2;
+		refinedPartAccumulator.set(face.partKey, current);
+	});
+	const partStats = [...refinedPartAccumulator.entries()]
 		.map(([key, value]) => ({
 			key,
 			label: PART_META[key].label,
@@ -870,6 +1274,9 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 	if (!components.windows) warnings.push('Jendela tidak terdeteksi eksplisit. OTTV memakai rasio kaca input.');
 	if (!components.doors) warnings.push('Pintu tidak terdeteksi eksplisit. Flow manusia memakai estimasi zona.');
 	if (spaces.some((space) => space.source === 'estimated_footprint')) warnings.push('Ruang tidak eksplisit di JSON. Sistem memakai footprint estimasi.');
+	if (spaces.some((space) => space.source === 'detected_floor')) {
+		warnings.push('Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp.');
+	}
 
 	const confidenceParts = [
 		faces.length > 0 ? 0.9 : 0.2,

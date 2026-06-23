@@ -4,7 +4,7 @@
 module BOMEngine
   module JSONBuilder
 
-    SCHEMA_VERSION = "2.0"
+    SCHEMA_VERSION = "2.1"
 
     # Build the export hash, content varies by export_level.
     #
@@ -13,17 +13,25 @@ module BOMEngine
     # @param materials [Array<Hash>]
     # @param spatial   [Hash]
     # @param settings  [Hash]
+    # @param compact_mesh [Hash, nil]
     # @return          [Hash]
-    def self.build(model:, entities:, materials:, spatial:, settings:)
+    def self.build(model:, entities:, materials:, spatial:, settings:, compact_mesh: nil)
       level = settings[:export_level].to_s
       level = "full" unless %w[visual standard full].include?(level)
+      compact = !compact_mesh.nil?
 
       base = {
         schema_version: SCHEMA_VERSION,
         export_level:   level,
         exported_at:    Time.now.utc.iso8601,
-        entities:       entities
+        geometry_format: compact ? "compact_mesh_v1" : "sketchup_mesh_polygons"
       }
+      if compact
+        base[:mesh] = compact_mesh
+        base[:entities] = []
+      else
+        base[:entities] = entities
+      end
 
       return base if level == "visual"
 

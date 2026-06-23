@@ -25,21 +25,22 @@ module BOMEngine
       end
 
       entities.each do |entity|
-        next if entity.nil? || entity.deleted?
+        next unless exportable_entity?(entity)
 
         case entity
         when Sketchup::Face
-          result << build_face(entity, tw, parent_tf, level)
+          result.concat(build_face(entity, tw, parent_tf, level, opts[:inherited_material]))
 
         when Sketchup::Edge
           result << build_edge(entity, parent_tf) if include_edges && level == "full"
 
         when Sketchup::Group
           child_tf = parent_tf * entity.transformation
+          child_opts = opts.merge(inherited_material: entity_material(entity) || opts[:inherited_material])
           h = {
             type:     "Group",
             name:     entity.name.empty? ? "(Group)" : entity.name,
-            children: walk(entity.entities, tw, child_tf, depth + 1, opts)
+            children: walk(entity.entities, tw, child_tf, depth + 1, child_opts)
           }
           if level == "standard" || level == "full"
             h[:layer]      = safe_layer_name(entity)
@@ -59,11 +60,12 @@ module BOMEngine
         when Sketchup::ComponentInstance
           defn     = entity.definition
           child_tf = parent_tf * entity.transformation
+          child_opts = opts.merge(inherited_material: entity_material(entity) || opts[:inherited_material])
           h = {
             type:            "ComponentInstance",
             name:            entity.name.empty? ? defn.name : entity.name,
             definition_name: defn.name,
-            children:        walk(defn.entities, tw, child_tf, depth + 1, opts)
+            children:        walk(defn.entities, tw, child_tf, depth + 1, child_opts)
           }
           if level == "standard" || level == "full"
             h[:layer]          = safe_layer_name(entity)
@@ -114,10 +116,83 @@ module BOMEngine
 
     # ── Face builder ────────────────────────────────────────────
 
-    def self.build_face(face, tw, tf, level = "full")
-      normal_world = face.normal.transform(tf).normalize
+    def self.build_face(face, tw, tf, level = "full", inherited_material = nil)
+      mesh_faces = build_mesh_faces(face, tw, tf, level, inherited_material)
+      return mesh_faces unless mesh_faces.empty?
+
+      [build_loop_face(face, tw, tf, level, inherited_material)]
+    end
+
+    def self.build_mesh_faces(face, tw, tf, level = "full", inherited_material = nil)
+      mesh = begin
+        face.mesh
+      rescue
+        nil
+      end
+      return [] unless mesh && mesh.respond_to?(:polygons)
+
+      normal_world = world_normal(face, tf)
       surface_type = Classifier.classify(normal_world)
-      area_m2      = (face.area * Constants::IN2_TO_M2).round(4)
+      front_mat    = face.material || inherited_material
+      back_mat     = face.back_material || inherited_material
+      color_mat    = front_mat || back_mat
+      uv_helper    = (level == "full") ? (face.get_UVHelper(true, true, tw) rescue nil) : nil
+
+      result = []
+      mesh.polygons.each_with_index do |polygon, index|
+        local_points = polygon.map { |point_index| mesh.point_at(point_index.abs) }.compact
+        next if local_points.length < 3
+
+        world_points = local_points.map { |point| tf * point }
+        area_m2 = polygon_area_m2(world_points)
+        next if area_m2 <= 0
+
+        vertices = local_points.zip(world_points).map do |local_point, world_point|
+          h = { position: pt_to_m(world_point) }
+          h[:uv] = extract_uv(uv_helper, local_point) if level == "full"
+          h
+        end
+
+        h = {
+          type:         "Face",
+          layer:        safe_layer_name(face),
+          surface_type: surface_type,
+          area_m2:      area_m2,
+          normal:       vec_hash(normal_world),
+          mat_color:    material_color(color_mat),
+          vertices:     vertices,
+          holes:        []
+        }
+
+        if level == "standard"
+          h[:has_holes]  = false
+          h[:hole_count] = 0
+          h
+        elsif level == "full"
+          h[:id]              = "#{face.persistent_id}:#{index}"
+          h[:source_face_id]  = face.persistent_id.to_s
+          h[:mesh_polygon]    = index
+          h[:surface_simple]  = Classifier.simplified(normal_world)
+          h[:material_front]  = material_hash(front_mat)
+          h[:material_back]   = material_hash(back_mat)
+          h[:attributes]      = extract_dicts(face)
+        end
+
+        result << h
+      end
+      result
+    end
+
+    def self.build_loop_face(face, tw, tf, level = "full", inherited_material = nil)
+      normal_world = world_normal(face, tf)
+      surface_type = Classifier.classify(normal_world)
+      area_m2      = world_area_m2(face, tf)
+      front_mat    = face.material || inherited_material
+      back_mat     = face.back_material || inherited_material
+      color_mat    = front_mat || back_mat
+      holes        = face.loops.reject(&:outer?).map do |loop|
+        loop.vertices.map { |v| pt_to_m(tf * v.position) }
+      end
 
       # ── Visual: minimal — only what the web viewer needs ────
       if level == "visual"
@@ -130,7 +205,9 @@ module BOMEngine
           surface_type: surface_type,
           normal:       vec_hash(normal_world),
           area_m2:      area_m2,
-          vertices:     vertices
+          mat_color:    material_color(color_mat),
+          vertices:     vertices,
+          holes:        holes
         }
       end
 
@@ -142,10 +219,6 @@ module BOMEngine
         h = { position: pt_to_m(world_pt) }
         h[:uv] = extract_uv(uv_helper, v.position) if level == "full"
         h
-      end
-
-      holes = face.loops.reject(&:outer?).map do |loop|
-        loop.vertices.map { |v| pt_to_m(tf * v.position) }
       end
 
       h = {
@@ -162,7 +235,7 @@ module BOMEngine
 
       if level == "standard"
         # Include only the hex color of front material
-        m = face.material
+        m = color_mat
         h[:mat_color] = m ? "#%02x%02x%02x" % [m.color.red, m.color.green, m.color.blue] : nil
         return h
       end
@@ -170,10 +243,63 @@ module BOMEngine
       # ── Full: everything ─────────────────────────────────────
       h[:id]              = face.persistent_id.to_s
       h[:surface_simple]  = Classifier.simplified(normal_world)
-      h[:material_front]  = material_hash(face.material)
-      h[:material_back]   = material_hash(face.back_material)
+      h[:mat_color]       = material_color(color_mat)
+      h[:material_front]  = material_hash(front_mat)
+      h[:material_back]   = material_hash(back_mat)
       h[:attributes]      = extract_dicts(face)
       h
+    end
+
+    def self.polygon_area_m2(points)
+      return 0.0 if points.length < 3
+
+      origin = points[0]
+      area = 0.0
+      (1...(points.length - 1)).each do |index|
+        area += ((points[index] - origin).cross(points[index + 1] - origin).length * 0.5)
+      end
+      (area * Constants::IN2_TO_M2).round(4)
+    end
+
+    # Account for non-uniform scale applied by parent instances.
+    def self.world_area_m2(face, tf)
+      area = begin
+        face.area(tf)
+      rescue ArgumentError, NoMethodError
+        face.area
+      end
+      (area * Constants::IN2_TO_M2).round(4)
+    end
+
+    def self.world_normal(face, tf)
+      points = face.outer_loop.vertices.map(&:position)
+      origin = points[0]
+      (1...(points.length - 1)).each do |index|
+        local_normal = (points[index] - origin).cross(points[index + 1] - origin)
+        next if local_normal.length.zero?
+
+        world_origin = tf * origin
+        world_normal = ((tf * points[index]) - world_origin).cross(
+          (tf * points[index + 1]) - world_origin
+        )
+        next if world_normal.length.zero?
+
+        world_normal.reverse! if local_normal.dot(face.normal) < 0
+        return world_normal.normalize
+      end
+      face.normal.transform(tf).normalize
+    end
+
+    def self.material_color(material)
+      return nil unless material
+      color = material.color
+      "#%02x%02x%02x" % [color.red, color.green, color.blue]
+    end
+
+    def self.entity_material(entity)
+      entity.respond_to?(:material) ? entity.material : nil
+    rescue
+      nil
     end
 
     # ── Edge builder ────────────────────────────────────────────
@@ -245,7 +371,7 @@ module BOMEngine
     def self.count_faces(entities, depth = 0)
       return 0 if depth > Constants::MAX_RECURSION_DEPTH
       entities.inject(0) do |sum, e|
-        next sum if e.nil? || e.deleted?
+        next sum unless exportable_entity?(e)
         case e
         when Sketchup::Face             then sum + 1
         when Sketchup::Group            then sum + count_faces(e.entities, depth + 1)
@@ -258,7 +384,7 @@ module BOMEngine
     def self.count_edges(entities, depth = 0)
       return 0 if depth > Constants::MAX_RECURSION_DEPTH
       entities.inject(0) do |sum, e|
-        next sum if e.nil? || e.deleted?
+        next sum unless exportable_entity?(e)
         case e
         when Sketchup::Edge             then sum + 1
         when Sketchup::Group            then sum + count_edges(e.entities, depth + 1)
@@ -303,6 +429,25 @@ module BOMEngine
       entity.respond_to?(:layer) && entity.layer ? entity.layer.name : "Layer0"
     rescue
       "Layer0"
+    end
+
+    def self.exportable_entity?(entity)
+      return false if entity.nil? || entity.deleted?
+      return false if entity.respond_to?(:hidden?) && entity.hidden?
+      if entity.respond_to?(:visible?)
+        begin
+          return false unless entity.visible?
+        rescue
+          # Older SketchUp entities may not expose reliable visible? state.
+        end
+      end
+
+      layer = entity.respond_to?(:layer) ? entity.layer : nil
+      return false if layer && layer.respond_to?(:visible?) && !layer.visible?
+
+      true
+    rescue
+      false
     end
 
     def self.extract_uv(uv_helper, local_pt)
