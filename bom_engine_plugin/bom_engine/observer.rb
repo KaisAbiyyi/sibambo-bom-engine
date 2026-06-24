@@ -31,9 +31,13 @@ module BOMEngine
         begin
           Core.run_export(
             output_path:    @temp_path,
+            export_level:   "visual",
             export_textures: false,
             include_edges:  false,
-            pretty_print:   false
+            pretty_print:   false,
+            compress_output: true,
+            compact_geometry: true,
+            binary_geometry: true
           )
           Logger.info("Live export updated: #{@temp_path}")
         rescue => e

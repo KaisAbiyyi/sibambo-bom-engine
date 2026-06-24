@@ -16,6 +16,7 @@
 		getTotalArea,
 		getTotalVolume,
 		parseBomModelJson,
+		readBomModelData,
 		runAnalysis,
 		type AnalysisKind,
 		type AnalysisResult,
@@ -42,7 +43,8 @@
 
 	const SAMPLE_URL = `${import.meta.env.BASE_URL}Model_SBMBOOST_bom_visual_nonPretty-print.json`;
 	const TEMPLATE_KEY = 'model-eval-analysis-template-v1';
-	const MAX_MODEL_FILE_BYTES = 60 * 1024 * 1024;
+	const MAX_MODEL_FILE_BYTES = 80 * 1024 * 1024;
+	const MAX_DECOMPRESSED_MODEL_BYTES = 120 * 1024 * 1024;
 	const MAX_TEMPLATE_BYTES = 512 * 1024;
 	const analysisOptions = Object.entries(ANALYSIS_META) as Array<[AnalysisKind, (typeof ANALYSIS_META)[AnalysisKind]]>;
 	const roomOptions = Object.entries(ROOM_FUNCTIONS) as Array<[RoomFunctionKey, (typeof ROOM_FUNCTIONS)[RoomFunctionKey]]>;
@@ -90,6 +92,13 @@
 	let readiness = $derived<ReadinessItem[]>(getReadiness(model, inputs, touched));
 	let selectedReadiness = $derived<ReadinessItem | undefined>(readiness.find((item) => item.kind === selectedAnalysis));
 	let presentParts = $derived(model ? model.partStats.filter((part) => part.count > 0) : []);
+	let grossHorizontalArea = $derived(
+		model
+			? model.surfaceStats
+					.filter((surface) => surface.key === 'floor' || surface.key === 'ceiling')
+					.reduce((sum, surface) => sum + surface.areaM2, 0)
+			: 0
+	);
 
 	onMount(() => {
 		const stored = localStorage.getItem(TEMPLATE_KEY);
@@ -135,7 +144,7 @@
 		}
 	}
 
-	function handleFileChange(event: Event) {
+	async function handleFileChange(event: Event) {
 		const file = (event.currentTarget as HTMLInputElement).files?.[0];
 		if (!file) return;
 		if (file.size > MAX_MODEL_FILE_BYTES) {
@@ -146,23 +155,15 @@
 		isLoading = true;
 		loadError = '';
 		parseMessage = `Membaca ${file.name}...`;
-		const reader = new FileReader();
-		reader.onload = () => {
-			try {
-				const data = JSON.parse(String(reader.result)) as BomModelJson;
-				acceptModel(data, file.name);
-			} catch (error) {
-				loadError = error instanceof Error ? error.message : 'JSON tidak valid';
-			} finally {
-				isLoading = false;
-				if (fileInput) fileInput.value = '';
-			}
-		};
-		reader.onerror = () => {
-			loadError = 'File tidak bisa dibaca';
+		try {
+			const data = await readBomModelData(file, MAX_DECOMPRESSED_MODEL_BYTES);
+			acceptModel(data, file.name);
+		} catch (error) {
+			loadError = error instanceof Error ? error.message : 'JSON tidak valid';
+		} finally {
 			isLoading = false;
-		};
-		reader.readAsText(file);
+			if (fileInput) fileInput.value = '';
+		}
 	}
 
 	function acceptModel(data: BomModelJson, name: string) {
@@ -273,7 +274,8 @@
 		if (key === 'roof_slope') return 'roof';
 		if (key === 'floor') return 'floor';
 		if (key === 'ceiling') return 'ceiling';
-		if (key === 'door' || key === 'window') return 'openings';
+		if (key === 'door') return 'doors';
+		if (key === 'window') return 'windows';
 		if (key === 'structure') return 'structure';
 		if (key === 'furniture') return 'furniture';
 		return 'other';
@@ -445,7 +447,7 @@
 				<button class="primary-button" type="button" onclick={() => fileInput.click()}>Upload JSON</button>
 				<button class="ghost-button" type="button" onclick={loadSample} disabled={isLoading}>Load sample</button>
 			</div>
-			<input bind:this={fileInput} accept=".json,application/json" hidden type="file" onchange={handleFileChange} />
+			<input bind:this={fileInput} accept=".json,.json.gz,.bome,.bome.gz,application/json,application/gzip,application/octet-stream" hidden type="file" onchange={handleFileChange} />
 			{#if isLoading}
 				<p class="status-line">Parsing model...</p>
 			{/if}
@@ -462,7 +464,8 @@
 				</div>
 				<div class="metric-grid">
 					<div><strong>{spaces.length}</strong><span>ruang/zona</span></div>
-					<div><strong>{format(getTotalArea(spaces), 1)}</strong><span>m2 area</span></div>
+					<div><strong>{format(getTotalArea(spaces), 1)}</strong><span>m2 ruang terdeteksi</span></div>
+					<div><strong>{format(grossHorizontalArea, 1)}</strong><span>m2 horizontal gross</span></div>
 					<div><strong>{format(getTotalVolume(spaces), 1)}</strong><span>m3 volume</span></div>
 					<div><strong>{format(model.faceCount)}</strong><span>face</span></div>
 					<div><strong>{model.components.doors}</strong><span>pintu</span></div>

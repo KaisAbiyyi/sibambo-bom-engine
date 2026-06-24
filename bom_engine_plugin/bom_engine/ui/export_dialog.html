@@ -6,7 +6,16 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
+  html {
+    height: 100%;
+    overflow: hidden;
+    background: #1e2229;
+  }
+
   body {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-size: 13px;
     background: #1e2229;
@@ -187,18 +196,29 @@
     margin-left: 5px;
     vertical-align: middle;
   }
+
+  @media (max-width: 430px) {
+    body { padding: 14px; }
+    .level-grid { grid-template-columns: 1fr; }
+    .path-row { flex-wrap: wrap; }
+    .path-row input { flex-basis: 100%; }
+    .btn-browse { width: 100%; }
+    .actions { justify-content: stretch; }
+    .actions .btn { flex: 1; }
+  }
 </style>
 </head>
 <body>
 
-  <h2>&#11041; BOM Engine Export <span class="badge">v2.0</span></h2>
+  <h2>&#11041; BOM Engine Export <span class="badge">BOME v1</span></h2>
 
   <div class="field">
-    <label>Output JSON Path</label>
+    <label>Output Path</label>
     <div class="path-row">
-      <input type="text" id="outputPath" placeholder="/path/to/output_bom.json">
+      <input type="text" id="outputPath" placeholder="/path/to/output_bom.bome">
       <button class="btn btn-browse" onclick="sketchup.browse()">Browse</button>
     </div>
+    <p class="info">Visual/Standard selalu diekspor sebagai .bome.gz binary. Full BIM tetap JSON untuk data lengkap/debug.</p>
   </div>
 
   <!-- ── Export Level ── -->
@@ -209,15 +229,15 @@
       <label class="level-card selected" id="card-visual" onclick="selectLevel('visual')">
         <input type="radio" name="exportLevel" value="visual" checked>
         <div class="level-name">&#9679; Visual</div>
-        <div class="level-size">~5–8 MB</div>
-        <div class="level-desc">Geometri polygon lengkap per face. Ringan untuk viewer 3D.</div>
+        <div class="level-size">~1–10 MB gzip</div>
+        <div class="level-desc">Compact mesh untuk viewer 3D. Default paling cepat.</div>
       </label>
 
       <label class="level-card" id="card-standard" onclick="selectLevel('standard')">
         <input type="radio" name="exportLevel" value="standard">
         <div class="level-name">&#9679; Standard</div>
-        <div class="level-size">~15–20 MB</div>
-        <div class="level-desc">+ Warna material, area, hierarki dasar.</div>
+        <div class="level-size">~5–20 MB gzip</div>
+        <div class="level-desc">Compact mesh + metadata dasar.</div>
       </label>
 
       <label class="level-card" id="card-full" onclick="selectLevel('full')">
@@ -234,7 +254,7 @@
   <div class="section">
     <h3>Opsi Tambahan</h3>
     <div class="checkbox-row full-only" id="opt-textures">
-      <input type="checkbox" id="exportTextures" checked>
+      <input type="checkbox" id="exportTextures">
       <label for="exportTextures">Export tekstur ke subfolder /textures</label>
     </div>
     <div class="checkbox-row full-only" id="opt-edges">
@@ -246,10 +266,22 @@
       <label for="includeMaterials">Sertakan library material lengkap</label>
     </div>
     <div class="checkbox-row">
-      <input type="checkbox" id="prettyPrint">
-      <label for="prettyPrint">Pretty-print JSON (mudah dibaca manusia)</label>
+      <input type="checkbox" id="compactGeometry" checked disabled>
+      <label for="compactGeometry">Compact mesh untuk Visual/Standard (wajib)</label>
     </div>
-    <p class="info" style="margin-top:-4px;margin-bottom:6px">&#9888; Pretty-print menambah spasi &amp; baris baru — ukuran file bisa <strong style="color:#ffaa44">2–3× lebih besar</strong>. Nonaktifkan untuk produksi.</p>
+    <div class="checkbox-row">
+      <input type="checkbox" id="binaryGeometry" checked disabled>
+      <label for="binaryGeometry">Simpan geometry sebagai .bome.gz binary (wajib untuk viewer)</label>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="prettyPrint">
+      <label for="prettyPrint">Pretty-print JSON Full BIM (debug saja)</label>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="compressOutput" checked>
+      <label for="compressOutput">Kompres output sebagai .gz</label>
+    </div>
+    <p class="info" style="margin-top:-4px;margin-bottom:6px">&#9888; Pretty-print hanya relevan untuk Full BIM JSON dan bisa membuat file jauh lebih besar.</p>
   </div>
 
   <div class="section">
@@ -263,7 +295,7 @@
 
   <div class="actions">
     <button class="btn btn-cancel" onclick="sketchup.cancel()">Batal</button>
-    <button class="btn btn-export" onclick="doExport()">Export JSON</button>
+    <button class="btn btn-export" onclick="doExport()">Export Model</button>
   </div>
 
 <script>
@@ -277,8 +309,15 @@
       card.querySelector('input[type=radio]').checked = (l === level);
     });
     document.querySelectorAll('.full-only').forEach(function(el) {
-      el.classList.toggle('dimmed', level === 'visual');
+      el.classList.toggle('dimmed', level !== 'full');
     });
+    var compact = document.getElementById('compactGeometry');
+    var binary = document.getElementById('binaryGeometry');
+    var viewerFormat = level !== 'full';
+    compact.checked = viewerFormat;
+    binary.checked = viewerFormat;
+    compact.disabled = true;
+    binary.disabled = true;
   }
 
   function setDefaultPath(path) {
@@ -326,6 +365,9 @@
       include_edges:     document.getElementById('includeEdges').checked,
       include_materials: document.getElementById('includeMaterials').checked,
       pretty_print:      document.getElementById('prettyPrint').checked,
+      compress_output:   document.getElementById('compressOutput').checked,
+      compact_geometry:  document.getElementById('compactGeometry').checked,
+      binary_geometry:   document.getElementById('binaryGeometry').checked,
       selection_only:    document.getElementById('selectionOnly').checked
     };
     sketchup.export(JSON.stringify(settings));

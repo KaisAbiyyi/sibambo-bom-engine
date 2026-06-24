@@ -11,9 +11,9 @@ module BOMEngine
     IN3_TO_M3 = IN_TO_M ** 3
 
     # ── Surface classification thresholds ─────────────────────────
-    # |nz| > 0.85 → floor or ceiling (within ~32° of horizontal)
-    HORIZONTAL_THRESHOLD = 0.85
-    # |nz| > 0.25 AND ≤ 0.85 → roof slope
+    # |nz| > 0.9659 → floor or ceiling (within ~15° of horizontal)
+    HORIZONTAL_THRESHOLD = 0.9659
+    # |nz| > 0.25 AND ≤ 0.9659 → roof slope
     ROOF_SLOPE_MIN       = 0.25
 
     # ── Opening detection thresholds (meters) ─────────────────────
