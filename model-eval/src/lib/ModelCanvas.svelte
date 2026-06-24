@@ -480,7 +480,7 @@
 	}
 
 	function refreshSurfaceMaterials() {
-		const visible = new Set(visiblePartKeys.length ? visiblePartKeys : model?.partStats.map((part) => part.key));
+		const visible = new Set(visiblePartKeys);
 		runtimes.forEach((runtime) => {
 			const visual = partVisual(runtime.key, runtime.baseColor);
 			const isVisible = visible.has(runtime.key);

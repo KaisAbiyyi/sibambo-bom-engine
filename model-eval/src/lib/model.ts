@@ -22,6 +22,7 @@ export type PartKey =
 	| 'openings'
 	| 'structure'
 	| 'foundation'
+	| 'earthwork'
 	| 'furniture'
 	| 'other';
 
@@ -365,6 +366,7 @@ export const PART_META: Record<PartKey, { label: string; color: string; order: n
 	openings: { label: 'Bukaan', color: '#5ca6c9', order: 57 },
 	structure: { label: 'Struktur', color: '#8b5a54', order: 60 },
 	foundation: { label: 'Fondasi', color: '#7d6a4e', order: 70 },
+	earthwork: { label: 'Pekerjaan Tanah', color: '#8b7355', order: 75 },
 	furniture: { label: 'Furnitur', color: '#75685e', order: 80 },
 	other: { label: 'Lainnya', color: '#8a8172', order: 90 }
 };
@@ -564,8 +566,9 @@ function normalizeSurface(surface?: string | null, name = ''): SurfaceKey {
 	if (/^j\d|jendela|window/.test(lower)) return 'window';
 	if (/^p\d|pintu|door/.test(lower)) return 'door';
 	if (/kolom|balok|sloof|cerucuk|pondasi|struktur|structure/.test(lower)) return 'structure';
-	if (/kulkas|dispenser|sofa|meja|kursi|lemari|furniture|sree/.test(lower)) return 'furniture';
+	if (/kulkas|dispenser|sofa|meja|kursi|lemari|furniture|sree|heather|sang|laura|mark|stacy|chris|susan|manusia|orang|scale_figure|scale figure/.test(lower)) return 'furniture';
 	if (/atap|perabung|spandek|listplank/.test(lower)) return 'roof_slope';
+	if (/urug|tanah/.test(lower)) return 'other';
 	return 'other';
 }
 
@@ -604,12 +607,16 @@ function hasCeilingMaterialSignal(lower: string) {
 
 function detectPartKey(path: string, surface: SurfaceKey, bounds: Bounds3, textureName = '', color = ''): PartKey {
 	const lower = `${path} ${textureName} ${color}`.toLowerCase();
-	if (/atap|roof|perabung|spandek|listplank|piri/.test(lower)) return 'roof';
-	if (/pondasi|penggali|batu kali|batu kosong|urug|tanah|cerucuk|sloof/.test(lower)) return 'foundation';
-	if (/^p\d|pintu|door/.test(lower) || surface === 'door') return 'doors';
+	if (/kulkas|dispenser|sofa|meja|kursi|lemari|furniture|sree|heather|sang|laura|mark|stacy|chris|susan|manusia|orang|scale_figure|scale figure/.test(lower) || surface === 'furniture') return 'furniture';
+	if (/piri - piri|piri-piri|listplank/.test(lower)) return 'ceiling';
+	if (/atap|roof|perabung|spandek/.test(lower)) return 'roof';
+	if (/pondasi|penggali|batu kali|batu kosong|cerucuk|sloof/.test(lower)) return 'foundation';
+	if (/urug|tanah timbun|tanah/.test(lower)) return 'earthwork';
+	if (/^p\d|pintu|door|pemotong/.test(lower) || surface === 'door') return 'doors';
 	if (/^j\d|jendela|window|kusen|glass|kaca|translucent/.test(lower) || surface === 'window') return 'windows';
-	if (/kulkas|dispenser|sofa|meja|kursi|lemari|furniture|sree/.test(lower) || surface === 'furniture') return 'furniture';
 	if (/kolom|balok|struktur|structure|beton/.test(lower) || surface === 'structure') return 'structure';
+	if (/cor lantai|keramik lantai/.test(lower) && surface.startsWith('wall')) return 'structure';
+	if (/bata|plester|dinding|wall/.test(lower) && (surface === 'floor' || surface === 'ceiling')) return 'walls';
 	if (surface.startsWith('wall') && hasWallMaterialSignal(lower)) return 'walls';
 	if (isWallLikeFace(bounds, surface)) return 'walls';
 	if (surface === 'floor' || (isHorizontalFace(bounds) && hasFloorMaterialSignal(lower))) return 'floor';
@@ -628,6 +635,10 @@ function estimateFloorLevels(faces: FaceRecord[]) {
 		buckets.set(bucket, current);
 	};
 	faces.forEach((face) => {
+		if (face.partKey === 'foundation' || face.partKey === 'roof' || face.partKey === 'earthwork') {
+			return;
+		}
+
 		const lower = `${face.path} ${face.textureName || ''} ${face.color || ''}`.toLowerCase();
 		if (isHorizontalFace(face.bounds) && (face.partKey === 'floor' || face.surface === 'floor') && !hasCeilingMaterialSignal(lower) && face.areaM2 >= 0.05) {
 			addBucket(face.bounds.center.y, face.areaM2);
@@ -660,6 +671,16 @@ function touchesFloorLevel(face: FaceRecord, floorLevels: number[], modelBounds:
 }
 
 function isOpeningOrFrameCandidate(face: FaceRecord) {
+	if (
+		face.partKey === 'furniture' ||
+		face.partKey === 'foundation' ||
+		face.partKey === 'structure' ||
+		face.partKey === 'roof' ||
+		face.partKey === 'earthwork' ||
+		face.partKey === 'ceiling'
+	) {
+		return false;
+	}
 	const lower = `${face.path} ${face.textureName || ''} ${face.color || ''}`.toLowerCase();
 	const vertical = face.surface.startsWith('wall') && face.bounds.size.y >= 0.18;
 	const smallPlan = Math.max(face.bounds.size.x, face.bounds.size.z) <= 1.6 || Math.min(face.bounds.size.x, face.bounds.size.z) <= 0.08;
@@ -709,6 +730,20 @@ function refineOpeningClusters(faces: FaceRecord[], floorLevels: number[], model
 }
 
 function refinePartKey(face: FaceRecord, modelBounds: Bounds3, floorLevels: number[]): PartKey {
+	if (
+		face.partKey === 'foundation' ||
+		face.partKey === 'roof' ||
+		face.partKey === 'structure' ||
+		face.partKey === 'furniture' ||
+		face.partKey === 'earthwork' ||
+		face.partKey === 'doors' ||
+		face.partKey === 'windows' ||
+		face.partKey === 'ceiling' ||
+		face.partKey === 'other'
+	) {
+		return face.partKey;
+	}
+
 	const lower = `${face.path} ${face.textureName || ''} ${face.color || ''}`.toLowerCase();
 	const touchesFloor = touchesFloorLevel(face, floorLevels, modelBounds);
 	const vertical = face.bounds.size.y >= 0.35 && face.surface.startsWith('wall');
@@ -718,7 +753,7 @@ function refinePartKey(face: FaceRecord, modelBounds: Bounds3, floorLevels: numb
 	if (face.partKey === 'openings') {
 		return touchesFloor && doorSized ? 'doors' : 'windows';
 	}
-	if ((face.partKey === 'windows' || (vertical && openingSized && hasOpeningMaterialSignal(lower))) && touchesFloor && doorSized) {
+	if ((vertical && openingSized && hasOpeningMaterialSignal(lower)) && touchesFloor && doorSized) {
 		return 'doors';
 	}
 	if (vertical && openingSized && hasOpeningMaterialSignal(lower)) {
@@ -726,6 +761,7 @@ function refinePartKey(face: FaceRecord, modelBounds: Bounds3, floorLevels: numb
 	}
 
 	if ((face.surface === 'floor' || face.surface === 'ceiling') && isHorizontalFace(face.bounds)) {
+		if (face.surface === 'ceiling' && hasFloorMaterialSignal(lower)) return 'structure';
 		if (hasCeilingMaterialSignal(lower)) return 'ceiling';
 		if (hasFloorMaterialSignal(lower)) return 'floor';
 		const levels = floorLevels.length ? floorLevels : [modelBounds.min.y];
@@ -745,7 +781,7 @@ function detectNameKind(name: string): keyof ComponentDetection | null {
 	if (/^j\d|jendela|window/.test(lower)) return 'windows';
 	if (/atap|perabung|spandek|listplank/.test(lower)) return 'roofElements';
 	if (/bata|plester|dinding|wall/.test(lower)) return 'wallElements';
-	if (/kulkas|dispenser|sofa|meja|kursi|lemari|furniture|sree/.test(lower)) return 'furniture';
+	if (/kulkas|dispenser|sofa|meja|kursi|lemari|furniture|sree|heather|sang|laura|mark|stacy|chris|susan|manusia|orang|scale_figure|scale figure/.test(lower)) return 'furniture';
 	if (/kolom|balok|sloof|cerucuk|pondasi|struktur|structure/.test(lower)) return 'structural';
 	return null;
 }
@@ -1080,9 +1116,13 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 				expandBounds(faceBounds, point);
 			})
 		);
-		const finalizedFaceBounds = finalizeBounds(faceBounds);
+				const finalizedFaceBounds = finalizeBounds(faceBounds);
 		const center = averagePoint(record.vertices);
-		const partKey = detectPartKey(record.path, record.surface, finalizedFaceBounds, record.textureName, record.color);
+		let partKey = detectPartKey(record.path, record.surface, finalizedFaceBounds, record.textureName, record.color);
+		// Root-level faces at z=0 (ground level in SketchUp, which maps to y=0 in Three.js world coordinates) with no parent architecture context -> other
+		if (/^face$/i.test(record.path.trim()) && Math.abs(finalizedFaceBounds.center.y) < 0.05 && record.surface === 'floor') {
+			partKey = 'other';
+		}
 		const current = surfaceAccumulator.get(record.surface) || { count: 0, areaM2: 0 };
 		current.count += 1;
 		current.areaM2 += record.areaM2;
@@ -1261,6 +1301,7 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 		refinedPartAccumulator.set(face.partKey, current);
 	});
 	const partStats = [...refinedPartAccumulator.entries()]
+		.filter(([key, value]) => key !== 'other' && value.areaM2 > 0)
 		.map(([key, value]) => ({
 			key,
 			label: PART_META[key].label,

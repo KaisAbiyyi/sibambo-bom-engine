@@ -265,24 +265,24 @@
 		visiblePartKeys = presentParts.map((part) => part.key);
 	}
 
-	function hideRoof() {
-		visiblePartKeys = visiblePartKeys.filter((key) => key !== 'roof');
-	}
-
-	function surfacePartKey(key: SurfaceKey): PartKey {
-		if (key.startsWith('wall')) return 'walls';
-		if (key === 'roof_slope') return 'roof';
-		if (key === 'floor') return 'floor';
-		if (key === 'ceiling') return 'ceiling';
-		if (key === 'door') return 'doors';
-		if (key === 'window') return 'windows';
-		if (key === 'structure') return 'structure';
-		if (key === 'furniture') return 'furniture';
-		return 'other';
+	function hideAll() {
+		visiblePartKeys = [];
 	}
 
 	function surfaceStatsForPart(key: PartKey) {
-		return model?.surfaceStats.filter((stat) => surfacePartKey(stat.key) === key).slice(0, 4) || [];
+		if (!model) return [];
+		const partFaces = model.faces.filter(f => f.partKey === key);
+		const acc = new Map<SurfaceKey, { count: number; areaM2: number }>();
+		partFaces.forEach(f => {
+			const c = acc.get(f.surface) || { count: 0, areaM2: 0 };
+			c.count++;
+			c.areaM2 += f.areaM2;
+			acc.set(f.surface, c);
+		});
+		return [...acc.entries()]
+			.map(([k, v]) => ({ key: k, label: SURFACE_META[k].label, count: v.count, areaM2: v.areaM2 }))
+			.sort((a, b) => b.areaM2 - a.areaM2)
+			.slice(0, 4);
 	}
 
 	function saveTemplate() {
@@ -476,7 +476,7 @@
 						<strong>Bagian model</strong>
 						<div>
 							<button type="button" onclick={showAllParts}>All</button>
-							<button type="button" onclick={hideRoof}>Hide atap</button>
+							<button type="button" onclick={hideAll}>Hide all</button>
 						</div>
 					</div>
 					{#each presentParts as part}
@@ -487,7 +487,7 @@
 								<span>{part.label}</span>
 								<strong>{format(part.areaM2, 1)} m2</strong>
 							</label>
-							{#if surfaceStatsForPart(part.key).length}
+							{#if part.key === 'walls' && surfaceStatsForPart(part.key).length > 1}
 								<div class="surface-detail">
 									{#each surfaceStatsForPart(part.key) as stat}
 										<div class="surface-row">
