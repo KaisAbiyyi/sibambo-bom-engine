@@ -612,8 +612,8 @@ function detectPartKey(path: string, surface: SurfaceKey, bounds: Bounds3, textu
 	if (/atap|roof|perabung|spandek/.test(lower)) return 'roof';
 	if (/pondasi|penggali|batu kali|batu kosong|cerucuk|sloof/.test(lower)) return 'foundation';
 	if (/urug|tanah timbun|tanah/.test(lower)) return 'earthwork';
-	if (/^p\d|pintu|door|pemotong/.test(lower) || surface === 'door') return 'doors';
-	if (/^j\d|jendela|window|kusen|glass|kaca|translucent/.test(lower) || surface === 'window') return 'windows';
+	if (/p1008|^p\d|pintu|door|p1008.*pemotong/.test(lower) || surface === 'door') return 'doors';
+	if (/j0006|^j\d|jendela|window|kusen|glass|kaca|translucent|j0006.*pemotong|pemotong/.test(lower) || surface === 'window') return 'windows';
 	if (/kolom|balok|struktur|structure|beton/.test(lower) || surface === 'structure') return 'structure';
 	if (/cor lantai|keramik lantai/.test(lower) && surface.startsWith('wall')) return 'structure';
 	if (/bata|plester|dinding|wall/.test(lower) && (surface === 'floor' || surface === 'ceiling')) return 'walls';
@@ -1229,7 +1229,7 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 		}
 	}
 
-	function walk(entity: BomEntity, pathParts: string[], depth = 0) {
+	function walk(entity: BomEntity, pathParts: string[], depth = 0, parentHasKind = false) {
 		if (depth > PARSE_LIMITS.maxDepth) {
 			throw new Error(`Struktur JSON terlalu dalam. Maksimum ${PARSE_LIMITS.maxDepth} level.`);
 		}
@@ -1239,7 +1239,18 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 		}
 		const name = entity.name || entity.definition_name || entity.type || 'Entity';
 		const path = pathParts.concat(name).join(' > ');
-		recordComponent(entity, path);
+		
+		let currentHasKind = parentHasKind;
+		const compName = entity.name || entity.definition_name;
+		if (compName) {
+			const kind = detectNameKind(compName);
+			if (kind) {
+				if (!parentHasKind) {
+					recordComponent(entity, path);
+					currentHasKind = true;
+				}
+			}
+		}
 
 		if (entity.type === 'Face' && entity.vertices && entity.vertices.length >= 3) {
 			if (vertexCount + entity.vertices.length > PARSE_LIMITS.maxTotalVertices) {
@@ -1265,13 +1276,13 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 			});
 		}
 
-		entity.children?.forEach((child) => walk(child, pathParts.concat(name), depth + 1));
+		entity.children?.forEach((child) => walk(child, pathParts.concat(name), depth + 1, currentHasKind));
 	}
 
 	if (compactMesh) {
 		walkCompactMesh(compactMesh);
 	} else {
-		data.entities?.forEach((entity) => walk(entity, [], 0));
+		data.entities?.forEach((entity) => walk(entity, [], 0, false));
 	}
 
 	if (!faces.length) {
