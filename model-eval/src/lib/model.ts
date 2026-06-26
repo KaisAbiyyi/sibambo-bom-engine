@@ -607,14 +607,18 @@ function hasCeilingMaterialSignal(lower: string) {
 
 function detectPartKey(path: string, surface: SurfaceKey, bounds: Bounds3, textureName = '', color = ''): PartKey {
 	const lower = `${path} ${textureName} ${color}`.toLowerCase();
-	if (/kulkas|dispenser|sofa|meja|kursi|lemari|furniture|sree|heather|sang|laura|mark|stacy|chris|susan|manusia|orang|scale_figure|scale figure/.test(lower) || surface === 'furniture') return 'furniture';
+	if (/atap|roof|perabung|spandek|shingle/.test(lower)) return 'roof';
 	if (/piri - piri|piri-piri|listplank/.test(lower)) return 'ceiling';
-	if (/atap|roof|perabung|spandek/.test(lower)) return 'roof';
+	if (/(?<!weather)(?<!fascia)\bboard\b/.test(lower) && !/roof|atap|shingle|wall|dinding/.test(lower)) {
+		if (/board/.test(lower)) return 'furniture';
+	}
+	if (/kulkas|dispenser|sofa|meja|kursi|lemari|furniture|bench|\bf_bench\b|\bf_.*\b|\bmanusia\b|\borang\b|\bscale_figure\b|\bscale figure\b/.test(lower) || surface === 'furniture') return 'furniture';
 	if (/pondasi|penggali|batu kali|batu kosong|cerucuk|sloof/.test(lower)) return 'foundation';
 	if (/urug|tanah timbun|tanah/.test(lower)) return 'earthwork';
 	if (/p1008|^p\d|pintu|door|p1008.*pemotong/.test(lower) || surface === 'door') return 'doors';
 	if (/j0006|^j\d|jendela|window|kusen|glass|kaca|translucent|j0006.*pemotong|pemotong/.test(lower) || surface === 'window') return 'windows';
-	if (/kolom|balok|struktur|structure|beton/.test(lower) || surface === 'structure') return 'structure';
+	if (/kolom|balok|struktur|structure/.test(lower) || (surface as string) === 'structure') return 'structure';
+	if (/beton/.test(lower) && (surface as string) === 'structure') return 'structure';
 	if (/cor lantai|keramik lantai/.test(lower) && surface.startsWith('wall')) return 'structure';
 	if (/bata|plester|dinding|wall/.test(lower) && (surface === 'floor' || surface === 'ceiling')) return 'walls';
 	if (surface.startsWith('wall') && hasWallMaterialSignal(lower)) return 'walls';
@@ -635,12 +639,12 @@ function estimateFloorLevels(faces: FaceRecord[]) {
 		buckets.set(bucket, current);
 	};
 	faces.forEach((face) => {
-		if (face.partKey === 'foundation' || face.partKey === 'roof' || face.partKey === 'earthwork') {
+		const lower = `${face.path} ${face.textureName || ''} ${face.color || ''}`.toLowerCase();
+		if (/pondasi|penggali|batu kali|batu kosong|cerucuk|sloof|urug|tanah|atap|roof|perabung|spandek/.test(lower)) {
 			return;
 		}
 
-		const lower = `${face.path} ${face.textureName || ''} ${face.color || ''}`.toLowerCase();
-		if (isHorizontalFace(face.bounds) && (face.partKey === 'floor' || face.surface === 'floor') && !hasCeilingMaterialSignal(lower) && face.areaM2 >= 0.05) {
+		if (isHorizontalFace(face.bounds) && face.surface === 'floor' && !lower.includes('piri') && !lower.includes('listplank') && !hasCeilingMaterialSignal(lower) && face.areaM2 >= 0.05) {
 			addBucket(face.bounds.center.y, face.areaM2);
 		}
 		if (
@@ -729,7 +733,7 @@ function refineOpeningClusters(faces: FaceRecord[], floorLevels: number[], model
 	});
 }
 
-function refinePartKey(face: FaceRecord, modelBounds: Bounds3, floorLevels: number[]): PartKey {
+function refinePartKey(face: FaceRecord, modelBounds: Bounds3, floorLevels: number[], verticalWalls: FaceRecord[]): PartKey {
 	if (
 		face.partKey === 'foundation' ||
 		face.partKey === 'roof' ||
@@ -738,7 +742,6 @@ function refinePartKey(face: FaceRecord, modelBounds: Bounds3, floorLevels: numb
 		face.partKey === 'earthwork' ||
 		face.partKey === 'doors' ||
 		face.partKey === 'windows' ||
-		face.partKey === 'ceiling' ||
 		face.partKey === 'other'
 	) {
 		return face.partKey;
@@ -761,12 +764,61 @@ function refinePartKey(face: FaceRecord, modelBounds: Bounds3, floorLevels: numb
 	}
 
 	if ((face.surface === 'floor' || face.surface === 'ceiling') && isHorizontalFace(face.bounds)) {
+		// 1. Relational Spatial Classification: check connection to vertical wall faces
+		let connectedToWall = false;
+		let relation: 'bottom' | 'top' | 'none' = 'none';
+
+		for (const w of verticalWalls) {
+			// Check if XZ bounding boxes overlap or touch with a small tolerance (5cm)
+			const xOverlap = !(face.bounds.max.x < w.bounds.min.x - 0.05 || face.bounds.min.x > w.bounds.max.x + 0.05);
+			const zOverlap = !(face.bounds.max.z < w.bounds.min.z - 0.05 || face.bounds.min.z > w.bounds.max.z + 0.05);
+
+			if (xOverlap && zOverlap) {
+				connectedToWall = true;
+				const distToBottom = Math.abs(face.bounds.center.y - w.bounds.min.y);
+				const distToTop = Math.abs(face.bounds.center.y - w.bounds.max.y);
+				if (distToBottom <= 0.25 && distToBottom < distToTop) {
+					relation = 'bottom';
+					break;
+				} else if (distToTop <= 0.25 && distToTop < distToBottom) {
+					relation = 'top';
+					break;
+				}
+			}
+		}
+
+		if (connectedToWall) {
+			if (relation === 'bottom') {
+				// Lowest plane connected to a wall -> floor (or if surface is ceiling, it is the underside of floor slab i.e. structure)
+				return face.surface === 'floor' ? 'floor' : 'structure';
+			} else if (relation === 'top') {
+				// Highest plane connected to a wall -> ceiling (plafon) or structure/roof if it's the top outer slab (concrete flat roof/listplank)
+				if (face.surface === 'floor') {
+					// The top surface of a high wall-top slab is concrete structure/deck or roof element, not a usable indoor floor
+					return lower.includes('listplank') || lower.includes('roof') || lower.includes('atap') || lower.includes('piri') ? 'roof' : 'structure';
+				}
+				// Underside/ceiling horizontal surface at top of wall -> ceiling (plafon)
+				if (lower.includes('piri') || lower.includes('listplank') || hasCeilingMaterialSignal(lower)) {
+					return 'ceiling';
+				}
+				return 'ceiling';
+			}
+		}
+
+		// 2. Fallbacks/Heuristics if not directly connected to a vertical wall:
+		if (lower.includes('piri') || lower.includes('listplank')) return 'ceiling';
 		if (face.surface === 'ceiling' && hasFloorMaterialSignal(lower)) return 'structure';
 		if (hasCeilingMaterialSignal(lower)) return 'ceiling';
 		if (hasFloorMaterialSignal(lower)) return 'floor';
 		const levels = floorLevels.length ? floorLevels : [modelBounds.min.y];
 		const nearestLevelDistance = Math.min(...levels.map((level) => Math.abs(face.bounds.center.y - level)));
-		if (nearestLevelDistance <= 0.35) return 'floor';
+		if (nearestLevelDistance <= 0.25) return 'floor';
+		
+		// If high up but not close to any floor level, a horizontal face facing up (floor) is likely a flat concrete roof structure
+		if (face.surface === 'floor' && face.bounds.center.y > Math.max(...levels) + 0.35) {
+			return lower.includes('piri') || lower.includes('listplank') ? 'ceiling' : 'structure';
+		}
+
 		const below = levels.filter((level) => level <= face.bounds.center.y + 0.2).pop();
 		const heightAboveFloor = below === undefined ? Infinity : face.bounds.center.y - below;
 		if (heightAboveFloor >= 2 && heightAboveFloor <= 4.2) return 'ceiling';
@@ -1291,8 +1343,11 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 
 	const finalBounds = finalizeBounds(bounds);
 	const floorLevels = estimateFloorLevels(faces);
+	// Pre-filter vertical walls to use inside refinePartKey for relational adjacency checks
+	const verticalWalls = faces.filter(f => f.partKey === 'walls' && f.bounds.size.y >= 1.2);
+	
 	faces.forEach((face) => {
-		face.partKey = refinePartKey(face, finalBounds, floorLevels);
+		face.partKey = refinePartKey(face, finalBounds, floorLevels, verticalWalls);
 	});
 	refineOpeningClusters(faces, floorLevels, finalBounds);
 	const surfaceStats = [...surfaceAccumulator.entries()]
