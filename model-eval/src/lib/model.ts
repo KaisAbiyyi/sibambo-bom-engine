@@ -1,4 +1,5 @@
 import { canonicalV3ToLegacyBom, isCanonicalV3 } from './formats/canonical-v3';
+import { bome2ToCanonical, isBome2Buffer, parseBome2Buffer, type Bome2RuntimeScene } from './formats/bome2';
 
 export type SurfaceKey =
 	| 'wall_x_pos'
@@ -104,6 +105,7 @@ export type BomModelJson = {
 	materials?: Record<string, BomMaterial> | BomMaterial[];
 	metadata?: Record<string, unknown>;
 	geometry_format?: string;
+	__bome2Runtime?: Bome2RuntimeScene;
 };
 
 export type CompactMeshMaterial = {
@@ -214,6 +216,7 @@ export type ParsedBuildingModel = {
 	materials: Array<{ name: string; color: string; reflectance?: number | string }>;
 	confidence: number;
 	warnings: string[];
+	runtimeScene?: Bome2RuntimeScene;
 };
 
 const BOME_MAGIC = 'BOME1\n';
@@ -227,6 +230,12 @@ export async function readBomModelFile(file: File, maxDecompressedBytes: number)
 
 export async function readBomModelData(file: File, maxDecompressedBytes: number) {
 	const buffer = await readModelArrayBuffer(file, maxDecompressedBytes);
+	if (isBome2Buffer(buffer)) {
+		const runtime = parseBome2Buffer(buffer);
+		const canonical = bome2ToCanonical(runtime) as BomModelJson;
+		canonical.__bome2Runtime = runtime;
+		return canonical;
+	}
 	return isBomeBuffer(buffer) ? parseBomeBuffer(buffer) : (JSON.parse(new TextDecoder().decode(buffer)) as BomModelJson);
 }
 
@@ -1026,6 +1035,7 @@ function materialRows(materials: BomModelJson['materials']) {
 }
 
 export function parseBomModelJson(data: BomModelJson, sourceName: string, defaultHeight = DEFAULT_INPUTS.roomHeightM): ParsedBuildingModel {
+	const runtimeScene = data.__bome2Runtime;
 	if (isCanonicalV3(data)) data = canonicalV3ToLegacyBom(data);
 	const compactMesh = data.geometry_format === 'compact_mesh_v1' ? data.mesh : null;
 	if (!compactMesh && !Array.isArray(data.entities)) {
@@ -1304,7 +1314,8 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 		components,
 		materials: materialRows(data.materials),
 		confidence: average(confidenceParts),
-		warnings
+		warnings,
+		runtimeScene
 	};
 }
 

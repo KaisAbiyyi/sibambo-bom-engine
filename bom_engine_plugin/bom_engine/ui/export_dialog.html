@@ -210,20 +210,30 @@
 </head>
 <body>
 
-  <h2>&#11041; BOM Engine Export <span class="badge">BOME v1</span></h2>
+  <h2>&#11041; BOM Engine Export <span class="badge">v3 / BOME2</span></h2>
 
   <div class="field">
     <label>Output Path</label>
     <div class="path-row">
-      <input type="text" id="outputPath" placeholder="/path/to/output_bom.bome">
+      <input type="text" id="outputPath" placeholder="/path/to/output_bom.bome2">
       <button class="btn btn-browse" onclick="sketchup.browse()">Browse</button>
     </div>
-    <p class="info">Visual/Standard selalu diekspor sebagai .bome.gz binary. Full BIM tetap JSON untuk data lengkap/debug.</p>
+    <p class="info">Suffix format ditambahkan otomatis. File sumber SKP tidak diubah.</p>
+  </div>
+
+  <div class="field">
+    <label for="outputFormat">Format Output</label>
+    <select id="outputFormat" onchange="selectFormat(this.value)" style="width:100%;padding:9px 10px;background:#111923;color:#d9e5ee;border:1px solid #324253;border-radius:5px">
+      <option value="bome2" selected>BOME2 Runtime — indexed, instanced, quantized</option>
+      <option value="canonical_v3">Canonical JSON v3 — semantic/readable</option>
+      <option value="legacy">Legacy v2/BOME1 — compatibility</option>
+    </select>
+    <p class="info" id="formatInfo">Runtime Three.js teroptimasi dengan geometry definition-local dan component instancing.</p>
   </div>
 
   <!-- ── Export Level ── -->
-  <div class="section">
-    <h3>Level Export</h3>
+  <div class="section dimmed" id="legacyLevelSection">
+    <h3>Legacy Export Level</h3>
     <div class="level-grid">
 
       <label class="level-card selected" id="card-visual" onclick="selectLevel('visual')">
@@ -265,23 +275,23 @@
       <input type="checkbox" id="includeMaterials" checked>
       <label for="includeMaterials">Sertakan library material lengkap</label>
     </div>
-    <div class="checkbox-row">
+    <div class="checkbox-row" id="legacyCompact">
       <input type="checkbox" id="compactGeometry" checked disabled>
       <label for="compactGeometry">Compact mesh untuk Visual/Standard (wajib)</label>
     </div>
-    <div class="checkbox-row">
+    <div class="checkbox-row" id="legacyBinary">
       <input type="checkbox" id="binaryGeometry" checked disabled>
       <label for="binaryGeometry">Simpan geometry sebagai .bome.gz binary (wajib untuk viewer)</label>
     </div>
     <div class="checkbox-row">
       <input type="checkbox" id="prettyPrint">
-      <label for="prettyPrint">Pretty-print JSON Full BIM (debug saja)</label>
+      <label for="prettyPrint">Pretty-print Canonical JSON (debug saja)</label>
     </div>
     <div class="checkbox-row">
       <input type="checkbox" id="compressOutput" checked>
       <label for="compressOutput">Kompres output sebagai .gz</label>
     </div>
-    <p class="info" style="margin-top:-4px;margin-bottom:6px">&#9888; Pretty-print hanya relevan untuk Full BIM JSON dan bisa membuat file jauh lebih besar.</p>
+    <p class="info" style="margin-top:-4px;margin-bottom:6px">&#9888; Pretty-print hanya untuk Canonical JSON debug dan bisa membuat file jauh lebih besar.</p>
   </div>
 
   <div class="section">
@@ -300,17 +310,16 @@
 
 <script>
   var currentLevel = 'visual';
+  var currentFormat = 'bome2';
 
   function selectLevel(level) {
     currentLevel = level;
     ['visual','standard','full'].forEach(function(l) {
       var card = document.getElementById('card-' + l);
-      card.classList.toggle('selected', l === level);
+      card.classList.toggle('selected', currentFormat === 'legacy' && l === level);
       card.querySelector('input[type=radio]').checked = (l === level);
     });
-    document.querySelectorAll('.full-only').forEach(function(el) {
-      el.classList.toggle('dimmed', level !== 'full');
-    });
+    updateOptionState();
     var compact = document.getElementById('compactGeometry');
     var binary = document.getElementById('binaryGeometry');
     var viewerFormat = level !== 'full';
@@ -318,6 +327,30 @@
     binary.checked = viewerFormat;
     compact.disabled = true;
     binary.disabled = true;
+  }
+
+  function selectFormat(format) {
+    currentFormat = format;
+    document.getElementById('outputFormat').value = format;
+    var legacy = format === 'legacy';
+    document.getElementById('legacyLevelSection').classList.toggle('dimmed', !legacy);
+    document.querySelectorAll('input[name=exportLevel]').forEach(function(input) { input.disabled = !legacy; });
+    selectLevel(legacy ? currentLevel : 'full');
+    var info = document.getElementById('formatInfo');
+    if (format === 'bome2') info.textContent = 'Runtime Three.js teroptimasi: indexed buffers, instancing, quantization terukur, section directory.';
+    else if (format === 'canonical_v3') info.textContent = 'Sumber analisis lossless: hierarchy, definitions, instances, holes, metadata, rooms, source identity.';
+    else info.textContent = 'Format v2/BOME1 lama untuk consumer yang belum migrasi.';
+    updateOptionState();
+  }
+
+  function updateOptionState() {
+    var fullOptions = currentFormat !== 'legacy' || currentLevel === 'full';
+    document.querySelectorAll('.full-only').forEach(function(el) { el.classList.toggle('dimmed', !fullOptions); });
+    var pretty = document.getElementById('prettyPrint');
+    pretty.disabled = currentFormat !== 'canonical_v3';
+    if (pretty.disabled) pretty.checked = false;
+    document.getElementById('legacyCompact').classList.toggle('dimmed', currentFormat !== 'legacy');
+    document.getElementById('legacyBinary').classList.toggle('dimmed', currentFormat !== 'legacy');
   }
 
   function setDefaultPath(path) {
@@ -360,6 +393,7 @@
     }
     var settings = {
       output_path:       outputPath,
+      output_format:     currentFormat,
       export_level:      currentLevel,
       export_textures:   document.getElementById('exportTextures').checked,
       include_edges:     document.getElementById('includeEdges').checked,
@@ -375,7 +409,7 @@
 
   window.onload = function() {
     sketchup.onReady();
-    selectLevel('visual'); // default
+    selectFormat('bome2');
   };
 </script>
 

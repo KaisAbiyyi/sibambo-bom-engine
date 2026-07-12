@@ -76,6 +76,7 @@ The JSON Schema contains a `description` for every structured field and is norma
 - `bounds_m`: local axis-aligned minimum/maximum/size.
 - `face.id`, `source_identity`: file-local face key and SketchUp persistent identity.
 - `face.outer`, `face.holes`: exterior and void loops.
+- `face.triangles`: SketchUp-derived indexed runtime triangulation; loops remain authoritative.
 - `front_material_id`, `back_material_id`, `tag_id`: table references or `null`.
 - `normal`, `area_m2`, `area_space`: local normal and area provenance.
 - `surface_hint`: exporter orientation hint; not an authoritative building-part classification.

@@ -14,6 +14,8 @@ artifacts/**/*.jpg
 artifacts/**/*.jpeg
 artifacts/**/*.bome
 artifacts/**/*.bome.gz
+artifacts/**/*.bome2
+artifacts/**/*.bome2.gz
 artifacts/**/*.glb
 artifacts/**/exported/*.json
 artifacts/**/exported/*.json.gz

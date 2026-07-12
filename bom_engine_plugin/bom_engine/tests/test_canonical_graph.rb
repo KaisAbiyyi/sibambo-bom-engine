@@ -94,6 +94,13 @@ module BOMEngine
               mesh[:faces][0][:outer].length == 4 && mesh[:faces][0][:holes].length == 1
           end
 
+          check(failures, 'face includes SketchUp-derived indexed triangles') do
+            mesh[:faces][0][:triangles].is_a?(Array) &&
+              mesh[:faces][0][:triangles].length >= 6 &&
+              (mesh[:faces][0][:triangles].length % 3).zero? &&
+              mesh[:faces][0][:triangles].all? { |index| index >= 0 && index < mesh[:positions_m].length / 3 }
+          end
+
           check(failures, 'local geometry is not expanded into world space') do
             mesh[:positions_m].each_slice(3).map(&:first).max <= (4.0 * Constants::IN_TO_M + 0.000001)
           end

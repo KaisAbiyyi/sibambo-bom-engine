@@ -1,0 +1,44 @@
+{
+  "canonical": {
+    "path": "D:/projects/sibambo-bom-engine/artifacts/project-sboost-2/exported/project-sboost-2_canonical.json.gz",
+    "compressed": true,
+    "pretty": false,
+    "bytes": 825111,
+    "uncompressed_bytes": 5999725,
+    "sha256": "5aa4302f6531d7bc9a3dbe29c5ef0780a8338f35715a0f1fbe246bc339e05cf1",
+    "elapsed_seconds": 3.034,
+    "format": "canonical_v3",
+    "statistics": {
+      "definitions": 101,
+      "meshes": 66,
+      "nodes": 117,
+      "component_instances": 49,
+      "group_instances": 67,
+      "faces": 7047,
+      "unique_vertices": 7319,
+      "materials": 48,
+      "tags": 19,
+      "transforms": 98,
+      "identity_transform_id": 0,
+      "skipped": {
+        "hidden_or_invalid_entity": 336
+      }
+    }
+  },
+  "bome2": {
+    "path": "D:/projects/sibambo-bom-engine/artifacts/project-sboost-2/exported/project-sboost-2_runtime.bome2.gz",
+    "compressed": true,
+    "bytes": 307979,
+    "uncompressed_bytes": 2024608,
+    "sha256": "1a047e9aef912d90be278d14f6bb1277f6990f22413c7fc3973092a6010e01b3",
+    "format": "bome2",
+    "meshes": 66,
+    "definitions": 101,
+    "nodes": 117,
+    "instances": 49,
+    "triangles": 13842,
+    "sections": 199,
+    "quantization_max_error_m": 0.000104131587,
+    "elapsed_seconds": 2.891
+  }
+}

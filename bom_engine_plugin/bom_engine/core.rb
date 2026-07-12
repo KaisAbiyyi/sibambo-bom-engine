@@ -14,6 +14,8 @@ require_relative 'spatial_analyzer'
 require_relative 'json_builder'
 require_relative 'canonical_graph_builder'
 require_relative 'canonical_json_writer'
+require_relative 'quantizer'
+require_relative 'bome2_writer'
 require_relative 'texture_exporter'
 require_relative 'binary_mesh_streamer'
 require_relative 'ui_dialog'
@@ -141,6 +143,31 @@ module BOMEngine
         rescue => e
           Logger.error("Canonical export failed: #{e.message}\n#{e.backtrace.first(5).join("\n")}")
           UI.messagebox("Export canonical gagal:\n#{e.message}", MB_OK) unless settings[:silent]
+          return nil
+        end
+      end
+
+      if settings[:output_format].to_s == "bome2"
+        begin
+          result = export_bome2(model, settings)
+          unless settings[:silent]
+            UI.messagebox(
+              "Export runtime selesai!\n\n" \
+              "File: #{result[:path]}\n" \
+              "Unique meshes: #{result[:meshes]}\n" \
+              "Instances: #{result[:instances]}\n" \
+              "Triangles: #{result[:triangles]}\n" \
+              "Quantization error max: #{result[:quantization_max_error_m]}m\n" \
+              "Ukuran: #{result[:bytes]} bytes\n" \
+              "Waktu: #{result[:elapsed_seconds]}s",
+              MB_OK
+            )
+          end
+          save_last_settings(settings.merge(output_path: result[:path]))
+          return result
+        rescue => e
+          Logger.error("BOME2 export failed: #{e.message}\n#{e.backtrace.first(5).join("\n")}")
+          UI.messagebox("Export runtime gagal:\n#{e.message}", MB_OK) unless settings[:silent]
           return nil
         end
       end
@@ -308,43 +335,7 @@ module BOMEngine
     def self.export_canonical(model, settings)
       started_at = Time.now
       output_path = canonical_output_path(settings[:output_path], settings[:compress_output])
-      selection_only = settings[:selection_only]
-      entities = selection_only ? model.selection : model.entities
-      parent_transform = selection_only ? active_context_transform(model) : Geom::Transformation.new
-
-      texture_writer = begin
-        Sketchup.create_texture_writer
-      rescue => e
-        Logger.warn("TextureWriter tidak tersedia (#{e.message}). UV dilewati.")
-        nil
-      end
-
-      texture_dir = nil
-      if settings[:export_textures]
-        texture_dir = output_path.sub(/\.json(?:\.gz)?$/i, '_textures')
-        MaterialExtractor.extract(model, texture_writer, texture_dir)
-      end
-
-      spatial = if selection_only
-                  SpatialAnalyzer.analyze_entities(entities, parent_transform)
-                else
-                  SpatialAnalyzer.analyze(model)
-                end
-
-      canonical_settings = settings.merge(
-        output_format: 'canonical_v3',
-        export_level: 'full',
-        selection_only: selection_only,
-        texture_directory: texture_dir
-      )
-      graph = CanonicalGraphBuilder.build(
-        model: model,
-        entities: entities,
-        parent_transform: parent_transform,
-        settings: canonical_settings,
-        spatial: spatial,
-        texture_writer: texture_writer
-      )
+      graph = build_canonical_graph(model, settings, output_path)
       result = CanonicalJSONWriter.write(
         output_path,
         graph,
@@ -360,10 +351,68 @@ module BOMEngine
       )
     end
 
+    def self.export_bome2(model, settings)
+      started_at = Time.now
+      output_path = bome2_output_path(settings[:output_path], settings[:compress_output])
+      graph = build_canonical_graph(model, settings.merge(output_format: 'bome2'), output_path)
+      result = BOME2Writer.write(output_path, graph, compress: settings[:compress_output] == true)
+      bytes = if settings[:compress_output] == true
+                Zlib::GzipReader.open(output_path, &:read)
+              else
+                File.binread(output_path)
+              end
+      validation = BOME2Writer.validate(bytes)
+      elapsed = (Time.now - started_at).round(3)
+      Logger.info("BOME2 export complete in #{elapsed}s -> #{output_path}")
+      result.merge(validation).merge(elapsed_seconds: elapsed, format: 'bome2')
+    end
+
+    def self.build_canonical_graph(model, settings, output_path)
+      selection_only = settings[:selection_only] == true
+      entities = selection_only ? model.selection : model.entities
+      parent_transform = selection_only ? active_context_transform(model) : Geom::Transformation.new
+      texture_writer = begin
+        Sketchup.create_texture_writer
+      rescue => e
+        Logger.warn("TextureWriter tidak tersedia (#{e.message}). UV dilewati.")
+        nil
+      end
+      texture_dir = nil
+      if settings[:export_textures]
+        texture_dir = output_path.sub(/\.(?:json|bome2)(?:\.gz)?$/i, '_textures')
+        MaterialExtractor.extract(model, texture_writer, texture_dir)
+      end
+      spatial = if selection_only
+                  SpatialAnalyzer.analyze_entities(entities, parent_transform)
+                else
+                  SpatialAnalyzer.analyze(model)
+                end
+      canonical_settings = settings.merge(
+        export_level: 'full',
+        selection_only: selection_only,
+        texture_directory: texture_dir
+      )
+      CanonicalGraphBuilder.build(
+        model: model,
+        entities: entities,
+        parent_transform: parent_transform,
+        settings: canonical_settings,
+        spatial: spatial,
+        texture_writer: texture_writer
+      )
+    end
+
     def self.canonical_output_path(output_path, compress)
       base_path = output_path.to_s.sub(/\.(?:json|bome)(?:\.gz)?$/i, '')
       base_path = base_path.sub(/_(?:visual|standard|full|canonical)$/i, '')
       path = "#{base_path}_canonical.json"
+      compress ? "#{path}.gz" : path
+    end
+
+    def self.bome2_output_path(output_path, compress)
+      base_path = output_path.to_s.sub(/\.(?:json|bome|bome2)(?:\.gz)?$/i, '')
+      base_path = base_path.sub(/_(?:visual|standard|full|canonical|runtime)$/i, '')
+      path = "#{base_path}_runtime.bome2"
       compress ? "#{path}.gz" : path
     end
 

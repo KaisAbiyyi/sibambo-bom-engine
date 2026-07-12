@@ -107,6 +107,7 @@
           },
           "outer": [0, 1, 2, 3],
           "holes": [],
+          "triangles": [0, 1, 2, 0, 2, 3],
           "front_material_id": "material:1",
           "back_material_id": null,
           "tag_id": "tag:0",

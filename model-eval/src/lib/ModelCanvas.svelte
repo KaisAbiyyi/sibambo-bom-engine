@@ -12,6 +12,7 @@
 		EdgesGeometry,
 		Float32BufferAttribute,
 		Group,
+		InstancedMesh,
 		LineBasicMaterial,
 		LineSegments,
 		Mesh,
@@ -32,6 +33,7 @@
 	import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 	import type { AnalysisKind, AnalysisResult, FaceRecord, OverlayMarker, ParsedBuildingModel, PartKey, SpaceZone } from './model';
 	import { PART_META } from './model';
+	import { buildRuntimeGeometryGroups } from './render/build-runtime-scene';
 
 	let {
 		model = null,
@@ -52,7 +54,8 @@
 		baseColor?: string;
 		textureName?: string;
 		mesh: Mesh;
-		edges: LineSegments;
+		edges: Object3D;
+		edgeGeometry?: BufferGeometry;
 		material: MeshStandardMaterial;
 		edgeMaterial: LineBasicMaterial;
 		baseY: number;
@@ -142,7 +145,7 @@
 			root.remove(runtime.mesh);
 			root.remove(runtime.edges);
 			runtime.mesh.geometry.dispose();
-			runtime.edges.geometry.dispose();
+			runtime.edgeGeometry?.dispose();
 			runtime.material.dispose();
 			runtime.edgeMaterial.dispose();
 		});
@@ -175,6 +178,15 @@
 		currentModel = model;
 
 		const wallGuide = modelWallGuide(model);
+		if (model.runtimeScene) {
+			buildIndexedRuntimeModel(model, wallGuide);
+			fitGround();
+			fitCamera();
+			applyEditTransform();
+			refreshSurfaceMaterials();
+			buildOverlays();
+			return;
+		}
 		const grouped = new Map<
 			string,
 			{ key: PartKey; baseColor?: string; textureName?: string; movesWithWallTop: boolean; stretchesWithWall: boolean; faces: FaceRecord[] }
@@ -219,6 +231,7 @@
 				textureName,
 				mesh,
 				edges,
+				edgeGeometry,
 				material,
 				edgeMaterial,
 				baseY: Math.min(...faces.map((face) => face.bounds.min.y)),
@@ -233,6 +246,48 @@
 		applyEditTransform();
 		refreshSurfaceMaterials();
 		buildOverlays();
+	}
+
+	function buildIndexedRuntimeModel(sourceModel: ParsedBuildingModel, wallGuide: ReturnType<typeof modelWallGuide>) {
+		if (!sourceModel.runtimeScene) return;
+		const groups = buildRuntimeGeometryGroups(sourceModel.runtimeScene);
+		groups.forEach((group) => {
+			const material = makeSurfaceMaterial(group.key, group.baseColor, group.textureName);
+			const mesh = new InstancedMesh(group.geometry, material, group.matrices.length);
+			group.matrices.forEach((matrix, index) => mesh.setMatrixAt(index, matrix));
+			mesh.instanceMatrix.needsUpdate = true;
+			mesh.computeBoundingBox();
+			mesh.computeBoundingSphere();
+			mesh.name = `${group.key}:bome2:${group.sourceMeshIndex}`;
+			mesh.frustumCulled = true;
+
+			const edges = new Group();
+			edges.name = `${mesh.name}:edges-omitted-for-instancing`;
+			const edgeMaterial = new LineBasicMaterial({
+				color: '#27333a',
+				transparent: true,
+				opacity: 0
+			});
+			root.add(mesh);
+			root.add(edges);
+
+			const relatedFaces = sourceModel.faces.filter((face) => face.partKey === group.key);
+			const stretchesWithWall = relatedFaces.some((face) => faceStretchesWithWall(face, wallGuide));
+			const movesWithWallTop = !stretchesWithWall && relatedFaces.some((face) => faceMovesWithWallTop(face, wallGuide));
+			runtimes.push({
+				key: group.key,
+				baseColor: group.baseColor,
+				textureName: group.textureName,
+				mesh,
+				edges,
+				material,
+				edgeMaterial,
+				baseY: group.baseY,
+				topY: group.topY,
+				movesWithWallTop,
+				stretchesWithWall
+			});
+		});
 	}
 
 	function geometryFromFaces(faces: FaceRecord[]) {

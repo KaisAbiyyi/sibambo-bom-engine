@@ -218,6 +218,7 @@ module BOMEngine
           source_identity: entity_source_identity(face),
           outer: outer,
           holes: holes,
+          triangles: build_face_triangles(face, positions, position_index),
           front_material_id: material_id(face.material),
           back_material_id: material_id(face.back_material),
           tag_id: tag_id(face.layer),
@@ -231,6 +232,22 @@ module BOMEngine
         uv = build_face_uv(face)
         result[:uv] = uv unless uv.nil?
         result
+      end
+
+      def build_face_triangles(face, positions, position_index)
+        mesh = face.mesh
+        return [] unless mesh && mesh.respond_to?(:polygons)
+
+        mesh.polygons.each_with_object([]) do |polygon, triangles|
+          indices = polygon.map do |point_index|
+            point = mesh.point_at(point_index.abs)
+            point ? intern_position(point, positions, position_index) : nil
+          end.compact
+          triangles.concat(indices) if indices.length == 3
+        end
+      rescue StandardError => error
+        @skipped["face_triangles:#{error.class}"] += 1
+        []
       end
 
       def build_edge(edge, positions, position_index)

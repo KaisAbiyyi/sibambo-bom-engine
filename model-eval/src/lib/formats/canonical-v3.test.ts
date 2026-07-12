@@ -32,6 +32,7 @@ function fixture() {
 						source_identity: { persistent_id: '1', entity_type: 'Sketchup::Face' },
 						outer: [0, 1, 2, 3],
 						holes: [[4, 5, 6, 7]],
+						triangles: [0, 1, 7, 0, 7, 4, 1, 2, 6, 1, 6, 7, 2, 3, 5, 2, 5, 6, 3, 0, 4, 3, 4, 5],
 						front_material_id: 'material:1',
 						back_material_id: null,
 						tag_id: 'tag:0',

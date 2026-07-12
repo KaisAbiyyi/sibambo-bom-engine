@@ -1,0 +1,103 @@
+{
+  "workflow_version": "2.0.0",
+  "measured_at": "2026-07-12T22:22:27.084Z",
+  "model": "project-sboost-2",
+  "runtime": {
+    "bun": "1.3.10",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "formats": {
+    "bome1": {
+      "format": "BOME1 flattened baseline",
+      "file_bytes": 68529,
+      "decode_ms": 38.87,
+      "model_parse_ms": 92.1,
+      "total_ms": 130.97,
+      "memory_delta": {
+        "heap_bytes": 2033668,
+        "rss_bytes": 67276800,
+        "external_bytes": 1322446
+      },
+      "faces": 6579,
+      "vertices": 19737
+    },
+    "canonical_v3": {
+      "format": "Canonical JSON v3 compatibility analysis",
+      "file_bytes": 825111,
+      "decompressed_bytes": 5999725,
+      "decompress_ms": 23.98,
+      "json_parse_ms": 56.56,
+      "model_parse_ms": 326.13,
+      "total_ms": 406.67,
+      "memory_delta": {
+        "heap_bytes": 55886603,
+        "rss_bytes": 128843776,
+        "external_bytes": 14998406
+      },
+      "faces": 25786,
+      "vertices": 92267
+    },
+    "bome2_runtime": {
+      "format": "BOME2 runtime-only indexed/instanced",
+      "file_bytes": 307979,
+      "decompressed_bytes": 2024608,
+      "decompress_ms": 7.32,
+      "decode_validate_ms": 73.67,
+      "runtime_group_build_ms": 48.35,
+      "total_ms": 129.34,
+      "memory_delta": {
+        "heap_bytes": -12737865,
+        "rss_bytes": 14168064,
+        "external_bytes": 6399271
+      },
+      "unique_meshes": 66,
+      "unique_vertices": 7319,
+      "unique_triangles": 13842,
+      "render_groups": 212,
+      "instance_matrices": 437,
+      "quantization_max_error_m": 0.000104131587
+    },
+    "bome2_analysis_compatibility": {
+      "format": "BOME2 analysis compatibility expansion",
+      "decode_ms": 89.37,
+      "model_parse_ms": 271.42,
+      "total_ms": 368.48,
+      "memory_delta": {
+        "heap_bytes": 20682870,
+        "rss_bytes": -204800,
+        "external_bytes": 12592816
+      },
+      "faces": 25786,
+      "vertices": 92267
+    },
+    "glb": {
+      "format": "GLB 2 derived visual runtime",
+      "file_bytes": 354472,
+      "read_ms": 2.79,
+      "container_json_parse_ms": 1.74,
+      "total_ms": 4.53,
+      "memory_delta": {
+        "heap_bytes": -17351679,
+        "rss_bytes": 696320,
+        "external_bytes": 354584
+      },
+      "unique_meshes": 66,
+      "nodes": 221,
+      "draw_primitives": 98,
+      "unique_triangles": 13842,
+      "retained_semantics": [
+        "mesh_definition_reuse",
+        "node_hierarchy",
+        "materials",
+        "source_definition_ids"
+      ],
+      "omitted_semantics": [
+        "polygon_loops",
+        "room_analysis",
+        "full_source_identity",
+        "attribute_dictionaries"
+      ]
+    }
+  }
+}

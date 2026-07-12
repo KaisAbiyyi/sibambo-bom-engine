@@ -102,21 +102,26 @@
 
 	onMount(() => {
 		const stored = localStorage.getItem(TEMPLATE_KEY);
-		if (!stored) return;
-		if (stored.length > MAX_TEMPLATE_BYTES) {
-			localStorage.removeItem(TEMPLATE_KEY);
-			return;
-		}
-		try {
-			const parsed = JSON.parse(stored) as { inputs?: Partial<ProjectInputs> };
-			const safeInputs = sanitizeInputs(parsed.inputs);
-			if (safeInputs) {
-				inputs = { ...inputs, ...safeInputs };
-				templateMessage = 'Template input ditemukan';
+		if (stored) {
+			if (stored.length > MAX_TEMPLATE_BYTES) {
+				localStorage.removeItem(TEMPLATE_KEY);
+			} else {
+				try {
+					const parsed = JSON.parse(stored) as { inputs?: Partial<ProjectInputs> };
+					const safeInputs = sanitizeInputs(parsed.inputs);
+					if (safeInputs) {
+						inputs = { ...inputs, ...safeInputs };
+						templateMessage = 'Template input ditemukan';
+					}
+				} catch {
+					localStorage.removeItem(TEMPLATE_KEY);
+				}
 			}
-		} catch {
-			localStorage.removeItem(TEMPLATE_KEY);
 		}
+		const params = new URLSearchParams(window.location.search);
+		const corpus = params.get('corpus');
+		const format = params.get('format') || 'bome2';
+		if (corpus) void loadCorpus(corpus, format);
 	});
 
 	async function ensureModelCanvas() {
@@ -139,6 +144,25 @@
 			acceptModel(data, 'Model_SBMBOOST_bom_visual_nonPretty-print.json');
 		} catch (error) {
 			loadError = error instanceof Error ? error.message : 'Gagal load sample';
+		} finally {
+			isLoading = false;
+		}
+	}
+
+	async function loadCorpus(slug: string, format: string) {
+		isLoading = true;
+		loadError = '';
+		parseMessage = `Load regression corpus ${slug} (${format})...`;
+		try {
+			const response = await fetch(`/api/corpus/${encodeURIComponent(slug)}/${encodeURIComponent(format)}`);
+			if (!response.ok) throw new Error(`Corpus tidak bisa dibaca: ${response.status}`);
+			const bytes = await response.arrayBuffer();
+			const filename = response.headers.get('x-bom-corpus-file') || `${slug}.${format}.gz`;
+			const file = new File([bytes], filename, { type: response.headers.get('content-type') || 'application/octet-stream' });
+			const data = await readBomModelData(file, MAX_DECOMPRESSED_MODEL_BYTES);
+			acceptModel(data, filename);
+		} catch (error) {
+			loadError = error instanceof Error ? error.message : 'Gagal load regression corpus';
 		} finally {
 			isLoading = false;
 		}

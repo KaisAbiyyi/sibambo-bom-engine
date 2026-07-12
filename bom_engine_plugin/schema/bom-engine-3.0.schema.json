@@ -274,12 +274,17 @@
     "face": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "source_identity", "outer", "holes", "front_material_id", "back_material_id", "tag_id", "normal", "area_m2", "area_space", "surface_hint"],
+      "required": ["id", "source_identity", "outer", "holes", "triangles", "front_material_id", "back_material_id", "tag_id", "normal", "area_m2", "area_space", "surface_hint"],
       "properties": {
         "id": { "$ref": "#/$defs/id" },
         "source_identity": { "$ref": "#/$defs/sourceIdentity" },
         "outer": { "$ref": "#/$defs/indexLoop" },
         "holes": { "type": "array", "items": { "$ref": "#/$defs/indexLoop" } },
+        "triangles": {
+          "type": "array",
+          "description": "SketchUp-derived indexed triangle list; polygon loops remain authoritative.",
+          "items": { "type": "integer", "minimum": 0 }
+        },
         "front_material_id": { "type": ["string", "null"] },
         "back_material_id": { "type": ["string", "null"] },
         "tag_id": { "type": ["string", "null"] },

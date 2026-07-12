@@ -10,6 +10,7 @@ type CanonicalFace = {
 	source_identity?: { persistent_id?: string };
 	outer: number[];
 	holes: number[][];
+	triangles: number[];
 	front_material_id?: string | null;
 	back_material_id?: string | null;
 	tag_id?: string | null;
@@ -105,6 +106,13 @@ export function validateCanonicalV3(value: unknown): string[] {
 			if (!validLoop(face.outer, vertexCount)) errors.push(`face ${face.id} has invalid outer indices`);
 			for (const hole of face.holes || []) {
 				if (!validLoop(hole, vertexCount)) errors.push(`face ${face.id} has invalid hole indices`);
+			}
+			if (
+				!Array.isArray(face.triangles) ||
+				face.triangles.length % 3 !== 0 ||
+				face.triangles.some((index) => !Number.isInteger(index) || index < 0 || index >= vertexCount)
+			) {
+				errors.push(`face ${face.id} has invalid triangle indices`);
 			}
 			if (face.front_material_id && !materials.has(face.front_material_id)) {
 				errors.push(`face ${face.id} references missing material ${face.front_material_id}`);
