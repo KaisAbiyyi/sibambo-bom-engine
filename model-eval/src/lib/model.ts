@@ -1,5 +1,6 @@
 import { canonicalV3ToLegacyBom, isCanonicalV3 } from './formats/canonical-v3';
 import { bome2ToCanonical, isBome2Buffer, parseBome2Buffer, type Bome2RuntimeScene } from './formats/bome2';
+import { CATEGORY_LABELS, classifyBuildingFaces, type BuildingCategory, type ClassificationTrace } from './classifier/classifier';
 
 export type SurfaceKey =
 	| 'wall_x_pos'
@@ -150,6 +151,8 @@ export type FaceRecord = {
 	textureName?: string;
 	center: Point3;
 	bounds: Bounds3;
+	category?: BuildingCategory;
+	classification?: ClassificationTrace;
 };
 
 export type Bounds3 = {
@@ -173,6 +176,14 @@ export type PartStat = {
 	count: number;
 	areaM2: number;
 	color: string;
+};
+
+export type CategoryStat = {
+	key: BuildingCategory;
+	label: string;
+	count: number;
+	areaM2: number;
+	averageConfidence: number;
 };
 
 export type SpaceZone = {
@@ -212,6 +223,7 @@ export type ParsedBuildingModel = {
 	bounds: Bounds3;
 	surfaceStats: SurfaceStat[];
 	partStats: PartStat[];
+	categoryStats: CategoryStat[];
 	components: ComponentDetection;
 	materials: Array<{ name: string; color: string; reflectance?: number | string }>;
 	confidence: number;
@@ -1257,6 +1269,30 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 		face.partKey = refinePartKey(face, finalBounds, floorLevels);
 	});
 	refineOpeningClusters(faces, floorLevels, finalBounds);
+	const classificationTraces = classifyBuildingFaces(
+		faces.map((face) => ({
+			id: face.id,
+			name: face.name,
+			path: face.path,
+			layer: face.layer,
+			surface: face.surface,
+			areaM2: face.areaM2,
+			bounds: face.bounds,
+			center: face.center,
+			vertexCount: face.vertices.length,
+			holeCount: face.holes.length,
+			color: face.color,
+			textureName: face.textureName,
+			legacyPartKey: face.partKey
+		})),
+		{ modelName: sourceName, buildingBounds: finalBounds, floorLevels }
+	);
+	faces.forEach((face, index) => {
+		const classification = classificationTraces[index];
+		face.category = classification.category;
+		face.classification = classification;
+		face.partKey = categoryToPartKey(classification.category);
+	});
 	const surfaceStats = [...surfaceAccumulator.entries()]
 		.map(([key, value]) => ({
 			key,
@@ -1282,6 +1318,24 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 			color: PART_META[key].color
 		}))
 		.sort((a, b) => PART_META[a.key].order - PART_META[b.key].order);
+	const categoryAccumulator = new Map<BuildingCategory, { count: number; areaM2: number; confidence: number }>();
+	faces.forEach((face) => {
+		const key = face.category || 'unknown';
+		const current = categoryAccumulator.get(key) || { count: 0, areaM2: 0, confidence: 0 };
+		current.count += 1;
+		current.areaM2 += face.areaM2;
+		current.confidence += face.classification?.confidence || 0;
+		categoryAccumulator.set(key, current);
+	});
+	const categoryStats = [...categoryAccumulator.entries()]
+		.map(([key, value]) => ({
+			key,
+			label: CATEGORY_LABELS[key],
+			count: value.count,
+			areaM2: round(value.areaM2, 1),
+			averageConfidence: round(value.confidence / Math.max(value.count, 1), 3)
+		}))
+		.sort((left, right) => right.count - left.count || left.label.localeCompare(right.label));
 	const spaces = makeSpaces(faces, finalBounds, defaultHeight);
 	const warnings: string[] = [];
 	if (!components.windows) warnings.push('Jendela tidak terdeteksi eksplisit. OTTV memakai rasio kaca input.');
@@ -1311,12 +1365,26 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 		bounds: finalBounds,
 		surfaceStats,
 		partStats,
+		categoryStats,
 		components,
 		materials: materialRows(data.materials),
 		confidence: average(confidenceParts),
 		warnings,
 		runtimeScene
 	};
+}
+
+function categoryToPartKey(category: BuildingCategory): PartKey {
+	if (category === 'roof') return 'roof';
+	if (category === 'floor' || category === 'room_boundary') return 'floor';
+	if (category === 'ceiling') return 'ceiling';
+	if (category === 'exterior_wall' || category === 'interior_wall') return 'walls';
+	if (category === 'door') return 'doors';
+	if (category === 'window') return 'windows';
+	if (category === 'opening') return 'openings';
+	if (category === 'column' || category === 'beam' || category === 'stair' || category === 'railing') return 'structure';
+	if (category === 'furniture' || category === 'fixture') return 'furniture';
+	return 'other';
 }
 
 export function getTotalArea(spaces: SpaceZone[]) {
