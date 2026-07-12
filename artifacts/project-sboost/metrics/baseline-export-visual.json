@@ -1,0 +1,14 @@
+{
+  "workflow_version": "1.0.0",
+  "measured_at": "2026-07-12T20:53:30Z",
+  "source_skp": "D:\\projects\\sibambo-bom-engine\\skps\\PROJECT SBOOST !.skp",
+  "level": "visual",
+  "compressed": true,
+  "status": "ok",
+  "wall_elapsed_ms_including_dialog": 2572.16,
+  "plugin_elapsed_ms": 1990.0,
+  "output_path": "D:/projects/sibambo-bom-engine/artifacts/project-sboost/exported/baseline-current_visual.bome.gz",
+  "output_exists": true,
+  "output_bytes": 70200,
+  "error": null
+}

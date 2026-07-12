@@ -1,0 +1,678 @@
+{
+  "workflow_version": "1.0.0",
+  "captured_at": "2026-07-12T21:00:53Z",
+  "capture_elapsed_ms": 3260.38,
+  "model": {
+    "source_path": "D:\\projects\\sibambo-bom-engine\\skps\\test.skp",
+    "source_bytes": 163941,
+    "name": "",
+    "title": "test",
+    "description": "",
+    "guid": "6a091703-3ba0-4195-ad2e-b576a6be2262",
+    "sketchup_version": "26.2.243",
+    "sketchup_locale": "en-US",
+    "modified": false,
+    "units": {
+      "length_unit_id": 4,
+      "length_unit_name": "Meters",
+      "length_precision": 4,
+      "length_format": 0,
+      "suppress_units_display": false
+    },
+    "bounds": {
+      "min_m": {
+        "x": -0.898076,
+        "y": -1.15714,
+        "z": -0.001367
+      },
+      "max_m": {
+        "x": 19.638329,
+        "y": 26.041184,
+        "z": 1.592087
+      },
+      "size_m": {
+        "x": 20.536405,
+        "y": 27.198325,
+        "z": 1.593454
+      },
+      "width_m": 20.536405,
+      "depth_m": 27.198325,
+      "height_m": 1.593454,
+      "diagonal_m": 34.117912
+    },
+    "axes": {
+      "origin_m": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "x_axis": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      }
+    },
+    "entity_counts_expanded": {
+      "face": 111,
+      "edge": 1782,
+      "group": 0,
+      "component_instance": 1,
+      "image": 0,
+      "construction_line": 0,
+      "text": 0,
+      "dimension": 0,
+      "other": 0
+    },
+    "top_level_entity_count": 6,
+    "definitions": [
+      {
+        "persistent_id": 48879,
+        "name": "Sree",
+        "description": "Sree is a multi disciplinary leader and Head of Project Management Office at Trimble. She is dedicated to empowering every person in Trimble to innovate by fostering a culture of execution and excellence everywhere. She truly believes what we do everyday is what we do with our lives! Her superpower is leading teams, from dreaming to doing and intention to action. Her passion lies in creating an environment that nurtures a culture of curiosity, modernizing and simplifying the complexities of technology to solve some of the big industry challenges of our times. She is truly an asset to the SketchUp team.",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 1888,
+        "bounds": {
+          "min_m": {
+            "x": -0.183526,
+            "y": 0.0,
+            "z": -0.001367
+          },
+          "max_m": {
+            "x": 0.447212,
+            "y": 0.0,
+            "z": 1.592087
+          },
+          "size_m": {
+            "x": 0.630738,
+            "y": 0.0,
+            "z": 1.593454
+          },
+          "width_m": 0.630738,
+          "depth_m": 0.0,
+          "height_m": 1.593454,
+          "diagonal_m": 1.713747
+        }
+      }
+    ],
+    "definition_count": 1,
+    "component_instance_count": 1,
+    "tags": [
+      {
+        "persistent_id": 13869,
+        "name": "Layer0",
+        "visible": true,
+        "color": {
+          "red": 255,
+          "green": 255,
+          "blue": 255,
+          "alpha": 255,
+          "hex": "#FFFFFF"
+        }
+      }
+    ],
+    "tag_count": 1,
+    "materials": [
+      {
+        "persistent_id": 45036,
+        "name": "Sree_Complexion_2",
+        "display_name": "Sree_Complexion_2",
+        "color": {
+          "red": 165,
+          "green": 117,
+          "blue": 93,
+          "alpha": 255,
+          "hex": "#A5755D"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45037,
+        "name": "Sree_Complexion_3",
+        "display_name": "Sree_Complexion_3",
+        "color": {
+          "red": 119,
+          "green": 84,
+          "blue": 67,
+          "alpha": 255,
+          "hex": "#775443"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45038,
+        "name": "Sree_Laptop_1",
+        "display_name": "Sree_Laptop_1",
+        "color": {
+          "red": 146,
+          "green": 155,
+          "blue": 160,
+          "alpha": 255,
+          "hex": "#929BA0"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45039,
+        "name": "Sree_Pearls_2",
+        "display_name": "Sree_Pearls_2",
+        "color": {
+          "red": 198,
+          "green": 198,
+          "blue": 198,
+          "alpha": 255,
+          "hex": "#C6C6C6"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45040,
+        "name": "Sree_Dress_1",
+        "display_name": "Sree_Dress_1",
+        "color": {
+          "red": 26,
+          "green": 33,
+          "blue": 51,
+          "alpha": 255,
+          "hex": "#1A2133"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45041,
+        "name": "Sree_Laptop_2",
+        "display_name": "Sree_Laptop_2",
+        "color": {
+          "red": 130,
+          "green": 138,
+          "blue": 142,
+          "alpha": 255,
+          "hex": "#828A8E"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45042,
+        "name": "Sree_Complexion_1",
+        "display_name": "Sree_Complexion_1",
+        "color": {
+          "red": 181,
+          "green": 133,
+          "blue": 110,
+          "alpha": 255,
+          "hex": "#B5856E"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45043,
+        "name": "Sree_Hair",
+        "display_name": "Sree_Hair",
+        "color": {
+          "red": 15,
+          "green": 15,
+          "blue": 15,
+          "alpha": 255,
+          "hex": "#0F0F0F"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45044,
+        "name": "Sree_Dress_4",
+        "display_name": "Sree_Dress_4",
+        "color": {
+          "red": 17,
+          "green": 23,
+          "blue": 35,
+          "alpha": 255,
+          "hex": "#111723"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45045,
+        "name": "Sree_Nails_4",
+        "display_name": "Sree_Nails_4",
+        "color": {
+          "red": 181,
+          "green": 157,
+          "blue": 146,
+          "alpha": 255,
+          "hex": "#B59D92"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45046,
+        "name": "Sree_Dress_3",
+        "display_name": "Sree_Dress_3",
+        "color": {
+          "red": 25,
+          "green": 37,
+          "blue": 61,
+          "alpha": 255,
+          "hex": "#19253D"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45047,
+        "name": "Sree_Dress_2",
+        "display_name": "Sree_Dress_2",
+        "color": {
+          "red": 24,
+          "green": 33,
+          "blue": 53,
+          "alpha": 255,
+          "hex": "#182135"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45048,
+        "name": "Sree_Pearls_1",
+        "display_name": "Sree_Pearls_1",
+        "color": {
+          "red": 252,
+          "green": 252,
+          "blue": 252,
+          "alpha": 255,
+          "hex": "#FCFCFC"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45049,
+        "name": "Sree_Watch_2",
+        "display_name": "Sree_Watch_2",
+        "color": {
+          "red": 43,
+          "green": 43,
+          "blue": 43,
+          "alpha": 255,
+          "hex": "#2B2B2B"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45050,
+        "name": "Sree_Watch_3",
+        "display_name": "Sree_Watch_3",
+        "color": {
+          "red": 53,
+          "green": 53,
+          "blue": 53,
+          "alpha": 255,
+          "hex": "#353535"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45051,
+        "name": "Sree_Watch_1",
+        "display_name": "Sree_Watch_1",
+        "color": {
+          "red": 15,
+          "green": 15,
+          "blue": 15,
+          "alpha": 255,
+          "hex": "#0F0F0F"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45052,
+        "name": "Sree_Laptop_3",
+        "display_name": "Sree_Laptop_3",
+        "color": {
+          "red": 193,
+          "green": 205,
+          "blue": 211,
+          "alpha": 255,
+          "hex": "#C1CDD3"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45053,
+        "name": "Sree_Shoes_1",
+        "display_name": "Sree_Shoes_1",
+        "color": {
+          "red": 23,
+          "green": 29,
+          "blue": 43,
+          "alpha": 255,
+          "hex": "#171D2B"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45054,
+        "name": "Sree_Shoes_2",
+        "display_name": "Sree_Shoes_2",
+        "color": {
+          "red": 48,
+          "green": 51,
+          "blue": 58,
+          "alpha": 255,
+          "hex": "#30333A"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45055,
+        "name": "Sree_Shoes_3",
+        "display_name": "Sree_Shoes_3",
+        "color": {
+          "red": 67,
+          "green": 71,
+          "blue": 81,
+          "alpha": 255,
+          "hex": "#434751"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 45056,
+        "name": "Sree_Shoes_4",
+        "display_name": "Sree_Shoes_4",
+        "color": {
+          "red": 17,
+          "green": 22,
+          "blue": 33,
+          "alpha": 255,
+          "hex": "#111621"
+        },
+        "alpha": 1.0,
+        "texture": null
+      }
+    ],
+    "material_count": 21,
+    "scenes": [
+
+    ],
+    "scene_count": 0,
+    "style": {
+      "selected_style": "[Simple Style]",
+      "display_sketch_axes": true,
+      "draw_hidden": false,
+      "draw_hidden_geometry": false,
+      "edge_display_mode": 1,
+      "face_front_color": {
+        "red": 255,
+        "green": 255,
+        "blue": 255,
+        "alpha": 255,
+        "hex": "#FFFFFF"
+      },
+      "face_back_color": {
+        "red": 162,
+        "green": 183,
+        "blue": 198,
+        "alpha": 255,
+        "hex": "#A2B7C6"
+      },
+      "background_color": {
+        "red": 191,
+        "green": 191,
+        "blue": 198,
+        "alpha": 255,
+        "hex": "#BFBFC6"
+      }
+    },
+    "georeferenced": false,
+    "missing_assets": [
+
+    ],
+    "warnings": [
+      "Model has no scenes"
+    ]
+  },
+  "captures": [
+    {
+      "model_name": "test",
+      "view_name": "isometric",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/test/sketchup/isometric.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 41.885212,
+        "y": -19.67136,
+        "z": 25.302088
+      },
+      "camera_target_m": {
+        "x": 10.257601,
+        "y": 11.956251,
+        "z": 0.0
+      },
+      "camera_up": {
+        "x": -0.34815531,
+        "y": 0.34815531,
+        "z": 0.87038828
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 20.620843,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Simple Style]",
+      "timestamp": "2026-07-12T21:00:51Z"
+    },
+    {
+      "model_name": "test",
+      "view_name": "front",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/test/sketchup/front.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 9.544101,
+        "y": -37.206515,
+        "z": 0.79536
+      },
+      "camera_target_m": {
+        "x": 9.544101,
+        "y": 12.70776,
+        "z": 0.79536
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 12.544741,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Simple Style]",
+      "timestamp": "2026-07-12T21:00:51Z"
+    },
+    {
+      "model_name": "test",
+      "view_name": "back",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/test/sketchup/back.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 9.412259,
+        "y": 60.695473,
+        "z": 0.79536
+      },
+      "camera_target_m": {
+        "x": 9.412259,
+        "y": 12.70776,
+        "z": 0.79536
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 12.70859,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Simple Style]",
+      "timestamp": "2026-07-12T21:00:52Z"
+    },
+    {
+      "model_name": "test",
+      "view_name": "left",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/test/sketchup/left.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 52.585648,
+        "y": 12.615997,
+        "z": 0.79536
+      },
+      "camera_target_m": {
+        "x": 9.635864,
+        "y": 12.615997,
+        "z": 0.79536
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 16.684337,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Simple Style]",
+      "timestamp": "2026-07-12T21:00:52Z"
+    },
+    {
+      "model_name": "test",
+      "view_name": "right",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/test/sketchup/right.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": -31.805744,
+        "y": 12.484154,
+        "z": 0.79536
+      },
+      "camera_target_m": {
+        "x": 9.635864,
+        "y": 12.484154,
+        "z": 0.79536
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 16.848187,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Simple Style]",
+      "timestamp": "2026-07-12T21:00:53Z"
+    },
+    {
+      "model_name": "test",
+      "view_name": "top",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/test/sketchup/top.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 9.635864,
+        "y": 12.484154,
+        "z": 54.850535
+      },
+      "camera_target_m": {
+        "x": 9.635864,
+        "y": 12.484154,
+        "z": 0.79536
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 28.541116,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Simple Style]",
+      "timestamp": "2026-07-12T21:00:53Z"
+    }
+  ],
+  "warnings": [
+    "Model has no scenes"
+  ]
+}

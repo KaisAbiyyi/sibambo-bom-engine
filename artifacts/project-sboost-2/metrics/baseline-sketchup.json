@@ -1,0 +1,6013 @@
+{
+  "workflow_version": "1.0.0",
+  "captured_at": "2026-07-12T21:04:27Z",
+  "capture_elapsed_ms": 4601.26,
+  "model": {
+    "source_path": "D:\\projects\\sibambo-bom-engine\\skps\\PROJECT SBOOST 2.skp",
+    "source_bytes": 3363219,
+    "name": "",
+    "title": "PROJECT SBOOST 2",
+    "description": "",
+    "guid": "db38393c-5b34-4713-8f24-2c1e3ba67c35",
+    "sketchup_version": "26.2.243",
+    "sketchup_locale": "en-US",
+    "modified": false,
+    "units": {
+      "length_unit_id": 2,
+      "length_unit_name": "Millimeters",
+      "length_precision": 0,
+      "length_format": 0,
+      "suppress_units_display": false
+    },
+    "bounds": {
+      "min_m": {
+        "x": -0.860141,
+        "y": -1.114141,
+        "z": -0.011238
+      },
+      "max_m": {
+        "x": 12.699263,
+        "y": 28.596293,
+        "z": 8.505692
+      },
+      "size_m": {
+        "x": 13.559404,
+        "y": 29.710435,
+        "z": 8.51693
+      },
+      "width_m": 13.559404,
+      "depth_m": 29.710435,
+      "height_m": 8.51693,
+      "diagonal_m": 33.750637
+    },
+    "axes": {
+      "origin_m": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "x_axis": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      }
+    },
+    "entity_counts_expanded": {
+      "face": 25865,
+      "edge": 47530,
+      "group": 126,
+      "component_instance": 107,
+      "image": 0,
+      "construction_line": 1,
+      "text": 0,
+      "dimension": 0,
+      "other": 0
+    },
+    "top_level_entity_count": 213,
+    "definitions": [
+      {
+        "persistent_id": 50837,
+        "name": "Group#62",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 295,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.011,
+            "y": 0.045348,
+            "z": 0.045438
+          },
+          "size_m": {
+            "x": 0.011,
+            "y": 0.045348,
+            "z": 0.045438
+          },
+          "width_m": 0.011,
+          "depth_m": 0.045348,
+          "height_m": 0.045438,
+          "diagonal_m": 0.065131
+        }
+      },
+      {
+        "persistent_id": 51283,
+        "name": "Group#4",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 202,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.011,
+            "y": 0.045348,
+            "z": 0.045438
+          },
+          "size_m": {
+            "x": 0.011,
+            "y": 0.045348,
+            "z": 0.045438
+          },
+          "width_m": 0.011,
+          "depth_m": 0.045348,
+          "height_m": 0.045438,
+          "diagonal_m": 0.065131
+        }
+      },
+      {
+        "persistent_id": 51588,
+        "name": "Group#47",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 30,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.001023,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.067178,
+            "y": 0.13625,
+            "z": 0.009128
+          },
+          "size_m": {
+            "x": 0.067178,
+            "y": 0.135227,
+            "z": 0.009128
+          },
+          "width_m": 0.067178,
+          "depth_m": 0.135227,
+          "height_m": 0.009128,
+          "diagonal_m": 0.15127
+        }
+      },
+      {
+        "persistent_id": 111036,
+        "name": "Group#650",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 295,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.011,
+            "y": 0.045348,
+            "z": 0.045438
+          },
+          "size_m": {
+            "x": 0.011,
+            "y": 0.045348,
+            "z": 0.045438
+          },
+          "width_m": 0.011,
+          "depth_m": 0.045348,
+          "height_m": 0.045438,
+          "diagonal_m": 0.065131
+        }
+      },
+      {
+        "persistent_id": 119162,
+        "name": "Group#24",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 202,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.011,
+            "y": 0.045348,
+            "z": 0.045438
+          },
+          "size_m": {
+            "x": 0.011,
+            "y": 0.045348,
+            "z": 0.045438
+          },
+          "width_m": 0.011,
+          "depth_m": 0.045348,
+          "height_m": 0.045438,
+          "diagonal_m": 0.065131
+        }
+      },
+      {
+        "persistent_id": 119467,
+        "name": "Group#25",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 30,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.001023,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.067178,
+            "y": 0.13625,
+            "z": 0.009128
+          },
+          "size_m": {
+            "x": 0.067178,
+            "y": 0.135227,
+            "z": 0.009128
+          },
+          "width_m": 0.067178,
+          "depth_m": 0.135227,
+          "height_m": 0.009128,
+          "diagonal_m": 0.15127
+        }
+      },
+      {
+        "persistent_id": 51633,
+        "name": "dhs_open",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 4,
+        "entity_count": 12,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.8,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.8,
+            "z": 0.0
+          },
+          "width_m": 0.8,
+          "depth_m": 0.8,
+          "height_m": 0.0,
+          "diagonal_m": 1.131371
+        }
+      },
+      {
+        "persistent_id": 51660,
+        "name": "dhs_panel",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 4,
+        "entity_count": 5,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.04,
+            "y": 0.8,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 0.04,
+            "y": 0.8,
+            "z": 0.0
+          },
+          "width_m": 0.04,
+          "depth_m": 0.8,
+          "height_m": 0.0,
+          "diagonal_m": 0.800999
+        }
+      },
+      {
+        "persistent_id": 51670,
+        "name": "Handle Pintu",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 3,
+        "bounds": {
+          "min_m": {
+            "x": 0.000168,
+            "y": -0.168951,
+            "z": -0.060949
+          },
+          "max_m": {
+            "x": 0.078345,
+            "y": -0.026483,
+            "z": 0.060295
+          },
+          "size_m": {
+            "x": 0.078178,
+            "y": 0.142468,
+            "z": 0.121244
+          },
+          "width_m": 0.078178,
+          "depth_m": 0.142468,
+          "height_m": 0.121244,
+          "diagonal_m": 0.202754
+        }
+      },
+      {
+        "persistent_id": 51909,
+        "name": "Component59",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 990,
+        "bounds": {
+          "min_m": {
+            "x": -1.717732,
+            "y": -1.719836,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.720538,
+            "y": 1.719836,
+            "z": 0.088234
+          },
+          "size_m": {
+            "x": 3.438269,
+            "y": 3.439672,
+            "z": 0.088234
+          },
+          "width_m": 3.438269,
+          "depth_m": 3.439672,
+          "height_m": 0.088234,
+          "diagonal_m": 4.864239
+        }
+      },
+      {
+        "persistent_id": 53258,
+        "name": "Component60",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 3447,
+        "bounds": {
+          "min_m": {
+            "x": -0.665817,
+            "y": -0.665817,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.665817,
+            "y": 0.665817,
+            "z": 0.185198
+          },
+          "size_m": {
+            "x": 1.331634,
+            "y": 1.331634,
+            "z": 0.185198
+          },
+          "width_m": 1.331634,
+          "depth_m": 1.331634,
+          "height_m": 0.185198,
+          "diagonal_m": 1.892299
+        }
+      },
+      {
+        "persistent_id": 57627,
+        "name": "Component62",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 149,
+        "bounds": {
+          "min_m": {
+            "x": 0.918876,
+            "y": -0.953766,
+            "z": -0.471456
+          },
+          "max_m": {
+            "x": 1.575282,
+            "y": -0.011147,
+            "z": 0.472631
+          },
+          "size_m": {
+            "x": 0.656406,
+            "y": 0.942619,
+            "z": 0.944087
+          },
+          "width_m": 0.656406,
+          "depth_m": 0.942619,
+          "height_m": 0.944087,
+          "diagonal_m": 1.486842
+        }
+      },
+      {
+        "persistent_id": 57840,
+        "name": "Component56",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 996,
+        "bounds": {
+          "min_m": {
+            "x": -1.717732,
+            "y": -1.719836,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.720538,
+            "y": 1.719836,
+            "z": 0.178159
+          },
+          "size_m": {
+            "x": 3.438269,
+            "y": 3.439672,
+            "z": 0.178159
+          },
+          "width_m": 3.438269,
+          "depth_m": 3.439672,
+          "height_m": 0.178159,
+          "diagonal_m": 4.866701
+        }
+      },
+      {
+        "persistent_id": 59195,
+        "name": "Component58",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 130,
+        "bounds": {
+          "min_m": {
+            "x": -0.229973,
+            "y": -0.229973,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.229973,
+            "y": 0.229973,
+            "z": 0.009948
+          },
+          "size_m": {
+            "x": 0.459946,
+            "y": 0.459946,
+            "z": 0.009948
+          },
+          "width_m": 0.459946,
+          "depth_m": 0.459946,
+          "height_m": 0.009948,
+          "diagonal_m": 0.650538
+        }
+      },
+      {
+        "persistent_id": 59390,
+        "name": "Component61",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 3076,
+        "bounds": {
+          "min_m": {
+            "x": -3.90366,
+            "y": -0.953766,
+            "z": -0.472631
+          },
+          "max_m": {
+            "x": 1.944751,
+            "y": 1.016622,
+            "z": 0.472631
+          },
+          "size_m": {
+            "x": 5.848411,
+            "y": 1.970388,
+            "z": 0.945262
+          },
+          "width_m": 5.848411,
+          "depth_m": 1.970388,
+          "height_m": 0.945262,
+          "diagonal_m": 6.243385
+        }
+      },
+      {
+        "persistent_id": 63317,
+        "name": "Component63",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 7322,
+        "bounds": {
+          "min_m": {
+            "x": -0.254,
+            "y": -0.254,
+            "z": 0.060748
+          },
+          "max_m": {
+            "x": 2.921,
+            "y": 0.254,
+            "z": 1.3589
+          },
+          "size_m": {
+            "x": 3.175,
+            "y": 0.508,
+            "z": 1.298152
+          },
+          "width_m": 3.175,
+          "depth_m": 0.508,
+          "height_m": 1.298152,
+          "diagonal_m": 3.467548
+        }
+      },
+      {
+        "persistent_id": 111519,
+        "name": "skp8647",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 3,
+        "bounds": {
+          "min_m": {
+            "x": 0.000168,
+            "y": -0.168951,
+            "z": -0.060949
+          },
+          "max_m": {
+            "x": 0.078345,
+            "y": -0.026483,
+            "z": 0.060295
+          },
+          "size_m": {
+            "x": 0.078178,
+            "y": 0.142468,
+            "z": 0.121244
+          },
+          "width_m": 0.078178,
+          "depth_m": 0.142468,
+          "height_m": 0.121244,
+          "diagonal_m": 0.202754
+        }
+      },
+      {
+        "persistent_id": 112611,
+        "name": "Group#655",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 47,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.1,
+            "y": 0.02,
+            "z": 2.35
+          },
+          "size_m": {
+            "x": 0.1,
+            "y": 0.02,
+            "z": 2.35
+          },
+          "width_m": 0.1,
+          "depth_m": 0.02,
+          "height_m": 2.35,
+          "diagonal_m": 2.352212
+        }
+      },
+      {
+        "persistent_id": 112679,
+        "name": "Group#661",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 322,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.752,
+            "y": 0.015,
+            "z": 2.401087
+          },
+          "size_m": {
+            "x": 0.752,
+            "y": 0.015,
+            "z": 2.401087
+          },
+          "width_m": 0.752,
+          "depth_m": 0.015,
+          "height_m": 2.401087,
+          "diagonal_m": 2.516137
+        }
+      },
+      {
+        "persistent_id": 51674,
+        "name": "Component#176",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 19,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.078178,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.7,
+            "y": 0.02,
+            "z": 2.35
+          },
+          "size_m": {
+            "x": 0.7,
+            "y": 0.098178,
+            "z": 2.35
+          },
+          "width_m": 0.7,
+          "depth_m": 0.098178,
+          "height_m": 2.35,
+          "diagonal_m": 2.454005
+        }
+      },
+      {
+        "persistent_id": 51702,
+        "name": "dhs_swing#25",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.0
+          },
+          "width_m": 0.7,
+          "depth_m": 0.7,
+          "height_m": 0.0,
+          "diagonal_m": 0.989949
+        }
+      },
+      {
+        "persistent_id": 51705,
+        "name": "dhs_frame_2",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 4,
+        "entity_count": 5,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.05,
+            "y": 0.1,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 0.05,
+            "y": 0.1,
+            "z": 0.0
+          },
+          "width_m": 0.05,
+          "depth_m": 0.1,
+          "height_m": 0.0,
+          "diagonal_m": 0.111803
+        }
+      },
+      {
+        "persistent_id": 51715,
+        "name": "dhs_frame_1",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 4,
+        "entity_count": 5,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.05,
+            "y": 0.1,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 0.05,
+            "y": 0.1,
+            "z": 0.0
+          },
+          "width_m": 0.05,
+          "depth_m": 0.1,
+          "height_m": 0.0,
+          "diagonal_m": 0.111803
+        }
+      },
+      {
+        "persistent_id": 51725,
+        "name": "Group#6",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.0,
+            "z": 2.1
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.0,
+            "z": 2.1
+          },
+          "width_m": 0.8,
+          "depth_m": 0.0,
+          "height_m": 2.1,
+          "diagonal_m": 2.247221
+        }
+      },
+      {
+        "persistent_id": 51731,
+        "name": "Group#7",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.0,
+            "z": 2.1
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.0,
+            "z": 2.1
+          },
+          "width_m": 0.8,
+          "depth_m": 0.0,
+          "height_m": 2.1,
+          "diagonal_m": 2.247221
+        }
+      },
+      {
+        "persistent_id": 72300,
+        "name": "dhs_swing#4",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.8,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.8,
+            "z": 0.0
+          },
+          "width_m": 0.8,
+          "depth_m": 0.8,
+          "height_m": 0.0,
+          "diagonal_m": 1.131371
+        }
+      },
+      {
+        "persistent_id": 72303,
+        "name": "Group#2",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.0,
+            "z": 2.1
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.0,
+            "z": 2.1
+          },
+          "width_m": 0.8,
+          "depth_m": 0.0,
+          "height_m": 2.1,
+          "diagonal_m": 2.247221
+        }
+      },
+      {
+        "persistent_id": 72309,
+        "name": "Group#263",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 7,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.095445,
+            "y": 0.031823,
+            "z": 0.076705
+          },
+          "size_m": {
+            "x": 0.095445,
+            "y": 0.031823,
+            "z": 0.076705
+          },
+          "width_m": 0.095445,
+          "depth_m": 0.031823,
+          "height_m": 0.076705,
+          "diagonal_m": 0.126515
+        }
+      },
+      {
+        "persistent_id": 111543,
+        "name": "dhs_swing#1",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.0
+          },
+          "width_m": 0.7,
+          "depth_m": 0.7,
+          "height_m": 0.0,
+          "diagonal_m": 0.989949
+        }
+      },
+      {
+        "persistent_id": 111552,
+        "name": "Component#132",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 43,
+        "bounds": {
+          "min_m": {
+            "x": -0.214286,
+            "y": -0.078178,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.7,
+            "y": 0.02,
+            "z": 2.401087
+          },
+          "size_m": {
+            "x": 0.914286,
+            "y": 0.098178,
+            "z": 2.401087
+          },
+          "width_m": 0.914286,
+          "depth_m": 0.098178,
+          "height_m": 2.401087,
+          "diagonal_m": 2.571143
+        }
+      },
+      {
+        "persistent_id": 111616,
+        "name": "Group#16",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.0,
+            "z": 2.1
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.0,
+            "z": 2.1
+          },
+          "width_m": 0.8,
+          "depth_m": 0.0,
+          "height_m": 2.1,
+          "diagonal_m": 2.247221
+        }
+      },
+      {
+        "persistent_id": 113162,
+        "name": "dhs_swing#2",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.8,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.8,
+            "z": 0.0
+          },
+          "width_m": 0.8,
+          "depth_m": 0.8,
+          "height_m": 0.0,
+          "diagonal_m": 1.131371
+        }
+      },
+      {
+        "persistent_id": 113177,
+        "name": "Component#170",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 37,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.073178,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.02,
+            "z": 2.35
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.093178,
+            "z": 2.35
+          },
+          "width_m": 0.8,
+          "depth_m": 0.093178,
+          "height_m": 2.35,
+          "diagonal_m": 2.484186
+        }
+      },
+      {
+        "persistent_id": 119515,
+        "name": "Group#27",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.0,
+            "z": 2.1
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.0,
+            "z": 2.1
+          },
+          "width_m": 0.8,
+          "depth_m": 0.0,
+          "height_m": 2.1,
+          "diagonal_m": 2.247221
+        }
+      },
+      {
+        "persistent_id": 119521,
+        "name": "Group#28",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.0,
+            "z": 2.1
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.0,
+            "z": 2.1
+          },
+          "width_m": 0.8,
+          "depth_m": 0.0,
+          "height_m": 2.1,
+          "diagonal_m": 2.247221
+        }
+      },
+      {
+        "persistent_id": 119554,
+        "name": "Group#30",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.0,
+            "z": 2.1
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.0,
+            "z": 2.1
+          },
+          "width_m": 0.8,
+          "depth_m": 0.0,
+          "height_m": 2.1,
+          "diagonal_m": 2.247221
+        }
+      },
+      {
+        "persistent_id": 119560,
+        "name": "Group#31",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.0,
+            "z": 2.1
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.0,
+            "z": 2.1
+          },
+          "width_m": 0.8,
+          "depth_m": 0.0,
+          "height_m": 2.1,
+          "diagonal_m": 2.247221
+        }
+      },
+      {
+        "persistent_id": 51737,
+        "name": "Group#654",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.078178,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.7,
+            "y": 0.118178,
+            "z": 2.35
+          },
+          "size_m": {
+            "x": 0.7,
+            "y": 0.196355,
+            "z": 2.35
+          },
+          "width_m": 0.7,
+          "depth_m": 0.196355,
+          "height_m": 2.35,
+          "diagonal_m": 2.459889
+        }
+      },
+      {
+        "persistent_id": 51740,
+        "name": "2D_Notasi_Pintu_Denah#25",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 3,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.8,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.8,
+            "z": 0.0
+          },
+          "width_m": 0.8,
+          "depth_m": 0.8,
+          "height_m": 0.0,
+          "diagonal_m": 1.131371
+        }
+      },
+      {
+        "persistent_id": 51744,
+        "name": "Group#5",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.003,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.06,
+            "z": 2.1
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.057,
+            "z": 2.1
+          },
+          "width_m": 0.8,
+          "depth_m": 0.057,
+          "height_m": 2.1,
+          "diagonal_m": 2.247943
+        }
+      },
+      {
+        "persistent_id": 72317,
+        "name": "2D_Notasi_Pintu_Denah",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 3,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.9,
+            "y": 0.9,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 0.9,
+            "y": 0.9,
+            "z": 0.0
+          },
+          "width_m": 0.9,
+          "depth_m": 0.9,
+          "height_m": 0.0,
+          "diagonal_m": 1.272792
+        }
+      },
+      {
+        "persistent_id": 72321,
+        "name": "Group#3",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.01,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.06,
+            "z": 2.1
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.05,
+            "z": 2.1
+          },
+          "width_m": 0.8,
+          "depth_m": 0.05,
+          "height_m": 2.1,
+          "diagonal_m": 2.247777
+        }
+      },
+      {
+        "persistent_id": 72324,
+        "name": "Component#89",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 76,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.078646,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.0,
+            "z": 2.35
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.078646,
+            "z": 2.35
+          },
+          "width_m": 0.8,
+          "depth_m": 0.078646,
+          "height_m": 2.35,
+          "diagonal_m": 2.483684
+        }
+      },
+      {
+        "persistent_id": 73630,
+        "name": "Group#121",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 34,
+        "bounds": {
+          "min_m": {
+            "x": -0.3375,
+            "y": -0.035,
+            "z": 0.025
+          },
+          "max_m": {
+            "x": 0.95625,
+            "y": 0.0,
+            "z": 1.7125
+          },
+          "size_m": {
+            "x": 1.29375,
+            "y": 0.035,
+            "z": 1.6875
+          },
+          "width_m": 1.29375,
+          "depth_m": 0.035,
+          "height_m": 1.6875,
+          "diagonal_m": 2.126657
+        }
+      },
+      {
+        "persistent_id": 73681,
+        "name": "Group#11",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 6,
+        "bounds": {
+          "min_m": {
+            "x": -0.426902,
+            "y": 0.056,
+            "z": 0.94
+          },
+          "max_m": {
+            "x": 0.213098,
+            "y": 0.116,
+            "z": 1.41
+          },
+          "size_m": {
+            "x": 0.64,
+            "y": 0.06,
+            "z": 0.47
+          },
+          "width_m": 0.64,
+          "depth_m": 0.06,
+          "height_m": 0.47,
+          "diagonal_m": 0.796304
+        }
+      },
+      {
+        "persistent_id": 73696,
+        "name": "Group#12",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": -0.3375,
+            "y": -0.01,
+            "z": 0.025
+          },
+          "max_m": {
+            "x": 0.80625,
+            "y": 0.0,
+            "z": 1.5625
+          },
+          "size_m": {
+            "x": 1.14375,
+            "y": 0.01,
+            "z": 1.5375
+          },
+          "width_m": 1.14375,
+          "depth_m": 0.01,
+          "height_m": 1.5375,
+          "diagonal_m": 1.916291
+        }
+      },
+      {
+        "persistent_id": 111622,
+        "name": "2D_Notasi_Pintu_Denah#1",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 3,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.8,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.8,
+            "z": 0.0
+          },
+          "width_m": 0.8,
+          "depth_m": 0.8,
+          "height_m": 0.0,
+          "diagonal_m": 1.131371
+        }
+      },
+      {
+        "persistent_id": 111626,
+        "name": "Group#17",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.01,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.075,
+            "z": 2.1
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.065,
+            "z": 2.1
+          },
+          "width_m": 0.8,
+          "depth_m": 0.065,
+          "height_m": 2.1,
+          "diagonal_m": 2.24816
+        }
+      },
+      {
+        "persistent_id": 111629,
+        "name": "Group#659",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.078178,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.7,
+            "y": 0.118178,
+            "z": 2.35
+          },
+          "size_m": {
+            "x": 0.7,
+            "y": 0.196355,
+            "z": 2.35
+          },
+          "width_m": 0.7,
+          "depth_m": 0.196355,
+          "height_m": 2.35,
+          "diagonal_m": 2.459889
+        }
+      },
+      {
+        "persistent_id": 113231,
+        "name": "2D_Notasi_Pintu_Denah#2",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 3,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.9,
+            "y": 0.9,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 0.9,
+            "y": 0.9,
+            "z": 0.0
+          },
+          "width_m": 0.9,
+          "depth_m": 0.9,
+          "height_m": 0.0,
+          "diagonal_m": 1.272792
+        }
+      },
+      {
+        "persistent_id": 113238,
+        "name": "Group#196",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 34,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.9,
+            "y": 0.15,
+            "z": 2.4
+          },
+          "size_m": {
+            "x": 0.9,
+            "y": 0.15,
+            "z": 2.4
+          },
+          "width_m": 0.9,
+          "depth_m": 0.15,
+          "height_m": 2.4,
+          "diagonal_m": 2.567586
+        }
+      },
+      {
+        "persistent_id": 113289,
+        "name": "Group#268",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.186355,
+            "z": 2.35
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.186355,
+            "z": 2.35
+          },
+          "width_m": 0.8,
+          "depth_m": 0.186355,
+          "height_m": 2.35,
+          "diagonal_m": 2.489423
+        }
+      },
+      {
+        "persistent_id": 114695,
+        "name": "Group#20",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 34,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.035,
+            "z": 0.025
+          },
+          "max_m": {
+            "x": 0.61875,
+            "y": 0.0,
+            "z": 1.4
+          },
+          "size_m": {
+            "x": 0.61875,
+            "y": 0.035,
+            "z": 1.375
+          },
+          "width_m": 0.61875,
+          "depth_m": 0.035,
+          "height_m": 1.375,
+          "diagonal_m": 1.508211
+        }
+      },
+      {
+        "persistent_id": 114746,
+        "name": "Group#21",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.01,
+            "z": 0.025
+          },
+          "max_m": {
+            "x": 0.46875,
+            "y": 0.0,
+            "z": 1.25
+          },
+          "size_m": {
+            "x": 0.46875,
+            "y": 0.01,
+            "z": 1.225
+          },
+          "width_m": 0.46875,
+          "depth_m": 0.01,
+          "height_m": 1.225,
+          "diagonal_m": 1.31166
+        }
+      },
+      {
+        "persistent_id": 114773,
+        "name": "Group#22",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 4,
+        "bounds": {
+          "min_m": {
+            "x": -0.586902,
+            "y": 0.056,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.213098,
+            "y": 0.116,
+            "z": 2.35
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.06,
+            "z": 2.35
+          },
+          "width_m": 0.8,
+          "depth_m": 0.06,
+          "height_m": 2.35,
+          "diagonal_m": 2.483163
+        }
+      },
+      {
+        "persistent_id": 119512,
+        "name": "Group#26",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.01,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.075,
+            "z": 2.1
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.065,
+            "z": 2.1
+          },
+          "width_m": 0.8,
+          "depth_m": 0.065,
+          "height_m": 2.1,
+          "diagonal_m": 2.24816
+        }
+      },
+      {
+        "persistent_id": 163793,
+        "name": "Group#37",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.01,
+            "y": 0.8,
+            "z": 1.6
+          },
+          "size_m": {
+            "x": 0.01,
+            "y": 0.8,
+            "z": 1.6
+          },
+          "width_m": 0.01,
+          "depth_m": 0.8,
+          "height_m": 1.6,
+          "diagonal_m": 1.788882
+        }
+      },
+      {
+        "persistent_id": 163820,
+        "name": "Group#366",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 34,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.03,
+            "y": 0.9,
+            "z": 1.7
+          },
+          "size_m": {
+            "x": 0.03,
+            "y": 0.9,
+            "z": 1.7
+          },
+          "width_m": 0.03,
+          "depth_m": 0.9,
+          "height_m": 1.7,
+          "diagonal_m": 1.923772
+        }
+      },
+      {
+        "persistent_id": 163871,
+        "name": "Group#38",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 60,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.8
+          },
+          "max_m": {
+            "x": 1.0,
+            "y": 0.1,
+            "z": 2.6
+          },
+          "size_m": {
+            "x": 1.0,
+            "y": 0.1,
+            "z": 1.8
+          },
+          "width_m": 1.0,
+          "depth_m": 0.1,
+          "height_m": 1.8,
+          "diagonal_m": 2.061553
+        }
+      },
+      {
+        "persistent_id": 163958,
+        "name": "Group#40",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 4,
+        "bounds": {
+          "min_m": {
+            "x": -0.586902,
+            "y": 0.056,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.213098,
+            "y": 0.116,
+            "z": 2.35
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.06,
+            "z": 2.35
+          },
+          "width_m": 0.8,
+          "depth_m": 0.06,
+          "height_m": 2.35,
+          "diagonal_m": 2.483163
+        }
+      },
+      {
+        "persistent_id": 51747,
+        "name": "Group#39",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 1.15,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.95,
+            "y": 0.3,
+            "z": 2.15
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.5,
+            "z": 2.15
+          },
+          "width_m": 0.8,
+          "depth_m": 0.5,
+          "height_m": 2.15,
+          "diagonal_m": 2.347871
+        }
+      },
+      {
+        "persistent_id": 51774,
+        "name": "Daun Pintu Kayu - 018",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 1,
+        "bounds": {
+          "min_m": {
+            "x": 0.05,
+            "y": -0.078178,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.75,
+            "y": 0.118178,
+            "z": 2.15
+          },
+          "size_m": {
+            "x": 0.7,
+            "y": 0.196355,
+            "z": 2.15
+          },
+          "width_m": 0.7,
+          "depth_m": 0.196355,
+          "height_m": 2.15,
+          "diagonal_m": 2.269594
+        }
+      },
+      {
+        "persistent_id": 51776,
+        "name": "Group#1",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.003347,
+            "y": 0.015,
+            "z": 0.01104
+          },
+          "max_m": {
+            "x": 0.803347,
+            "y": 0.815,
+            "z": 2.16104
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.8,
+            "z": 2.15
+          },
+          "width_m": 0.8,
+          "depth_m": 0.8,
+          "height_m": 2.15,
+          "diagonal_m": 2.429506
+        }
+      },
+      {
+        "persistent_id": 51779,
+        "name": "Group#8",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 34,
+        "bounds": {
+          "min_m": {
+            "x": 0.015,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.815,
+            "y": 0.1,
+            "z": 2.2
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.1,
+            "z": 2.2
+          },
+          "width_m": 0.8,
+          "depth_m": 0.1,
+          "height_m": 2.2,
+          "diagonal_m": 2.343075
+        }
+      },
+      {
+        "persistent_id": 72433,
+        "name": "Group#9",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.015,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.9,
+            "y": 0.915,
+            "z": 2.36
+          },
+          "size_m": {
+            "x": 0.9,
+            "y": 0.9,
+            "z": 2.36
+          },
+          "width_m": 0.9,
+          "depth_m": 0.9,
+          "height_m": 2.36,
+          "diagonal_m": 2.681343
+        }
+      },
+      {
+        "persistent_id": 72436,
+        "name": "Group#10",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 1.05,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.95,
+            "y": 0.33,
+            "z": 2.41
+          },
+          "size_m": {
+            "x": 0.9,
+            "y": 0.53,
+            "z": 2.41
+          },
+          "width_m": 0.9,
+          "depth_m": 0.53,
+          "height_m": 2.41,
+          "diagonal_m": 2.626595
+        }
+      },
+      {
+        "persistent_id": 72463,
+        "name": "Component#90",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 36,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.048646,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.9,
+            "y": 0.108646,
+            "z": 2.4
+          },
+          "size_m": {
+            "x": 0.9,
+            "y": 0.157292,
+            "z": 2.4
+          },
+          "width_m": 0.9,
+          "depth_m": 0.157292,
+          "height_m": 2.4,
+          "diagonal_m": 2.568023
+        }
+      },
+      {
+        "persistent_id": 73723,
+        "name": "Group#488",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": -2.2875,
+            "y": -0.01,
+            "z": -0.625
+          },
+          "max_m": {
+            "x": 0.3,
+            "y": 0.0,
+            "z": 0.5
+          },
+          "size_m": {
+            "x": 2.5875,
+            "y": 0.01,
+            "z": 1.125
+          },
+          "width_m": 2.5875,
+          "depth_m": 0.01,
+          "height_m": 1.125,
+          "diagonal_m": 2.821503
+        }
+      },
+      {
+        "persistent_id": 73750,
+        "name": "Group#13",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": -0.45,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.95,
+            "y": 0.33,
+            "z": 2.4
+          },
+          "size_m": {
+            "x": 2.4,
+            "y": 0.53,
+            "z": 2.4
+          },
+          "width_m": 2.4,
+          "depth_m": 0.53,
+          "height_m": 2.4,
+          "diagonal_m": 3.435244
+        }
+      },
+      {
+        "persistent_id": 73777,
+        "name": "Daun Jendela Aluminium - 009",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 3,
+        "bounds": {
+          "min_m": {
+            "x": -0.294444,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.855556,
+            "y": 1.35,
+            "z": 0.035
+          },
+          "size_m": {
+            "x": 1.15,
+            "y": 1.35,
+            "z": 0.035
+          },
+          "width_m": 1.15,
+          "depth_m": 1.35,
+          "height_m": 0.035,
+          "diagonal_m": 1.77376
+        }
+      },
+      {
+        "persistent_id": 73781,
+        "name": "Group#115",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 98,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.2
+          },
+          "max_m": {
+            "x": 2.4,
+            "y": 0.1,
+            "z": 2.6
+          },
+          "size_m": {
+            "x": 2.4,
+            "y": 0.1,
+            "z": 2.4
+          },
+          "width_m": 2.4,
+          "depth_m": 0.1,
+          "height_m": 2.4,
+          "diagonal_m": 3.395585
+        }
+      },
+      {
+        "persistent_id": 73962,
+        "name": "Group#14",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 1.35,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.95,
+            "y": 0.33,
+            "z": 1.5
+          },
+          "size_m": {
+            "x": 0.6,
+            "y": 0.53,
+            "z": 1.5
+          },
+          "width_m": 0.6,
+          "depth_m": 0.53,
+          "height_m": 1.5,
+          "diagonal_m": 1.700265
+        }
+      },
+      {
+        "persistent_id": 73989,
+        "name": "Group#50",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 56,
+        "bounds": {
+          "min_m": {
+            "x": -0.5,
+            "y": 0.0,
+            "z": -0.05
+          },
+          "max_m": {
+            "x": 1.0,
+            "y": 0.1,
+            "z": 0.55
+          },
+          "size_m": {
+            "x": 1.5,
+            "y": 0.1,
+            "z": 0.6
+          },
+          "width_m": 1.5,
+          "depth_m": 0.1,
+          "height_m": 0.6,
+          "diagonal_m": 1.618641
+        }
+      },
+      {
+        "persistent_id": 74070,
+        "name": "Group#148",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 162,
+        "bounds": {
+          "min_m": {
+            "x": 0.02,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.52,
+            "y": 0.03,
+            "z": 1.4
+          },
+          "size_m": {
+            "x": 0.5,
+            "y": 0.03,
+            "z": 1.4
+          },
+          "width_m": 0.5,
+          "depth_m": 0.03,
+          "height_m": 1.4,
+          "diagonal_m": 1.48691
+        }
+      },
+      {
+        "persistent_id": 74307,
+        "name": "Group#145",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.003,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.4,
+            "y": 0.003,
+            "z": 1.3
+          },
+          "size_m": {
+            "x": 0.4,
+            "y": 0.006,
+            "z": 1.3
+          },
+          "width_m": 0.4,
+          "depth_m": 0.006,
+          "height_m": 1.3,
+          "diagonal_m": 1.36016
+        }
+      },
+      {
+        "persistent_id": 74334,
+        "name": "Group#15",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 4,
+        "bounds": {
+          "min_m": {
+            "x": -0.586902,
+            "y": 0.056,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.213098,
+            "y": 0.116,
+            "z": 2.35
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.06,
+            "z": 2.35
+          },
+          "width_m": 0.8,
+          "depth_m": 0.06,
+          "height_m": 2.35,
+          "diagonal_m": 2.483163
+        }
+      },
+      {
+        "persistent_id": 111632,
+        "name": "Group#18",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.015,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.815,
+            "z": 2.361238
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.8,
+            "z": 2.361238
+          },
+          "width_m": 0.8,
+          "depth_m": 0.8,
+          "height_m": 2.361238,
+          "diagonal_m": 2.618291
+        }
+      },
+      {
+        "persistent_id": 111662,
+        "name": "Component#133",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 43,
+        "bounds": {
+          "min_m": {
+            "x": 0.1,
+            "y": -0.048178,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.9,
+            "y": 0.148178,
+            "z": 2.4
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.196355,
+            "z": 2.4
+          },
+          "width_m": 0.8,
+          "depth_m": 0.196355,
+          "height_m": 2.4,
+          "diagonal_m": 2.537431
+        }
+      },
+      {
+        "persistent_id": 113292,
+        "name": "Group#19",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.015,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.9,
+            "y": 0.915,
+            "z": 2.35
+          },
+          "size_m": {
+            "x": 0.9,
+            "y": 0.9,
+            "z": 2.35
+          },
+          "width_m": 0.9,
+          "depth_m": 0.9,
+          "height_m": 2.35,
+          "diagonal_m": 2.672546
+        }
+      },
+      {
+        "persistent_id": 113322,
+        "name": "Component#135",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": -0.1,
+            "y": -0.018178,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.168178,
+            "z": 2.4
+          },
+          "size_m": {
+            "x": 0.9,
+            "y": 0.186355,
+            "z": 2.4
+          },
+          "width_m": 0.9,
+          "depth_m": 0.186355,
+          "height_m": 2.4,
+          "diagonal_m": 2.569967
+        }
+      },
+      {
+        "persistent_id": 114784,
+        "name": "Group#23",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.75,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.95,
+            "y": 0.33,
+            "z": 1.2
+          },
+          "size_m": {
+            "x": 1.2,
+            "y": 0.53,
+            "z": 1.2
+          },
+          "width_m": 1.2,
+          "depth_m": 0.53,
+          "height_m": 1.2,
+          "diagonal_m": 1.777892
+        }
+      },
+      {
+        "persistent_id": 114811,
+        "name": "Daun Jendela Aluminium - 006",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 3,
+        "bounds": {
+          "min_m": {
+            "x": 0.005556,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.555556,
+            "y": 1.1,
+            "z": 0.035
+          },
+          "size_m": {
+            "x": 0.55,
+            "y": 1.1,
+            "z": 0.035
+          },
+          "width_m": 0.55,
+          "depth_m": 1.1,
+          "height_m": 0.035,
+          "diagonal_m": 1.230335
+        }
+      },
+      {
+        "persistent_id": 114815,
+        "name": "Group#111",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 54,
+        "bounds": {
+          "min_m": {
+            "x": 0.011111,
+            "y": 0.0,
+            "z": 0.82
+          },
+          "max_m": {
+            "x": 1.211111,
+            "y": 0.1,
+            "z": 2.02
+          },
+          "size_m": {
+            "x": 1.2,
+            "y": 0.1,
+            "z": 1.2
+          },
+          "width_m": 1.2,
+          "depth_m": 0.1,
+          "height_m": 1.2,
+          "diagonal_m": 1.7
+        }
+      },
+      {
+        "persistent_id": 119527,
+        "name": "Group#29",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 1.05,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.95,
+            "y": 0.33,
+            "z": 2.41
+          },
+          "size_m": {
+            "x": 0.9,
+            "y": 0.53,
+            "z": 2.41
+          },
+          "width_m": 0.9,
+          "depth_m": 0.53,
+          "height_m": 2.41,
+          "diagonal_m": 2.626595
+        }
+      },
+      {
+        "persistent_id": 119566,
+        "name": "Group#32",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 1.05,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.95,
+            "y": 0.33,
+            "z": 2.41
+          },
+          "size_m": {
+            "x": 0.9,
+            "y": 0.53,
+            "z": 2.41
+          },
+          "width_m": 0.9,
+          "depth_m": 0.53,
+          "height_m": 2.41,
+          "diagonal_m": 2.626595
+        }
+      },
+      {
+        "persistent_id": 163427,
+        "name": "Group#33",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.35,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.95,
+            "y": 0.33,
+            "z": 2.2
+          },
+          "size_m": {
+            "x": 1.6,
+            "y": 0.53,
+            "z": 2.2
+          },
+          "width_m": 1.6,
+          "depth_m": 0.53,
+          "height_m": 2.2,
+          "diagonal_m": 2.771444
+        }
+      },
+      {
+        "persistent_id": 163454,
+        "name": "Group#390",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.01,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.496748,
+            "y": 0.0,
+            "z": 0.7
+          },
+          "size_m": {
+            "x": 1.496748,
+            "y": 0.01,
+            "z": 0.7
+          },
+          "width_m": 1.496748,
+          "depth_m": 0.01,
+          "height_m": 0.7,
+          "diagonal_m": 1.652378
+        }
+      },
+      {
+        "persistent_id": 163481,
+        "name": "Group#34",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 122,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.3
+          },
+          "max_m": {
+            "x": 1.6,
+            "y": 0.1,
+            "z": 2.5
+          },
+          "size_m": {
+            "x": 1.6,
+            "y": 0.1,
+            "z": 2.2
+          },
+          "width_m": 1.6,
+          "depth_m": 0.1,
+          "height_m": 2.2,
+          "diagonal_m": 2.722132
+        }
+      },
+      {
+        "persistent_id": 163652,
+        "name": "Group#35",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 4,
+        "bounds": {
+          "min_m": {
+            "x": -0.586902,
+            "y": 0.056,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.213098,
+            "y": 0.116,
+            "z": 2.35
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.06,
+            "z": 2.35
+          },
+          "width_m": 0.8,
+          "depth_m": 0.06,
+          "height_m": 2.35,
+          "diagonal_m": 2.483163
+        }
+      },
+      {
+        "persistent_id": 163663,
+        "name": "Group#36",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 4,
+        "bounds": {
+          "min_m": {
+            "x": -0.586902,
+            "y": 0.056,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.213098,
+            "y": 0.116,
+            "z": 2.35
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 0.06,
+            "z": 2.35
+          },
+          "width_m": 0.8,
+          "depth_m": 0.06,
+          "height_m": 2.35,
+          "diagonal_m": 2.483163
+        }
+      },
+      {
+        "persistent_id": 163674,
+        "name": "Kaca 6mm - 001 1",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.01,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.623374,
+            "y": 0.0,
+            "z": 1.25
+          },
+          "size_m": {
+            "x": 0.623374,
+            "y": 0.01,
+            "z": 1.25
+          },
+          "width_m": 0.623374,
+          "depth_m": 0.01,
+          "height_m": 1.25,
+          "diagonal_m": 1.396852
+        }
+      },
+      {
+        "persistent_id": 163701,
+        "name": "Daun Jendela Aluminium - 001",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 34,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.723374,
+            "y": 0.03,
+            "z": 1.35
+          },
+          "size_m": {
+            "x": 0.723374,
+            "y": 0.03,
+            "z": 1.35
+          },
+          "width_m": 0.723374,
+          "depth_m": 0.03,
+          "height_m": 1.35,
+          "diagonal_m": 1.531884
+        }
+      },
+      {
+        "persistent_id": 163969,
+        "name": "Group#41",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.95,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.95,
+            "y": 0.33,
+            "z": 1.8
+          },
+          "size_m": {
+            "x": 1.0,
+            "y": 0.53,
+            "z": 1.8
+          },
+          "width_m": 1.0,
+          "depth_m": 0.53,
+          "height_m": 1.8,
+          "diagonal_m": 2.126241
+        }
+      },
+      {
+        "persistent_id": 163996,
+        "name": "Group#42",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 4,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.2,
+            "z": 0.6
+          },
+          "max_m": {
+            "x": 1.0,
+            "y": 0.3,
+            "z": 2.4
+          },
+          "size_m": {
+            "x": 1.0,
+            "y": 0.1,
+            "z": 1.8
+          },
+          "width_m": 1.0,
+          "depth_m": 0.1,
+          "height_m": 1.8,
+          "diagonal_m": 2.061553
+        }
+      },
+      {
+        "persistent_id": 173165,
+        "name": "Group121#1",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 98,
+        "bounds": {
+          "min_m": {
+            "x": -0.05,
+            "y": -0.05,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.05,
+            "y": 0.05,
+            "z": 7.245512
+          },
+          "size_m": {
+            "x": 0.1,
+            "y": 0.1,
+            "z": 7.245512
+          },
+          "width_m": 0.1,
+          "depth_m": 0.1,
+          "height_m": 7.245512,
+          "diagonal_m": 7.246892
+        }
+      },
+      {
+        "persistent_id": 173339,
+        "name": "Group122#1",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 98,
+        "bounds": {
+          "min_m": {
+            "x": -0.05,
+            "y": -0.05,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.05,
+            "y": 0.05,
+            "z": 4.190462
+          },
+          "size_m": {
+            "x": 0.1,
+            "y": 0.1,
+            "z": 4.190462
+          },
+          "width_m": 0.1,
+          "depth_m": 0.1,
+          "height_m": 4.190462,
+          "diagonal_m": 4.192848
+        }
+      },
+      {
+        "persistent_id": 173513,
+        "name": "Group123#1",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 98,
+        "bounds": {
+          "min_m": {
+            "x": -0.05,
+            "y": -0.05,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.05,
+            "y": 0.05,
+            "z": 7.245512
+          },
+          "size_m": {
+            "x": 0.1,
+            "y": 0.1,
+            "z": 7.245512
+          },
+          "width_m": 0.1,
+          "depth_m": 0.1,
+          "height_m": 7.245512,
+          "diagonal_m": 7.246892
+        }
+      },
+      {
+        "persistent_id": 173687,
+        "name": "Group124#1",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 98,
+        "bounds": {
+          "min_m": {
+            "x": -0.05,
+            "y": -0.05,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.05,
+            "y": 0.05,
+            "z": 7.245512
+          },
+          "size_m": {
+            "x": 0.1,
+            "y": 0.1,
+            "z": 7.245512
+          },
+          "width_m": 0.1,
+          "depth_m": 0.1,
+          "height_m": 7.245512,
+          "diagonal_m": 7.246892
+        }
+      },
+      {
+        "persistent_id": 173861,
+        "name": "Group125#1",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 98,
+        "bounds": {
+          "min_m": {
+            "x": -0.05,
+            "y": -0.05,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.05,
+            "y": 0.05,
+            "z": 4.190462
+          },
+          "size_m": {
+            "x": 0.1,
+            "y": 0.1,
+            "z": 4.190462
+          },
+          "width_m": 0.1,
+          "depth_m": 0.1,
+          "height_m": 4.190462,
+          "diagonal_m": 4.192848
+        }
+      },
+      {
+        "persistent_id": 174035,
+        "name": "Group126#1",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 98,
+        "bounds": {
+          "min_m": {
+            "x": -0.05,
+            "y": -0.05,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.05,
+            "y": 0.05,
+            "z": 1.0
+          },
+          "size_m": {
+            "x": 0.1,
+            "y": 0.1,
+            "z": 1.0
+          },
+          "width_m": 0.1,
+          "depth_m": 0.1,
+          "height_m": 1.0,
+          "diagonal_m": 1.00995
+        }
+      },
+      {
+        "persistent_id": 174209,
+        "name": "Group127#1",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 98,
+        "bounds": {
+          "min_m": {
+            "x": -0.05,
+            "y": -0.05,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.05,
+            "y": 0.05,
+            "z": 3.05505
+          },
+          "size_m": {
+            "x": 0.1,
+            "y": 0.1,
+            "z": 3.05505
+          },
+          "width_m": 0.1,
+          "depth_m": 0.1,
+          "height_m": 3.05505,
+          "diagonal_m": 3.058322
+        }
+      },
+      {
+        "persistent_id": 51830,
+        "name": "Pintu 220x80 1 Daun 018",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 4,
+        "bounds": {
+          "min_m": {
+            "x": -0.8,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.0,
+            "y": 0.8,
+            "z": 2.2
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 1.0,
+            "z": 2.2
+          },
+          "width_m": 0.8,
+          "depth_m": 1.0,
+          "height_m": 2.2,
+          "diagonal_m": 2.545584
+        }
+      },
+      {
+        "persistent_id": 72516,
+        "name": "P1002 - Pintu 90x240",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 3,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.9,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.9,
+            "y": 0.2,
+            "z": 2.411238
+          },
+          "size_m": {
+            "x": 0.9,
+            "y": 1.1,
+            "z": 2.411238
+          },
+          "width_m": 0.9,
+          "depth_m": 1.1,
+          "height_m": 2.411238,
+          "diagonal_m": 2.798941
+        }
+      },
+      {
+        "persistent_id": 73920,
+        "name": "Jendela Aluminium Geser 240x240 - 009",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 5,
+        "bounds": {
+          "min_m": {
+            "x": -2.4,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.0,
+            "y": 0.33,
+            "z": 2.4
+          },
+          "size_m": {
+            "x": 2.4,
+            "y": 0.53,
+            "z": 2.4
+          },
+          "width_m": 2.4,
+          "depth_m": 0.53,
+          "height_m": 2.4,
+          "diagonal_m": 3.435244
+        }
+      },
+      {
+        "persistent_id": 74345,
+        "name": "Jendela Aluminium 1 Daun 150x60 - 003",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 5,
+        "bounds": {
+          "min_m": {
+            "x": -0.6,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.0,
+            "y": 0.33,
+            "z": 1.5
+          },
+          "size_m": {
+            "x": 0.6,
+            "y": 0.53,
+            "z": 1.5
+          },
+          "width_m": 0.6,
+          "depth_m": 0.53,
+          "height_m": 1.5,
+          "diagonal_m": 1.700265
+        }
+      },
+      {
+        "persistent_id": 111724,
+        "name": "P1005 - Pintu Kayu 80x240",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 3,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.8,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.2,
+            "z": 2.4
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 1.0,
+            "z": 2.4
+          },
+          "width_m": 0.8,
+          "depth_m": 1.0,
+          "height_m": 2.4,
+          "diagonal_m": 2.720294
+        }
+      },
+      {
+        "persistent_id": 113325,
+        "name": "P1006 - Pintu Kayu 3 Panel 90x240",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 3,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.9,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.9,
+            "y": 0.2,
+            "z": 2.4
+          },
+          "size_m": {
+            "x": 0.9,
+            "y": 1.1,
+            "z": 2.4
+          },
+          "width_m": 0.9,
+          "depth_m": 1.1,
+          "height_m": 2.4,
+          "diagonal_m": 2.789265
+        }
+      },
+      {
+        "persistent_id": 114890,
+        "name": "Jendela Aluminium 2 Daun 120x120 - 006",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 4,
+        "bounds": {
+          "min_m": {
+            "x": -1.2,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.0,
+            "y": 0.33,
+            "z": 1.2
+          },
+          "size_m": {
+            "x": 1.2,
+            "y": 0.53,
+            "z": 1.2
+          },
+          "width_m": 1.2,
+          "depth_m": 0.53,
+          "height_m": 1.2,
+          "diagonal_m": 1.777892
+        }
+      },
+      {
+        "persistent_id": 163752,
+        "name": "Jendela Aluminium 2 Daun 220x160 - 001",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 9,
+        "bounds": {
+          "min_m": {
+            "x": -1.6,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.0,
+            "y": 0.33,
+            "z": 2.2
+          },
+          "size_m": {
+            "x": 1.6,
+            "y": 0.53,
+            "z": 2.2
+          },
+          "width_m": 1.6,
+          "depth_m": 0.53,
+          "height_m": 2.2,
+          "diagonal_m": 2.771444
+        }
+      },
+      {
+        "persistent_id": 164001,
+        "name": "Jendela Aluminium 1 Daun 180x100 - 004",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": -1.0,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.0,
+            "y": 0.33,
+            "z": 1.8
+          },
+          "size_m": {
+            "x": 1.0,
+            "y": 0.53,
+            "z": 1.8
+          },
+          "width_m": 1.0,
+          "depth_m": 0.53,
+          "height_m": 1.8,
+          "diagonal_m": 2.126241
+        }
+      },
+      {
+        "persistent_id": 172711,
+        "name": "Group#44",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 24,
+        "bounds": {
+          "min_m": {
+            "x": -0.743301,
+            "y": -0.743301,
+            "z": -0.025
+          },
+          "max_m": {
+            "x": 9.743301,
+            "y": 8.743301,
+            "z": 2.713546
+          },
+          "size_m": {
+            "x": 10.486603,
+            "y": 9.486603,
+            "z": 2.738546
+          },
+          "width_m": 10.486603,
+          "depth_m": 9.486603,
+          "height_m": 2.738546,
+          "diagonal_m": 14.403614
+        }
+      },
+      {
+        "persistent_id": 172744,
+        "name": "Group#45",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 66,
+        "bounds": {
+          "min_m": {
+            "x": -0.7,
+            "y": -0.7,
+            "z": -0.2
+          },
+          "max_m": {
+            "x": 9.7,
+            "y": 8.7,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 10.4,
+            "y": 9.4,
+            "z": 0.2
+          },
+          "width_m": 10.4,
+          "depth_m": 9.4,
+          "height_m": 0.2,
+          "diagonal_m": 14.019986
+        }
+      },
+      {
+        "persistent_id": 172777,
+        "name": "Group#46",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 132,
+        "bounds": {
+          "min_m": {
+            "x": -0.692,
+            "y": -0.692,
+            "z": -0.2
+          },
+          "max_m": {
+            "x": 9.692,
+            "y": 8.692,
+            "z": -0.18
+          },
+          "size_m": {
+            "x": 10.384,
+            "y": 9.384,
+            "z": 0.02
+          },
+          "width_m": 10.384,
+          "depth_m": 9.384,
+          "height_m": 0.02,
+          "diagonal_m": 13.995975
+        }
+      },
+      {
+        "persistent_id": 172810,
+        "name": "Group#48",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 66,
+        "bounds": {
+          "min_m": {
+            "x": -0.692,
+            "y": -0.692,
+            "z": -0.18
+          },
+          "max_m": {
+            "x": 9.692,
+            "y": 8.692,
+            "z": -0.17
+          },
+          "size_m": {
+            "x": 10.384,
+            "y": 9.384,
+            "z": 0.01
+          },
+          "width_m": 10.384,
+          "depth_m": 9.384,
+          "height_m": 0.01,
+          "diagonal_m": 13.995964
+        }
+      },
+      {
+        "persistent_id": 173126,
+        "name": "Group#49",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 7,
+        "bounds": {
+          "min_m": {
+            "x": -0.79202,
+            "y": -0.79202,
+            "z": -0.071291
+          },
+          "max_m": {
+            "x": 9.79202,
+            "y": 8.79202,
+            "z": 2.759837
+          },
+          "size_m": {
+            "x": 10.584039,
+            "y": 9.584039,
+            "z": 2.831128
+          },
+          "width_m": 10.584039,
+          "depth_m": 9.584039,
+          "height_m": 2.831128,
+          "diagonal_m": 14.556476
+        }
+      },
+      {
+        "persistent_id": 175957,
+        "name": "Group#59",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 154,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 8.925,
+            "y": 3.917,
+            "z": 0.05
+          },
+          "size_m": {
+            "x": 8.925,
+            "y": 3.917,
+            "z": 0.05
+          },
+          "width_m": 8.925,
+          "depth_m": 3.917,
+          "height_m": 0.05,
+          "diagonal_m": 9.746846
+        }
+      },
+      {
+        "persistent_id": 176227,
+        "name": "Group#60",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 50,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.925,
+            "y": 2.85,
+            "z": 0.05
+          },
+          "size_m": {
+            "x": 1.925,
+            "y": 2.85,
+            "z": 0.05
+          },
+          "width_m": 1.925,
+          "depth_m": 2.85,
+          "height_m": 0.05,
+          "diagonal_m": 3.439568
+        }
+      },
+      {
+        "persistent_id": 176315,
+        "name": "Group#61",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 50,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 3.85,
+            "y": 3.913,
+            "z": 0.05
+          },
+          "size_m": {
+            "x": 3.85,
+            "y": 3.913,
+            "z": 0.05
+          },
+          "width_m": 3.85,
+          "depth_m": 3.913,
+          "height_m": 0.05,
+          "diagonal_m": 5.489678
+        }
+      },
+      {
+        "persistent_id": 176403,
+        "name": "Group#63",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 50,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 3.85,
+            "y": 3.913,
+            "z": 0.05
+          },
+          "size_m": {
+            "x": 3.85,
+            "y": 3.913,
+            "z": 0.05
+          },
+          "width_m": 3.85,
+          "depth_m": 3.913,
+          "height_m": 0.05,
+          "diagonal_m": 5.489678
+        }
+      },
+      {
+        "persistent_id": 176568,
+        "name": "Group#65",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 154,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 8.925,
+            "y": 3.917,
+            "z": 0.04
+          },
+          "size_m": {
+            "x": 8.925,
+            "y": 3.917,
+            "z": 0.04
+          },
+          "width_m": 8.925,
+          "depth_m": 3.917,
+          "height_m": 0.04,
+          "diagonal_m": 9.7468
+        }
+      },
+      {
+        "persistent_id": 176863,
+        "name": "Group#67",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 50,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.925,
+            "y": 2.85,
+            "z": 0.04
+          },
+          "size_m": {
+            "x": 1.925,
+            "y": 2.85,
+            "z": 0.04
+          },
+          "width_m": 1.925,
+          "depth_m": 2.85,
+          "height_m": 0.04,
+          "diagonal_m": 3.439437
+        }
+      },
+      {
+        "persistent_id": 176977,
+        "name": "Group#69",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 50,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 3.85,
+            "y": 3.913,
+            "z": 0.04
+          },
+          "size_m": {
+            "x": 3.85,
+            "y": 3.913,
+            "z": 0.04
+          },
+          "width_m": 3.85,
+          "depth_m": 3.913,
+          "height_m": 0.04,
+          "diagonal_m": 5.489596
+        }
+      },
+      {
+        "persistent_id": 177091,
+        "name": "Group#71",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 50,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 3.85,
+            "y": 3.913,
+            "z": 0.04
+          },
+          "size_m": {
+            "x": 3.85,
+            "y": 3.913,
+            "z": 0.04
+          },
+          "width_m": 3.85,
+          "depth_m": 3.913,
+          "height_m": 0.04,
+          "diagonal_m": 5.489596
+        }
+      },
+      {
+        "persistent_id": 177179,
+        "name": "Group#72",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 154,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 8.925,
+            "y": 3.917,
+            "z": 0.01
+          },
+          "size_m": {
+            "x": 8.925,
+            "y": 3.917,
+            "z": 0.01
+          },
+          "width_m": 8.925,
+          "depth_m": 3.917,
+          "height_m": 0.01,
+          "diagonal_m": 9.746723
+        }
+      },
+      {
+        "persistent_id": 177411,
+        "name": "Group#73",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 50,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.925,
+            "y": 2.85,
+            "z": 0.01
+          },
+          "size_m": {
+            "x": 1.925,
+            "y": 2.85,
+            "z": 0.01
+          },
+          "width_m": 1.925,
+          "depth_m": 2.85,
+          "height_m": 0.01,
+          "diagonal_m": 3.439219
+        }
+      },
+      {
+        "persistent_id": 177487,
+        "name": "Group#74",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 50,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 3.85,
+            "y": 3.913,
+            "z": 0.01
+          },
+          "size_m": {
+            "x": 3.85,
+            "y": 3.913,
+            "z": 0.01
+          },
+          "width_m": 3.85,
+          "depth_m": 3.913,
+          "height_m": 0.01,
+          "diagonal_m": 5.48946
+        }
+      },
+      {
+        "persistent_id": 177563,
+        "name": "Group#75",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 50,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 3.85,
+            "y": 3.913,
+            "z": 0.01
+          },
+          "size_m": {
+            "x": 3.85,
+            "y": 3.913,
+            "z": 0.01
+          },
+          "width_m": 3.85,
+          "depth_m": 3.913,
+          "height_m": 0.01,
+          "diagonal_m": 5.48946
+        }
+      },
+      {
+        "persistent_id": 177863,
+        "name": "Group#64",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 3.85,
+            "y": 3.85,
+            "z": 0.05
+          },
+          "size_m": {
+            "x": 3.85,
+            "y": 3.85,
+            "z": 0.05
+          },
+          "width_m": 3.85,
+          "depth_m": 3.85,
+          "height_m": 0.05,
+          "diagonal_m": 5.444952
+        }
+      },
+      {
+        "persistent_id": 177895,
+        "name": "Group#66",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 3.85,
+            "y": 3.85,
+            "z": 0.05
+          },
+          "size_m": {
+            "x": 3.85,
+            "y": 3.85,
+            "z": 0.05
+          },
+          "width_m": 3.85,
+          "depth_m": 3.85,
+          "height_m": 0.05,
+          "diagonal_m": 5.444952
+        }
+      },
+      {
+        "persistent_id": 177927,
+        "name": "Group#68",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 26,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 8.85,
+            "y": 3.85,
+            "z": 0.05
+          },
+          "size_m": {
+            "x": 8.85,
+            "y": 3.85,
+            "z": 0.05
+          },
+          "width_m": 8.85,
+          "depth_m": 3.85,
+          "height_m": 0.05,
+          "diagonal_m": 9.651295
+        }
+      },
+      {
+        "persistent_id": 177973,
+        "name": "Group#70",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.85,
+            "y": 2.85,
+            "z": 0.05
+          },
+          "size_m": {
+            "x": 1.85,
+            "y": 2.85,
+            "z": 0.05
+          },
+          "width_m": 1.85,
+          "depth_m": 2.85,
+          "height_m": 0.05,
+          "diagonal_m": 3.398161
+        }
+      },
+      {
+        "persistent_id": 178011,
+        "name": "Group#78",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 3.85,
+            "y": 3.85,
+            "z": 0.04
+          },
+          "size_m": {
+            "x": 3.85,
+            "y": 3.85,
+            "z": 0.04
+          },
+          "width_m": 3.85,
+          "depth_m": 3.85,
+          "height_m": 0.04,
+          "diagonal_m": 5.444869
+        }
+      },
+      {
+        "persistent_id": 178049,
+        "name": "Group#80",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 3.85,
+            "y": 3.85,
+            "z": 0.04
+          },
+          "size_m": {
+            "x": 3.85,
+            "y": 3.85,
+            "z": 0.04
+          },
+          "width_m": 3.85,
+          "depth_m": 3.85,
+          "height_m": 0.04,
+          "diagonal_m": 5.444869
+        }
+      },
+      {
+        "persistent_id": 178089,
+        "name": "Group#82",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 26,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 8.85,
+            "y": 3.85,
+            "z": 0.04
+          },
+          "size_m": {
+            "x": 8.85,
+            "y": 3.85,
+            "z": 0.04
+          },
+          "width_m": 8.85,
+          "depth_m": 3.85,
+          "height_m": 0.04,
+          "diagonal_m": 9.651249
+        }
+      },
+      {
+        "persistent_id": 178141,
+        "name": "Group#84",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.85,
+            "y": 2.85,
+            "z": 0.04
+          },
+          "size_m": {
+            "x": 1.85,
+            "y": 2.85,
+            "z": 0.04
+          },
+          "width_m": 1.85,
+          "depth_m": 2.85,
+          "height_m": 0.04,
+          "diagonal_m": 3.398029
+        }
+      },
+      {
+        "persistent_id": 178173,
+        "name": "Group#85",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 3.85,
+            "y": 3.85,
+            "z": 0.01
+          },
+          "size_m": {
+            "x": 3.85,
+            "y": 3.85,
+            "z": 0.01
+          },
+          "width_m": 3.85,
+          "depth_m": 3.85,
+          "height_m": 0.01,
+          "diagonal_m": 5.444731
+        }
+      },
+      {
+        "persistent_id": 178201,
+        "name": "Group#86",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 3.85,
+            "y": 3.85,
+            "z": 0.01
+          },
+          "size_m": {
+            "x": 3.85,
+            "y": 3.85,
+            "z": 0.01
+          },
+          "width_m": 3.85,
+          "depth_m": 3.85,
+          "height_m": 0.01,
+          "diagonal_m": 5.444731
+        }
+      },
+      {
+        "persistent_id": 178229,
+        "name": "Group#87",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 26,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 8.85,
+            "y": 3.85,
+            "z": 0.01
+          },
+          "size_m": {
+            "x": 8.85,
+            "y": 3.85,
+            "z": 0.01
+          },
+          "width_m": 8.85,
+          "depth_m": 3.85,
+          "height_m": 0.01,
+          "diagonal_m": 9.651171
+        }
+      },
+      {
+        "persistent_id": 178269,
+        "name": "Group#88",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.85,
+            "y": 2.85,
+            "z": 0.01
+          },
+          "size_m": {
+            "x": 1.85,
+            "y": 2.85,
+            "z": 0.01
+          },
+          "width_m": 1.85,
+          "depth_m": 2.85,
+          "height_m": 0.01,
+          "diagonal_m": 3.397808
+        }
+      },
+      {
+        "persistent_id": 33944,
+        "name": "Teddy",
+        "description": "Teddy oversees the distribution of SketchUp in Europe, the Middle East, and Africa, working with authorized resellers to enable and support users. An avid traveler, she enjoys diverse cultures and natural wonders. You may catch her dancing the night away or devouring a book. Most of all, she adores reading with her five-year-old!",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 1202,
+        "bounds": {
+          "min_m": {
+            "x": -0.231312,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.358559,
+            "y": 0.0,
+            "z": 1.75887
+          },
+          "size_m": {
+            "x": 0.589871,
+            "y": 0.0,
+            "z": 1.75887
+          },
+          "width_m": 0.589871,
+          "depth_m": 0.0,
+          "height_m": 1.75887,
+          "diagonal_m": 1.855148
+        }
+      },
+      {
+        "persistent_id": 51870,
+        "name": "P0001 - Pintu Kayu 1 Daun 220x80_web_153",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 0,
+        "entity_count": 1,
+        "bounds": {
+          "min_m": {
+            "x": -0.8,
+            "y": 0.0,
+            "z": -0.8
+          },
+          "max_m": {
+            "x": 0.0,
+            "y": 2.2,
+            "z": 0.2
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 2.2,
+            "z": 1.0
+          },
+          "width_m": 0.8,
+          "depth_m": 2.2,
+          "height_m": 1.0,
+          "diagonal_m": 2.545584
+        }
+      },
+      {
+        "persistent_id": 72561,
+        "name": "P1002 - Pintu 90x240_web_292",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 1,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.9,
+            "y": 0.9,
+            "z": 2.411238
+          },
+          "size_m": {
+            "x": 0.9,
+            "y": 1.1,
+            "z": 2.411238
+          },
+          "width_m": 0.9,
+          "depth_m": 1.1,
+          "height_m": 2.411238,
+          "diagonal_m": 2.798941
+        }
+      },
+      {
+        "persistent_id": 73960,
+        "name": "J0009 - Jendela Aluminium Geser 240x240_web_161",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 0,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": -2.4,
+            "y": 0.0,
+            "z": -0.33
+          },
+          "max_m": {
+            "x": 0.0,
+            "y": 2.4,
+            "z": 0.2
+          },
+          "size_m": {
+            "x": 2.4,
+            "y": 2.4,
+            "z": 0.53
+          },
+          "width_m": 2.4,
+          "depth_m": 2.4,
+          "height_m": 0.53,
+          "diagonal_m": 3.435244
+        }
+      },
+      {
+        "persistent_id": 74378,
+        "name": "J0003 - Jendela Aluminium 1 Daun 150x60_web_156",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 4,
+        "entity_count": 1,
+        "bounds": {
+          "min_m": {
+            "x": -0.6,
+            "y": 0.0,
+            "z": -0.33
+          },
+          "max_m": {
+            "x": 0.0,
+            "y": 1.5,
+            "z": 0.2
+          },
+          "size_m": {
+            "x": 0.6,
+            "y": 1.5,
+            "z": 0.53
+          },
+          "width_m": 0.6,
+          "depth_m": 1.5,
+          "height_m": 0.53,
+          "diagonal_m": 1.700265
+        }
+      },
+      {
+        "persistent_id": 111772,
+        "name": "P1005 - Pintu Kayu 80x240_web_296",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 1,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8,
+            "y": 0.8,
+            "z": 2.4
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 1.0,
+            "z": 2.4
+          },
+          "width_m": 0.8,
+          "depth_m": 1.0,
+          "height_m": 2.4,
+          "diagonal_m": 2.720294
+        }
+      },
+      {
+        "persistent_id": 113369,
+        "name": "P1006 - Pintu Kayu 3D Panel 90x240_web_297",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 0,
+        "entity_count": 1,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.9,
+            "y": 0.9,
+            "z": 2.4
+          },
+          "size_m": {
+            "x": 0.9,
+            "y": 1.1,
+            "z": 2.4
+          },
+          "width_m": 0.9,
+          "depth_m": 1.1,
+          "height_m": 2.4,
+          "diagonal_m": 2.789265
+        }
+      },
+      {
+        "persistent_id": 114922,
+        "name": "J0006 - Jendela Aluminium 2 Daun 120x120_web_159",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 0,
+        "entity_count": 1,
+        "bounds": {
+          "min_m": {
+            "x": -1.2,
+            "y": 0.0,
+            "z": -0.33
+          },
+          "max_m": {
+            "x": 0.0,
+            "y": 1.2,
+            "z": 0.2
+          },
+          "size_m": {
+            "x": 1.2,
+            "y": 1.2,
+            "z": 0.53
+          },
+          "width_m": 1.2,
+          "depth_m": 1.2,
+          "height_m": 0.53,
+          "diagonal_m": 1.777892
+        }
+      },
+      {
+        "persistent_id": 163790,
+        "name": "J0005 - Jendela Aluminium 2 Daun 220x160_web_154",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 3,
+        "entity_count": 1,
+        "bounds": {
+          "min_m": {
+            "x": -1.6,
+            "y": 0.0,
+            "z": -0.33
+          },
+          "max_m": {
+            "x": 0.0,
+            "y": 2.2,
+            "z": 0.2
+          },
+          "size_m": {
+            "x": 1.6,
+            "y": 2.2,
+            "z": 0.53
+          },
+          "width_m": 1.6,
+          "depth_m": 2.2,
+          "height_m": 0.53,
+          "diagonal_m": 2.771444
+        }
+      },
+      {
+        "persistent_id": 164035,
+        "name": "J0004 - Jendela Aluminium 1 Daun 180x100_web_157",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 1,
+        "bounds": {
+          "min_m": {
+            "x": -1.0,
+            "y": 0.0,
+            "z": -0.33
+          },
+          "max_m": {
+            "x": 0.0,
+            "y": 1.8,
+            "z": 0.2
+          },
+          "size_m": {
+            "x": 1.0,
+            "y": 1.8,
+            "z": 0.53
+          },
+          "width_m": 1.0,
+          "depth_m": 1.8,
+          "height_m": 0.53,
+          "diagonal_m": 2.126241
+        }
+      },
+      {
+        "persistent_id": 171846,
+        "name": "Difference#1",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 178,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 9.15,
+            "y": 8.15,
+            "z": 3.0
+          },
+          "size_m": {
+            "x": 9.15,
+            "y": 8.15,
+            "z": 3.0
+          },
+          "width_m": 9.15,
+          "depth_m": 8.15,
+          "height_m": 3.0,
+          "diagonal_m": 12.615269
+        }
+      },
+      {
+        "persistent_id": 172243,
+        "name": "Difference#2",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 222,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 9.15,
+            "y": 8.15,
+            "z": 3.0
+          },
+          "size_m": {
+            "x": 9.15,
+            "y": 8.15,
+            "z": 3.0
+          },
+          "width_m": 9.15,
+          "depth_m": 8.15,
+          "height_m": 3.0,
+          "diagonal_m": 12.615269
+        }
+      },
+      {
+        "persistent_id": 175164,
+        "name": "Group#51",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 5,
+        "bounds": {
+          "min_m": {
+            "x": -0.011109,
+            "y": -0.011109,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 10.57293,
+            "y": 9.57293,
+            "z": 2.959837
+          },
+          "size_m": {
+            "x": 10.584039,
+            "y": 9.584039,
+            "z": 2.959837
+          },
+          "width_m": 10.584039,
+          "depth_m": 9.584039,
+          "height_m": 2.959837,
+          "diagonal_m": 14.582055
+        }
+      },
+      {
+        "persistent_id": 177640,
+        "name": "Group#76",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 12,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 8.925,
+            "y": 7.85,
+            "z": 0.1
+          },
+          "size_m": {
+            "x": 8.925,
+            "y": 7.85,
+            "z": 0.1
+          },
+          "width_m": 8.925,
+          "depth_m": 7.85,
+          "height_m": 0.1,
+          "diagonal_m": 11.886468
+        }
+      },
+      {
+        "persistent_id": 178298,
+        "name": "Group#89",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 12,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 8.85,
+            "y": 7.85,
+            "z": 0.14
+          },
+          "size_m": {
+            "x": 8.85,
+            "y": 7.85,
+            "z": 0.14
+          },
+          "width_m": 8.85,
+          "depth_m": 7.85,
+          "height_m": 0.14,
+          "diagonal_m": 11.830664
+        }
+      }
+    ],
+    "definition_count": 154,
+    "component_instance_count": 179,
+    "tags": [
+      {
+        "persistent_id": 11741,
+        "name": "Layer0",
+        "visible": true,
+        "color": {
+          "red": 255,
+          "green": 255,
+          "blue": 255,
+          "alpha": 255,
+          "hex": "#FFFFFF"
+        }
+      },
+      {
+        "persistent_id": 44597,
+        "name": "Pas. Bata 5x10x20>>Bata5x10x20+plester2.5+cat",
+        "visible": true,
+        "color": {
+          "red": 119,
+          "green": 119,
+          "blue": 153,
+          "alpha": 255,
+          "hex": "#777799"
+        }
+      },
+      {
+        "persistent_id": 51862,
+        "name": "edge_dash",
+        "visible": true,
+        "color": {
+          "red": 255,
+          "green": 0,
+          "blue": 204,
+          "alpha": 255,
+          "hex": "#FF00CC"
+        }
+      },
+      {
+        "persistent_id": 51864,
+        "name": "#2d_graphic",
+        "visible": true,
+        "color": {
+          "red": 0,
+          "green": 153,
+          "blue": 135,
+          "alpha": 255,
+          "hex": "#009987"
+        }
+      },
+      {
+        "persistent_id": 51866,
+        "name": "PEMOTONG",
+        "visible": false,
+        "color": {
+          "red": 170,
+          "green": 68,
+          "blue": 0,
+          "alpha": 255,
+          "hex": "#AA4400"
+        }
+      },
+      {
+        "persistent_id": 72552,
+        "name": "#PINTU & JENDELA",
+        "visible": true,
+        "color": {
+          "red": 0,
+          "green": 0,
+          "blue": 204,
+          "alpha": 255,
+          "hex": "#0000CC"
+        }
+      },
+      {
+        "persistent_id": 73956,
+        "name": "!sign",
+        "visible": true,
+        "color": {
+          "red": 170,
+          "green": 168,
+          "blue": 0,
+          "alpha": 255,
+          "hex": "#AAA800"
+        }
+      },
+      {
+        "persistent_id": 77392,
+        "name": "Atap>>Atap Spandek",
+        "visible": true,
+        "color": {
+          "red": 153,
+          "green": 0,
+          "blue": 255,
+          "alpha": 255,
+          "hex": "#9900FF"
+        }
+      },
+      {
+        "persistent_id": 77394,
+        "name": "Listplank>>Atap Spandek",
+        "visible": true,
+        "color": {
+          "red": 204,
+          "green": 68,
+          "blue": 0,
+          "alpha": 255,
+          "hex": "#CC4400"
+        }
+      },
+      {
+        "persistent_id": 77396,
+        "name": "List Profil Plafond>>Atap Spandek",
+        "visible": true,
+        "color": {
+          "red": 170,
+          "green": 68,
+          "blue": 0,
+          "alpha": 255,
+          "hex": "#AA4400"
+        }
+      },
+      {
+        "persistent_id": 77398,
+        "name": "Plafond>>Atap Spandek",
+        "visible": true,
+        "color": {
+          "red": 204,
+          "green": 102,
+          "blue": 0,
+          "alpha": 255,
+          "hex": "#CC6600"
+        }
+      },
+      {
+        "persistent_id": 77400,
+        "name": "Perabung>>Atap Spandek",
+        "visible": true,
+        "color": {
+          "red": 204,
+          "green": 84,
+          "blue": 0,
+          "alpha": 255,
+          "hex": "#CC5400"
+        }
+      },
+      {
+        "persistent_id": 81508,
+        "name": "Tanah Timbun",
+        "visible": true,
+        "color": {
+          "red": 255,
+          "green": 170,
+          "blue": 0,
+          "alpha": 255,
+          "hex": "#FFAA00"
+        }
+      },
+      {
+        "persistent_id": 81744,
+        "name": "Urugan Pasir",
+        "visible": true,
+        "color": {
+          "red": 0,
+          "green": 170,
+          "blue": 186,
+          "alpha": 255,
+          "hex": "#00AABA"
+        }
+      },
+      {
+        "persistent_id": 82120,
+        "name": "Cor Lantai",
+        "visible": true,
+        "color": {
+          "red": 102,
+          "green": 221,
+          "blue": 0,
+          "alpha": 255,
+          "hex": "#66DD00"
+        }
+      },
+      {
+        "persistent_id": 82554,
+        "name": "Keramik Lantai",
+        "visible": true,
+        "color": {
+          "red": 153,
+          "green": 153,
+          "blue": 153,
+          "alpha": 255,
+          "hex": "#999999"
+        }
+      },
+      {
+        "persistent_id": 111763,
+        "name": "A. DOOR",
+        "visible": true,
+        "color": {
+          "red": 255,
+          "green": 119,
+          "blue": 102,
+          "alpha": 255,
+          "hex": "#FF7766"
+        }
+      },
+      {
+        "persistent_id": 111765,
+        "name": "#3d_object",
+        "visible": true,
+        "color": {
+          "red": 255,
+          "green": 255,
+          "blue": 255,
+          "alpha": 255,
+          "hex": "#FFFFFF"
+        }
+      },
+      {
+        "persistent_id": 164033,
+        "name": "#KUSEN LT1",
+        "visible": true,
+        "color": {
+          "red": 204,
+          "green": 68,
+          "blue": 0,
+          "alpha": 255,
+          "hex": "#CC4400"
+        }
+      }
+    ],
+    "tag_count": 19,
+    "materials": [
+      {
+        "persistent_id": 33927,
+        "name": "Teddy_Glasses",
+        "display_name": "Teddy_Glasses",
+        "color": {
+          "red": 103,
+          "green": 77,
+          "blue": 64,
+          "alpha": 255,
+          "hex": "#674D40"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 33928,
+        "name": "Teddy_BookCover",
+        "display_name": "Teddy_BookCover",
+        "color": {
+          "red": 50,
+          "green": 131,
+          "blue": 50,
+          "alpha": 255,
+          "hex": "#328332"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 33929,
+        "name": "Teddy_Shoes",
+        "display_name": "Teddy_Shoes",
+        "color": {
+          "red": 189,
+          "green": 191,
+          "blue": 193,
+          "alpha": 255,
+          "hex": "#BDBFC1"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 33930,
+        "name": "Teddy_BookJacket",
+        "display_name": "Teddy_BookJacket",
+        "color": {
+          "red": 67,
+          "green": 109,
+          "blue": 71,
+          "alpha": 255,
+          "hex": "#436D47"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 33931,
+        "name": "Teddy_Bracelet",
+        "display_name": "Teddy_Bracelet",
+        "color": {
+          "red": 145,
+          "green": 141,
+          "blue": 147,
+          "alpha": 255,
+          "hex": "#918D93"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 33932,
+        "name": "Teddy_HairLight",
+        "display_name": "Teddy_HairLight",
+        "color": {
+          "red": 51,
+          "green": 36,
+          "blue": 26,
+          "alpha": 255,
+          "hex": "#33241A"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 33933,
+        "name": "Teddy_Hair",
+        "display_name": "Teddy_Hair",
+        "color": {
+          "red": 48,
+          "green": 28,
+          "blue": 16,
+          "alpha": 255,
+          "hex": "#301C10"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 33934,
+        "name": "Teddy_SkinShadow ",
+        "display_name": "Teddy_SkinShadow ",
+        "color": {
+          "red": 134,
+          "green": 77,
+          "blue": 23,
+          "alpha": 255,
+          "hex": "#864D17"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 33935,
+        "name": "Teddy_Paper",
+        "display_name": "Teddy_Paper",
+        "color": {
+          "red": 237,
+          "green": 237,
+          "blue": 189,
+          "alpha": 255,
+          "hex": "#EDEDBD"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 33936,
+        "name": "Teddy_BraceletShadow ",
+        "display_name": "Teddy_BraceletShadow ",
+        "color": {
+          "red": 165,
+          "green": 134,
+          "blue": 109,
+          "alpha": 255,
+          "hex": "#A5866D"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 33937,
+        "name": "Teddy_Brim",
+        "display_name": "Teddy_Brim",
+        "color": {
+          "red": 101,
+          "green": 50,
+          "blue": 61,
+          "alpha": 255,
+          "hex": "#65323D"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 33938,
+        "name": "Teddy_Brim2",
+        "display_name": "Teddy_Brim2",
+        "color": {
+          "red": 91,
+          "green": 45,
+          "blue": 55,
+          "alpha": 255,
+          "hex": "#5B2D37"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 33939,
+        "name": "Teddy_DressDepth",
+        "display_name": "Teddy_DressDepth",
+        "color": {
+          "red": 87,
+          "green": 167,
+          "blue": 219,
+          "alpha": 255,
+          "hex": "#57A7DB"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 33940,
+        "name": "Teddy_Dress",
+        "display_name": "Teddy_Dress",
+        "color": {
+          "red": 88,
+          "green": 169,
+          "blue": 221,
+          "alpha": 255,
+          "hex": "#58A9DD"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 33941,
+        "name": "Teddy_Hat",
+        "display_name": "Teddy_Hat",
+        "color": {
+          "red": 122,
+          "green": 53,
+          "blue": 68,
+          "alpha": 255,
+          "hex": "#7A3544"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 33942,
+        "name": "Teddy_Skin ",
+        "display_name": "Teddy_Skin ",
+        "color": {
+          "red": 196,
+          "green": 161,
+          "blue": 133,
+          "alpha": 255,
+          "hex": "#C4A185"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 33943,
+        "name": "Teddy_DressShadow",
+        "display_name": "Teddy_DressShadow",
+        "color": {
+          "red": 72,
+          "green": 144,
+          "blue": 214,
+          "alpha": 255,
+          "hex": "#4890D6"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 44593,
+        "name": "Plesteran",
+        "display_name": "Plesteran",
+        "color": {
+          "red": 169,
+          "green": 169,
+          "blue": 169,
+          "alpha": 255,
+          "hex": "#A9A9A9"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "C:/Users/LEGION/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/SBMBOOST APP/Materials/Plesteran.jpg",
+          "width_m": 0.254,
+          "height_m": 0.254,
+          "image_width": 256,
+          "image_height": 256
+        }
+      },
+      {
+        "persistent_id": 44594,
+        "name": "White",
+        "display_name": "White",
+        "color": {
+          "red": 255,
+          "green": 255,
+          "blue": 255,
+          "alpha": 255,
+          "hex": "#FFFFFF"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 51868,
+        "name": "Kayu K18",
+        "display_name": "Kayu K18",
+        "color": {
+          "red": 68,
+          "green": 57,
+          "blue": 49,
+          "alpha": 255,
+          "hex": "#443931"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "C:\\texture\\Kayu HPL\\71_wood fine medium color texture-seamless.jpg",
+          "width_m": 1.0,
+          "height_m": 1.0,
+          "image_width": 1000,
+          "image_height": 1000
+        }
+      },
+      {
+        "persistent_id": 51869,
+        "name": "Aluminium Hitam",
+        "display_name": "Aluminium Hitam",
+        "color": {
+          "red": 50,
+          "green": 50,
+          "blue": 50,
+          "alpha": 255,
+          "hex": "#323232"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 72554,
+        "name": "Pintu - Handle 004",
+        "display_name": "Pintu - Handle 004",
+        "color": {
+          "red": 114,
+          "green": 114,
+          "blue": 114,
+          "alpha": 255,
+          "hex": "#727272"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 72555,
+        "name": "集简空间ly210327-05415",
+        "display_name": "集简空间ly210327-05415",
+        "color": {
+          "red": 34,
+          "green": 34,
+          "blue": 34,
+          "alpha": 255,
+          "hex": "#222222"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 72556,
+        "name": "集简空间ly210327-05413",
+        "display_name": "集简空间ly210327-05413",
+        "color": {
+          "red": 43,
+          "green": 43,
+          "blue": 43,
+          "alpha": 255,
+          "hex": "#2B2B2B"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 72557,
+        "name": "集简空间ly210327-05414",
+        "display_name": "集简空间ly210327-05414",
+        "color": {
+          "red": 229,
+          "green": 174,
+          "blue": 114,
+          "alpha": 255,
+          "hex": "#E5AE72"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 72558,
+        "name": "集简空间ly210327-054",
+        "display_name": "集简空间ly210327-054",
+        "color": {
+          "red": 51,
+          "green": 51,
+          "blue": 51,
+          "alpha": 255,
+          "hex": "#333333"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 72559,
+        "name": "集简空间ly210327-05405",
+        "display_name": "集简空间ly210327-05405",
+        "color": {
+          "red": 140,
+          "green": 123,
+          "blue": 107,
+          "alpha": 255,
+          "hex": "#8C7B6B"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "C:\\Users\\Administrator\\Desktop\\王东旭SU已整理\\4-19\\m210327-054现代门-单开门-双开门-子母门-玻璃门推拉门\\集简空间m210327-054001.jpg",
+          "width_m": 0.0254,
+          "height_m": 0.0254,
+          "image_width": 853,
+          "image_height": 1024
+        }
+      },
+      {
+        "persistent_id": 72560,
+        "name": "集简空间ly210327-05401",
+        "display_name": "集简空间ly210327-05401",
+        "color": {
+          "red": 56,
+          "green": 56,
+          "blue": 56,
+          "alpha": 255,
+          "hex": "#383838"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 73958,
+        "name": "Aluminium Hitam1",
+        "display_name": "Aluminium Hitam1",
+        "color": {
+          "red": 51,
+          "green": 51,
+          "blue": 51,
+          "alpha": 255,
+          "hex": "#333333"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 73959,
+        "name": "Glass_Basic_01",
+        "display_name": "Glass_Basic_01",
+        "color": {
+          "red": 161,
+          "green": 173,
+          "blue": 186,
+          "alpha": 255,
+          "hex": "#A1ADBA"
+        },
+        "alpha": 0.24705882370471954,
+        "texture": null
+      },
+      {
+        "persistent_id": 75213,
+        "name": "Atap_Spandek",
+        "display_name": "Atap_Spandek",
+        "color": {
+          "red": 77,
+          "green": 79,
+          "blue": 85,
+          "alpha": 255,
+          "hex": "#4D4F55"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "C:/Users/LEGION/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/SBMBOOST APP/Materials/Atap_Spandek.jpg",
+          "width_m": 0.5,
+          "height_m": 0.5,
+          "image_width": 200,
+          "image_height": 200
+        }
+      },
+      {
+        "persistent_id": 75214,
+        "name": "Rangka_Atap_Spandek",
+        "display_name": "Rangka_Atap_Spandek",
+        "color": {
+          "red": 193,
+          "green": 199,
+          "blue": 207,
+          "alpha": 255,
+          "hex": "#C1C7CF"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "C:/Users/LEGION/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/SBMBOOST APP/Materials/Rangka_Atap_Spandek.png",
+          "width_m": 1.2,
+          "height_m": 1.2,
+          "image_width": 509,
+          "image_height": 509
+        }
+      },
+      {
+        "persistent_id": 75215,
+        "name": "Listplank GRC Finishing Cat",
+        "display_name": "Listplank GRC Finishing Cat",
+        "color": {
+          "red": 255,
+          "green": 255,
+          "blue": 255,
+          "alpha": 255,
+          "hex": "#FFFFFF"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "C:/Users/LEGION/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/SBMBOOST APP/Materials/GRC_Board.jpg",
+          "width_m": 1.524,
+          "height_m": 1.524,
+          "image_width": 443,
+          "image_height": 443
+        }
+      },
+      {
+        "persistent_id": 75216,
+        "name": "List Kayu Finishing Cat",
+        "display_name": "List Kayu Finishing Cat",
+        "color": {
+          "red": 255,
+          "green": 255,
+          "blue": 255,
+          "alpha": 255,
+          "hex": "#FFFFFF"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "C:/Users/LEGION/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/SBMBOOST APP/Materials/Tripleks.jpg",
+          "width_m": 1.5,
+          "height_m": 1.5,
+          "image_width": 256,
+          "image_height": 256
+        }
+      },
+      {
+        "persistent_id": 75217,
+        "name": "Lambrisering Kayu Finishing Kayu",
+        "display_name": "Lambrisering Kayu Finishing Kayu",
+        "color": {
+          "red": 255,
+          "green": 255,
+          "blue": 255,
+          "alpha": 255,
+          "hex": "#FFFFFF"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "C:/Users/LEGION/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/SBMBOOST APP/Materials/Lambrisering_Kayu.jpg",
+          "width_m": 0.3,
+          "height_m": 0.3,
+          "image_width": 256,
+          "image_height": 256
+        }
+      },
+      {
+        "persistent_id": 81506,
+        "name": "Urugan Tanah",
+        "display_name": "Urugan Tanah",
+        "color": {
+          "red": 158,
+          "green": 116,
+          "blue": 100,
+          "alpha": 255,
+          "hex": "#9E7464"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "C:/Users/LEGION/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/SBMBOOST APP/Materials/Urugan Tanah.jpg",
+          "width_m": 0.5,
+          "height_m": 0.5,
+          "image_width": 256,
+          "image_height": 256
+        }
+      },
+      {
+        "persistent_id": 81702,
+        "name": "Urugan_Pasir",
+        "display_name": "Urugan_Pasir",
+        "color": {
+          "red": 182,
+          "green": 148,
+          "blue": 101,
+          "alpha": 255,
+          "hex": "#B69465"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "C:/Users/LEGION/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/SBMBOOST APP/Materials/Urugan_Pasir.jpg",
+          "width_m": 0.254,
+          "height_m": 0.254,
+          "image_width": 256,
+          "image_height": 256
+        }
+      },
+      {
+        "persistent_id": 82119,
+        "name": "Cor_Beton",
+        "display_name": "Cor_Beton",
+        "color": {
+          "red": 155,
+          "green": 150,
+          "blue": 148,
+          "alpha": 255,
+          "hex": "#9B9694"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "C:/Users/LEGION/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/SBMBOOST APP/Materials/Cor_Beton.jpg",
+          "width_m": 0.3,
+          "height_m": 0.3,
+          "image_width": 256,
+          "image_height": 256
+        }
+      },
+      {
+        "persistent_id": 82553,
+        "name": "152_wall cladding stone texture-seamless",
+        "display_name": "152_wall cladding stone texture-seamless",
+        "color": {
+          "red": 89,
+          "green": 89,
+          "blue": 89,
+          "alpha": 255,
+          "hex": "#595959"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "C:/Users/LEGION/AppData/Local/152_wall cladding stone texture-seamless.jpg",
+          "width_m": 0.6,
+          "height_m": 0.6,
+          "image_width": 256,
+          "image_height": 256
+        }
+      },
+      {
+        "persistent_id": 111767,
+        "name": "WF3",
+        "display_name": "WF3",
+        "color": {
+          "red": 141,
+          "green": 111,
+          "blue": 81,
+          "alpha": 255,
+          "hex": "#8D6F51"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 111768,
+        "name": "00.borde_vidrios",
+        "display_name": "00.borde_vidrios",
+        "color": {
+          "red": 142,
+          "green": 142,
+          "blue": 142,
+          "alpha": 255,
+          "hex": "#8E8E8E"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 111769,
+        "name": "00.Charcoal_Alum",
+        "display_name": "00.Charcoal_Alum",
+        "color": {
+          "red": 35,
+          "green": 35,
+          "blue": 35,
+          "alpha": 255,
+          "hex": "#232323"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 111770,
+        "name": "Material100",
+        "display_name": "Material100",
+        "color": {
+          "red": 66,
+          "green": 66,
+          "blue": 66,
+          "alpha": 255,
+          "hex": "#424242"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 111771,
+        "name": "Material56",
+        "display_name": "Material56",
+        "color": {
+          "red": 128,
+          "green": 102,
+          "blue": 75,
+          "alpha": 255,
+          "hex": "#80664B"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "D:\\WORK\\RESOURCES\\MATERIAL\\Kayu HPL\\133_golden teak fine wood PBR texture seamless.jpg",
+          "width_m": 1.0,
+          "height_m": 1.0,
+          "image_width": 1024,
+          "image_height": 1024
+        }
+      },
+      {
+        "persistent_id": 113366,
+        "name": "WF4",
+        "display_name": "WF4",
+        "color": {
+          "red": 119,
+          "green": 119,
+          "blue": 119,
+          "alpha": 255,
+          "hex": "#777777"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 113367,
+        "name": "Material99",
+        "display_name": "Material99",
+        "color": {
+          "red": 68,
+          "green": 57,
+          "blue": 49,
+          "alpha": 255,
+          "hex": "#443931"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "C:\\texture\\Kayu HPL\\71_wood fine medium color texture-seamless.jpg",
+          "width_m": 1.0,
+          "height_m": 1.0,
+          "image_width": 1000,
+          "image_height": 1000
+        }
+      },
+      {
+        "persistent_id": 113368,
+        "name": "Material53",
+        "display_name": "Material53",
+        "color": {
+          "red": 141,
+          "green": 125,
+          "blue": 108,
+          "alpha": 255,
+          "hex": "#8D7D6C"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "D:\\WORK\\RESOURCES\\MATERIAL\\Kayu HPL\\133_golden teak fine wood PBR texture seamless.jpg",
+          "width_m": 1.0,
+          "height_m": 1.0,
+          "image_width": 1024,
+          "image_height": 1024
+        }
+      },
+      {
+        "persistent_id": 163789,
+        "name": "Aluminium Hitam2",
+        "display_name": "Aluminium Hitam2",
+        "color": {
+          "red": 50,
+          "green": 50,
+          "blue": 50,
+          "alpha": 255,
+          "hex": "#323232"
+        },
+        "alpha": 1.0,
+        "texture": null
+      }
+    ],
+    "material_count": 48,
+    "scenes": [
+
+    ],
+    "scene_count": 0,
+    "style": {
+      "selected_style": "[Architectural Design Style]",
+      "display_sketch_axes": true,
+      "draw_hidden": false,
+      "draw_hidden_geometry": false,
+      "edge_display_mode": 1,
+      "face_front_color": {
+        "red": 255,
+        "green": 255,
+        "blue": 255,
+        "alpha": 255,
+        "hex": "#FFFFFF"
+      },
+      "face_back_color": {
+        "red": 164,
+        "green": 178,
+        "blue": 187,
+        "alpha": 255,
+        "hex": "#A4B2BB"
+      },
+      "background_color": {
+        "red": 204,
+        "green": 204,
+        "blue": 201,
+        "alpha": 255,
+        "hex": "#CCCCC9"
+      }
+    },
+    "georeferenced": false,
+    "missing_assets": [
+      {
+        "material": "Plesteran",
+        "source": "C:/Users/LEGION/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/SBMBOOST APP/Materials/Plesteran.jpg"
+      },
+      {
+        "material": "Kayu K18",
+        "source": "C:\\texture\\Kayu HPL\\71_wood fine medium color texture-seamless.jpg"
+      },
+      {
+        "material": "集简空间ly210327-05405",
+        "source": "C:\\Users\\Administrator\\Desktop\\王东旭SU已整理\\4-19\\m210327-054现代门-单开门-双开门-子母门-玻璃门推拉门\\集简空间m210327-054001.jpg"
+      },
+      {
+        "material": "Atap_Spandek",
+        "source": "C:/Users/LEGION/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/SBMBOOST APP/Materials/Atap_Spandek.jpg"
+      },
+      {
+        "material": "Rangka_Atap_Spandek",
+        "source": "C:/Users/LEGION/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/SBMBOOST APP/Materials/Rangka_Atap_Spandek.png"
+      },
+      {
+        "material": "Listplank GRC Finishing Cat",
+        "source": "C:/Users/LEGION/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/SBMBOOST APP/Materials/GRC_Board.jpg"
+      },
+      {
+        "material": "List Kayu Finishing Cat",
+        "source": "C:/Users/LEGION/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/SBMBOOST APP/Materials/Tripleks.jpg"
+      },
+      {
+        "material": "Lambrisering Kayu Finishing Kayu",
+        "source": "C:/Users/LEGION/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/SBMBOOST APP/Materials/Lambrisering_Kayu.jpg"
+      },
+      {
+        "material": "Urugan Tanah",
+        "source": "C:/Users/LEGION/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/SBMBOOST APP/Materials/Urugan Tanah.jpg"
+      },
+      {
+        "material": "Urugan_Pasir",
+        "source": "C:/Users/LEGION/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/SBMBOOST APP/Materials/Urugan_Pasir.jpg"
+      },
+      {
+        "material": "Cor_Beton",
+        "source": "C:/Users/LEGION/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/SBMBOOST APP/Materials/Cor_Beton.jpg"
+      },
+      {
+        "material": "152_wall cladding stone texture-seamless",
+        "source": "C:/Users/LEGION/AppData/Local/152_wall cladding stone texture-seamless.jpg"
+      },
+      {
+        "material": "Material56",
+        "source": "D:\\WORK\\RESOURCES\\MATERIAL\\Kayu HPL\\133_golden teak fine wood PBR texture seamless.jpg"
+      },
+      {
+        "material": "Material99",
+        "source": "C:\\texture\\Kayu HPL\\71_wood fine medium color texture-seamless.jpg"
+      },
+      {
+        "material": "Material53",
+        "source": "D:\\WORK\\RESOURCES\\MATERIAL\\Kayu HPL\\133_golden teak fine wood PBR texture seamless.jpg"
+      }
+    ],
+    "warnings": [
+      "Model has no scenes",
+      "Texture source paths unavailable on disk; textures may still be embedded"
+    ]
+  },
+  "captures": [
+    {
+      "model_name": "PROJECT SBOOST 2",
+      "view_name": "isometric",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/project-sboost-2/sketchup/isometric.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 23.271809,
+        "y": -13.256501,
+        "z": 17.942949
+      },
+      "camera_target_m": {
+        "x": 4.951925,
+        "y": 5.063383,
+        "z": 3.287042
+      },
+      "camera_up": {
+        "x": -0.34815531,
+        "y": 0.34815531,
+        "z": 0.87038828
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 12.123572,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Architectural Design Style]",
+      "timestamp": "2026-07-12T21:04:24Z"
+    },
+    {
+      "model_name": "PROJECT SBOOST 2",
+      "view_name": "front",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/project-sboost-2/sketchup/front.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 5.314785,
+        "y": -20.871412,
+        "z": 4.247227
+      },
+      "camera_target_m": {
+        "x": 5.314785,
+        "y": 5.272675,
+        "z": 4.247227
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 8.96519,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Architectural Design Style]",
+      "timestamp": "2026-07-12T21:04:24Z"
+    },
+    {
+      "model_name": "PROJECT SBOOST 2",
+      "view_name": "back",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/project-sboost-2/sketchup/back.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 5.251162,
+        "y": 30.275159,
+        "z": 4.247227
+      },
+      "camera_target_m": {
+        "x": 5.251162,
+        "y": 5.272675,
+        "z": 4.247227
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 8.96519,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Architectural Design Style]",
+      "timestamp": "2026-07-12T21:04:25Z"
+    },
+    {
+      "model_name": "PROJECT SBOOST 2",
+      "view_name": "left",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/project-sboost-2/sketchup/left.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 27.933545,
+        "y": 5.157019,
+        "z": 4.247227
+      },
+      "camera_target_m": {
+        "x": 5.411637,
+        "y": 5.157019,
+        "z": 4.247227
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 8.96519,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Architectural Design Style]",
+      "timestamp": "2026-07-12T21:04:26Z"
+    },
+    {
+      "model_name": "PROJECT SBOOST 2",
+      "view_name": "right",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/project-sboost-2/sketchup/right.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": -17.110272,
+        "y": 5.093396,
+        "z": 4.247227
+      },
+      "camera_target_m": {
+        "x": 5.411637,
+        "y": 5.093396,
+        "z": 4.247227
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 8.96519,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Architectural Design Style]",
+      "timestamp": "2026-07-12T21:04:26Z"
+    },
+    {
+      "model_name": "PROJECT SBOOST 2",
+      "view_name": "top",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/project-sboost-2/sketchup/top.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 5.430442,
+        "y": 5.093396,
+        "z": 32.418139
+      },
+      "camera_target_m": {
+        "x": 5.430442,
+        "y": 5.093396,
+        "z": 4.252846
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 12.814641,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Architectural Design Style]",
+      "timestamp": "2026-07-12T21:04:27Z"
+    }
+  ],
+  "warnings": [
+    "Model has no scenes",
+    "Texture source paths unavailable on disk; textures may still be embedded"
+  ]
+}

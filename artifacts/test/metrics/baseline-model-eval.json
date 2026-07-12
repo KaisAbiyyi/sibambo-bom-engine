@@ -1,0 +1,192 @@
+{
+  "workflow_version": "1.0.0",
+  "measured_at": "2026-07-12T21:17:09.643Z",
+  "model": "test",
+  "runtime": {
+    "bun": "1.3.10",
+    "platform": "win32",
+    "arch": "x64",
+    "ui_max_file_bytes": 83886080,
+    "ui_max_decompressed_bytes": 125829120
+  },
+  "source": {
+    "skp_path": "D:\\projects\\sibambo-bom-engine\\skps\\test.skp",
+    "skp_bytes": 163941,
+    "units": {
+      "length_unit_id": 4,
+      "length_unit_name": "Meters",
+      "length_precision": 4,
+      "length_format": 0,
+      "suppress_units_display": false
+    },
+    "bounds_m": {
+      "min_m": {
+        "x": -0.898076,
+        "y": -1.15714,
+        "z": -0.001367
+      },
+      "max_m": {
+        "x": 19.638329,
+        "y": 26.041184,
+        "z": 1.592087
+      },
+      "size_m": {
+        "x": 20.536405,
+        "y": 27.198325,
+        "z": 1.593454
+      },
+      "width_m": 20.536405,
+      "depth_m": 27.198325,
+      "height_m": 1.593454,
+      "diagonal_m": 34.117912
+    },
+    "groups_expanded": 0,
+    "component_definitions": 1,
+    "component_instances_expanded": 1,
+    "materials": 21,
+    "tags": 1,
+    "scenes": 0
+  },
+  "loads": {
+    "full": {
+      "status": "ok",
+      "format": "legacy-json-v2.1",
+      "path": "D:\\projects\\sibambo-bom-engine\\artifacts\\test\\exported\\baseline-current_full.json",
+      "file_bytes": 1038263,
+      "decompressed_bytes": 1038263,
+      "decode_and_container_parse_ms": 15.96,
+      "model_parse_ms": 8.09,
+      "triangulation_ms": 4.23,
+      "total_pipeline_ms": 28.28,
+      "heap_delta_bytes": 2397220,
+      "rss_delta_bytes": 14249984,
+      "heap_before_bytes": 2390537,
+      "heap_after_bytes": 4787757,
+      "rss_before_bytes": 199454720,
+      "rss_after_bytes": 213704704,
+      "external_before_bytes": 1964419,
+      "external_after_bytes": 6674820,
+      "entities": 985,
+      "faces": 984,
+      "vertices": 3737,
+      "triangles": 1769,
+      "materials": 21,
+      "classification": {
+        "parts": [
+          {
+            "key": "floor",
+            "label": "Lantai",
+            "count": 2,
+            "areaM2": 417.9,
+            "color": "#c6a96b"
+          },
+          {
+            "key": "furniture",
+            "label": "Furnitur",
+            "count": 982,
+            "areaM2": 0.5,
+            "color": "#75685e"
+          }
+        ],
+        "surfaces": [
+          {
+            "key": "floor",
+            "label": "Lantai",
+            "count": 2,
+            "areaM2": 417.9,
+            "confidence": 0.82
+          },
+          {
+            "key": "wall_x_neg",
+            "label": "Dinding X-",
+            "count": 965,
+            "areaM2": 0.5,
+            "confidence": 0.82
+          },
+          {
+            "key": "wall_y_neg",
+            "label": "Dinding Y-",
+            "count": 17,
+            "areaM2": 0,
+            "confidence": 0.82
+          }
+        ]
+      },
+      "warnings": [
+        "Jendela tidak terdeteksi eksplisit. OTTV memakai rasio kaca input.",
+        "Pintu tidak terdeteksi eksplisit. Flow manusia memakai estimasi zona.",
+        "Ruang tidak eksplisit di JSON. Sistem memakai footprint estimasi."
+      ]
+    },
+    "visual": {
+      "status": "ok",
+      "format": "bome-v1-gzip",
+      "path": "D:\\projects\\sibambo-bom-engine\\artifacts\\test\\exported\\baseline-current_visual.bome.gz",
+      "file_bytes": 10653,
+      "decompressed_bytes": 69376,
+      "decode_and_container_parse_ms": 3.48,
+      "model_parse_ms": 15.69,
+      "triangulation_ms": 0.49,
+      "total_pipeline_ms": 19.66,
+      "heap_delta_bytes": 0,
+      "rss_delta_bytes": 8454144,
+      "heap_before_bytes": 2390537,
+      "heap_after_bytes": 2390537,
+      "rss_before_bytes": 186155008,
+      "rss_after_bytes": 194609152,
+      "external_before_bytes": 1621845,
+      "external_after_bytes": 2036069,
+      "entities": 932,
+      "faces": 932,
+      "vertices": 2796,
+      "triangles": 932,
+      "materials": 21,
+      "classification": {
+        "parts": [
+          {
+            "key": "floor",
+            "label": "Lantai",
+            "count": 2,
+            "areaM2": 417.9,
+            "color": "#c6a96b"
+          },
+          {
+            "key": "furniture",
+            "label": "Furnitur",
+            "count": 930,
+            "areaM2": 0.5,
+            "color": "#75685e"
+          }
+        ],
+        "surfaces": [
+          {
+            "key": "floor",
+            "label": "Lantai",
+            "count": 2,
+            "areaM2": 417.9,
+            "confidence": 0.82
+          },
+          {
+            "key": "wall_x_neg",
+            "label": "Dinding X-",
+            "count": 913,
+            "areaM2": 0.5,
+            "confidence": 0.82
+          },
+          {
+            "key": "wall_y_neg",
+            "label": "Dinding Y-",
+            "count": 17,
+            "areaM2": 0,
+            "confidence": 0.82
+          }
+        ]
+      },
+      "warnings": [
+        "Jendela tidak terdeteksi eksplisit. OTTV memakai rasio kaca input.",
+        "Pintu tidak terdeteksi eksplisit. Flow manusia memakai estimasi zona.",
+        "Ruang tidak eksplisit di JSON. Sistem memakai footprint estimasi."
+      ]
+    }
+  }
+}

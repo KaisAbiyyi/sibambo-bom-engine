@@ -1,0 +1,14 @@
+{
+  "workflow_version": "1.0.0",
+  "measured_at": "2026-07-12T20:59:53Z",
+  "source_skp": "D:\\projects\\sibambo-bom-engine\\skps\\test.skp",
+  "level": "visual",
+  "compressed": true,
+  "status": "ok",
+  "wall_elapsed_ms_including_dialog": 9445.54,
+  "plugin_elapsed_ms": 210.0,
+  "output_path": "D:/projects/sibambo-bom-engine/artifacts/test/exported/baseline-current_visual.bome.gz",
+  "output_exists": true,
+  "output_bytes": 10653,
+  "error": null
+}

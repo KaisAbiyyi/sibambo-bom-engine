@@ -1,0 +1,316 @@
+{
+  "workflow_version": "1.0.0",
+  "measured_at": "2026-07-12T21:17:05.434Z",
+  "model": "house2",
+  "runtime": {
+    "bun": "1.3.10",
+    "platform": "win32",
+    "arch": "x64",
+    "ui_max_file_bytes": 83886080,
+    "ui_max_decompressed_bytes": 125829120
+  },
+  "source": {
+    "skp_path": "D:\\projects\\sibambo-bom-engine\\skps\\house2.skp",
+    "skp_bytes": 440016,
+    "units": {
+      "length_unit_id": 0,
+      "length_unit_name": "Inches",
+      "length_precision": 4,
+      "length_format": 1,
+      "suppress_units_display": false
+    },
+    "bounds_m": {
+      "min_m": {
+        "x": -0.4699,
+        "y": -5.740288,
+        "z": 0
+      },
+      "max_m": {
+        "x": 6.87705,
+        "y": 9.840502,
+        "z": 6.5659
+      },
+      "size_m": {
+        "x": 7.34695,
+        "y": 15.58079,
+        "z": 6.5659
+      },
+      "width_m": 7.34695,
+      "depth_m": 15.58079,
+      "height_m": 6.5659,
+      "diagonal_m": 18.435014
+    },
+    "groups_expanded": 4,
+    "component_definitions": 40,
+    "component_instances_expanded": 97,
+    "materials": 19,
+    "tags": 5,
+    "scenes": 0
+  },
+  "loads": {
+    "full": {
+      "status": "ok",
+      "format": "legacy-json-v2.1",
+      "path": "D:\\projects\\sibambo-bom-engine\\artifacts\\house2\\exported\\baseline-current_full.json",
+      "file_bytes": 6794325,
+      "decompressed_bytes": 6794325,
+      "decode_and_container_parse_ms": 81.11,
+      "model_parse_ms": 110.81,
+      "triangulation_ms": 3.89,
+      "total_pipeline_ms": 195.81,
+      "heap_delta_bytes": 32568860,
+      "rss_delta_bytes": 60874752,
+      "heap_before_bytes": 16553053,
+      "heap_after_bytes": 49121913,
+      "rss_before_bytes": 242057216,
+      "rss_after_bytes": 302931968,
+      "external_before_bytes": 3437132,
+      "external_after_bytes": 33915617,
+      "entities": 9835,
+      "faces": 9734,
+      "vertices": 29523,
+      "triangles": 10079,
+      "materials": 19,
+      "classification": {
+        "parts": [
+          {
+            "key": "roof",
+            "label": "Atap",
+            "count": 612,
+            "areaM2": 63.4,
+            "color": "#ab5f4f"
+          },
+          {
+            "key": "walls",
+            "label": "Dinding",
+            "count": 368,
+            "areaM2": 153.6,
+            "color": "#557b72"
+          },
+          {
+            "key": "floor",
+            "label": "Lantai",
+            "count": 767,
+            "areaM2": 147.4,
+            "color": "#c6a96b"
+          },
+          {
+            "key": "ceiling",
+            "label": "Plafon",
+            "count": 410,
+            "areaM2": 2.6,
+            "color": "#d7cfaa"
+          },
+          {
+            "key": "doors",
+            "label": "Pintu",
+            "count": 2684,
+            "areaM2": 18.3,
+            "color": "#9b6b3d"
+          },
+          {
+            "key": "windows",
+            "label": "Jendela",
+            "count": 2402,
+            "areaM2": 39.7,
+            "color": "#5ca6c9"
+          },
+          {
+            "key": "other",
+            "label": "Lainnya",
+            "count": 2491,
+            "areaM2": 10.3,
+            "color": "#8a8172"
+          }
+        ],
+        "surfaces": [
+          {
+            "key": "wall_y_neg",
+            "label": "Dinding Y-",
+            "count": 1451,
+            "areaM2": 84.4,
+            "confidence": 0.82
+          },
+          {
+            "key": "floor",
+            "label": "Lantai",
+            "count": 1286,
+            "areaM2": 81,
+            "confidence": 0.82
+          },
+          {
+            "key": "ceiling",
+            "label": "Plafon",
+            "count": 1006,
+            "areaM2": 77,
+            "confidence": 0.82
+          },
+          {
+            "key": "roof_slope",
+            "label": "Atap miring",
+            "count": 1576,
+            "areaM2": 64,
+            "confidence": 0.82
+          },
+          {
+            "key": "wall_x_neg",
+            "label": "Dinding X-",
+            "count": 1640,
+            "areaM2": 63.1,
+            "confidence": 0.82
+          },
+          {
+            "key": "wall_y_pos",
+            "label": "Dinding Y+",
+            "count": 1388,
+            "areaM2": 48.1,
+            "confidence": 0.82
+          },
+          {
+            "key": "wall_x_pos",
+            "label": "Dinding X+",
+            "count": 1387,
+            "areaM2": 17.6,
+            "confidence": 0.82
+          }
+        ]
+      },
+      "warnings": [
+        "Ruang tidak eksplisit di JSON. Sistem memakai footprint estimasi."
+      ]
+    },
+    "visual": {
+      "status": "ok",
+      "format": "bome-v1-gzip",
+      "path": "D:\\projects\\sibambo-bom-engine\\artifacts\\house2\\exported\\baseline-current_visual.bome.gz",
+      "file_bytes": 102744,
+      "decompressed_bytes": 686492,
+      "decode_and_container_parse_ms": 9.14,
+      "model_parse_ms": 77.71,
+      "triangulation_ms": 0.99,
+      "total_pipeline_ms": 87.84,
+      "heap_delta_bytes": 14145010,
+      "rss_delta_bytes": 41508864,
+      "heap_before_bytes": 2408043,
+      "heap_after_bytes": 16553053,
+      "rss_before_bytes": 195543040,
+      "rss_after_bytes": 237051904,
+      "external_before_bytes": 3030749,
+      "external_after_bytes": 6248157,
+      "entities": 9490,
+      "faces": 9490,
+      "vertices": 28470,
+      "triangles": 9490,
+      "materials": 18,
+      "classification": {
+        "parts": [
+          {
+            "key": "roof",
+            "label": "Atap",
+            "count": 1462,
+            "areaM2": 64,
+            "color": "#ab5f4f"
+          },
+          {
+            "key": "walls",
+            "label": "Dinding",
+            "count": 651,
+            "areaM2": 162.2,
+            "color": "#557b72"
+          },
+          {
+            "key": "floor",
+            "label": "Lantai",
+            "count": 1202,
+            "areaM2": 81,
+            "color": "#c6a96b"
+          },
+          {
+            "key": "ceiling",
+            "label": "Plafon",
+            "count": 987,
+            "areaM2": 77,
+            "color": "#d7cfaa"
+          },
+          {
+            "key": "doors",
+            "label": "Pintu",
+            "count": 4,
+            "areaM2": 2.2,
+            "color": "#9b6b3d"
+          },
+          {
+            "key": "windows",
+            "label": "Jendela",
+            "count": 83,
+            "areaM2": 13.4,
+            "color": "#5ca6c9"
+          },
+          {
+            "key": "other",
+            "label": "Lainnya",
+            "count": 5101,
+            "areaM2": 35.4,
+            "color": "#8a8172"
+          }
+        ],
+        "surfaces": [
+          {
+            "key": "wall_y_neg",
+            "label": "Dinding Y-",
+            "count": 1444,
+            "areaM2": 84.4,
+            "confidence": 0.82
+          },
+          {
+            "key": "floor",
+            "label": "Lantai",
+            "count": 1202,
+            "areaM2": 81,
+            "confidence": 0.82
+          },
+          {
+            "key": "ceiling",
+            "label": "Plafon",
+            "count": 987,
+            "areaM2": 77,
+            "confidence": 0.82
+          },
+          {
+            "key": "roof_slope",
+            "label": "Atap miring",
+            "count": 1462,
+            "areaM2": 64,
+            "confidence": 0.82
+          },
+          {
+            "key": "wall_x_neg",
+            "label": "Dinding X-",
+            "count": 1634,
+            "areaM2": 63.1,
+            "confidence": 0.82
+          },
+          {
+            "key": "wall_y_pos",
+            "label": "Dinding Y+",
+            "count": 1381,
+            "areaM2": 48.1,
+            "confidence": 0.82
+          },
+          {
+            "key": "wall_x_pos",
+            "label": "Dinding X+",
+            "count": 1380,
+            "areaM2": 17.6,
+            "confidence": 0.82
+          }
+        ]
+      },
+      "warnings": [
+        "Jendela tidak terdeteksi eksplisit. OTTV memakai rasio kaca input.",
+        "Pintu tidak terdeteksi eksplisit. Flow manusia memakai estimasi zona.",
+        "Ruang tidak eksplisit di JSON. Sistem memakai footprint estimasi."
+      ]
+    }
+  }
+}
