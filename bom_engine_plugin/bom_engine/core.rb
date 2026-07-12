@@ -310,20 +310,22 @@ module BOMEngine
         summary += "Renderable faces: #{stats[:faces]}\n"
         summary += "Roof slope faces: #{stats[:roof_slope_faces]}\n"
 
-        UI.messagebox(
-          "Export selesai!\n\n" \
-          "File: #{out_path}\n" \
-          "#{summary}" \
-          "Waktu: #{elapsed}s",
-          MB_OK
-        )
+        unless settings[:silent]
+          UI.messagebox(
+            "Export selesai!\n\n" \
+            "File: #{out_path}\n" \
+            "#{summary}" \
+            "Waktu: #{elapsed}s",
+            MB_OK
+          )
+        end
 
         save_last_settings(settings)
 
       rescue => e
         model.abort_operation
         Logger.error("Export failed: #{e.message}\n#{e.backtrace.first(5).join("\n")}")
-        UI.messagebox("Export gagal:\n#{e.message}", MB_OK)
+        UI.messagebox("Export gagal:\n#{e.message}", MB_OK) unless settings[:silent]
         return
       end
 

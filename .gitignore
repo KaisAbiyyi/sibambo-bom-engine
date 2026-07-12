@@ -20,3 +20,5 @@ artifacts/**/*.glb
 artifacts/**/exported/*.json
 artifacts/**/exported/*.json.gz
 artifacts/_workflow/logs/
+artifacts/_workflow/backups/
+artifacts/_workflow/staging/

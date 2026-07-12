@@ -72,6 +72,9 @@ module BOMEngine
 
       # --- world_area_m2 honors scaled instances ---
       model = Sketchup.active_model
+      old_modified = model.modified?
+      model.start_operation("BOM Engine Traversal Tests", true)
+      begin
       group = model.entities.add_group
       scaled_face = group.entities.add_face(
         [0, 0, 0],
@@ -194,6 +197,11 @@ module BOMEngine
           model.materials.remove(mat) if mat && model.materials.respond_to?(:remove)
         rescue
         end
+      end
+
+      ensure
+        model.abort_operation
+        model.modified = old_modified if model.respond_to?(:modified=)
       end
 
       total = pass + fail_count

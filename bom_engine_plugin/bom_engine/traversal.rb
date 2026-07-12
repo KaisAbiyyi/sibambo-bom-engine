@@ -258,7 +258,9 @@ module BOMEngine
       (1...(points.length - 1)).each do |index|
         area += ((points[index] - origin).cross(points[index + 1] - origin).length * 0.5)
       end
-      (area * Constants::IN2_TO_M2).round(4)
+      # Mesh polygons can be tiny and numerous. Four-decimal rounding can turn
+      # valid triangles into zero-area rows or accumulate visible area drift.
+      (area * Constants::IN2_TO_M2).round(8)
     end
 
     # Account for non-uniform scale applied by parent instances.
