@@ -12,6 +12,8 @@ require_relative 'opening_detector'
 require_relative 'material_extractor'
 require_relative 'spatial_analyzer'
 require_relative 'json_builder'
+require_relative 'canonical_graph_builder'
+require_relative 'canonical_json_writer'
 require_relative 'texture_exporter'
 require_relative 'binary_mesh_streamer'
 require_relative 'ui_dialog'
@@ -99,6 +101,7 @@ module BOMEngine
     #   :compress_output  [Boolean] gzip output
     #   :compact_geometry [Boolean] legacy setting; Visual/Standard always use compact mesh
     #   :binary_geometry  [Boolean] legacy setting; Visual/Standard always use .bome/.bome.gz
+    #   :output_format    [String]  canonical_v3 or legacy (default)
     #   :selection_only   [Boolean] export only currently selected entities
     def self.run_export(settings)
       model    = Sketchup.active_model
@@ -115,6 +118,31 @@ module BOMEngine
       if selection_only && model.selection.empty?
         UI.messagebox("Tidak ada objek yang diseleksi.\nGunakan Export Model untuk mengekspor seluruh model.", MB_OK)
         return
+      end
+
+      if settings[:output_format].to_s == "canonical_v3"
+        begin
+          result = export_canonical(model, settings)
+          unless settings[:silent]
+            stats = result[:statistics]
+            UI.messagebox(
+              "Export canonical selesai!\n\n" \
+              "File: #{result[:path]}\n" \
+              "Definitions: #{stats[:definitions]}\n" \
+              "Instances: #{stats[:component_instances].to_i + stats[:group_instances].to_i}\n" \
+              "Faces: #{stats[:faces]}\n" \
+              "Ukuran: #{result[:bytes]} bytes\n" \
+              "Waktu: #{result[:elapsed_seconds]}s",
+              MB_OK
+            )
+          end
+          save_last_settings(settings.merge(output_path: result[:path]))
+          return result
+        rescue => e
+          Logger.error("Canonical export failed: #{e.message}\n#{e.backtrace.first(5).join("\n")}")
+          UI.messagebox("Export canonical gagal:\n#{e.message}", MB_OK) unless settings[:silent]
+          return nil
+        end
       end
 
       # Append export level suffix before .json extension.
@@ -275,6 +303,70 @@ module BOMEngine
       model.commit_operation
     end
 
+    # Export canonical JSON v3 without expanding component instances.
+    # Kept separate from the legacy exporter so existing APIs and output remain stable.
+    def self.export_canonical(model, settings)
+      started_at = Time.now
+      output_path = canonical_output_path(settings[:output_path], settings[:compress_output])
+      selection_only = settings[:selection_only]
+      entities = selection_only ? model.selection : model.entities
+      parent_transform = selection_only ? active_context_transform(model) : Geom::Transformation.new
+
+      texture_writer = begin
+        Sketchup.create_texture_writer
+      rescue => e
+        Logger.warn("TextureWriter tidak tersedia (#{e.message}). UV dilewati.")
+        nil
+      end
+
+      texture_dir = nil
+      if settings[:export_textures]
+        texture_dir = output_path.sub(/\.json(?:\.gz)?$/i, '_textures')
+        MaterialExtractor.extract(model, texture_writer, texture_dir)
+      end
+
+      spatial = if selection_only
+                  SpatialAnalyzer.analyze_entities(entities, parent_transform)
+                else
+                  SpatialAnalyzer.analyze(model)
+                end
+
+      canonical_settings = settings.merge(
+        output_format: 'canonical_v3',
+        export_level: 'full',
+        selection_only: selection_only,
+        texture_directory: texture_dir
+      )
+      graph = CanonicalGraphBuilder.build(
+        model: model,
+        entities: entities,
+        parent_transform: parent_transform,
+        settings: canonical_settings,
+        spatial: spatial,
+        texture_writer: texture_writer
+      )
+      result = CanonicalJSONWriter.write(
+        output_path,
+        graph,
+        pretty: settings[:pretty_print] == true,
+        compress: settings[:compress_output] == true
+      )
+      elapsed = (Time.now - started_at).round(3)
+      Logger.info("Canonical export complete in #{elapsed}s -> #{output_path}")
+      result.merge(
+        elapsed_seconds: elapsed,
+        format: 'canonical_v3',
+        statistics: graph[:statistics]
+      )
+    end
+
+    def self.canonical_output_path(output_path, compress)
+      base_path = output_path.to_s.sub(/\.(?:json|bome)(?:\.gz)?$/i, '')
+      base_path = base_path.sub(/_(?:visual|standard|full|canonical)$/i, '')
+      path = "#{base_path}_canonical.json"
+      compress ? "#{path}.gz" : path
+    end
+
     # ── Selection helpers ────────────────────────────────────────────
 
     # Compute the world-space transformation of the current editing context.
@@ -326,6 +418,7 @@ module BOMEngine
       Sketchup.write_default(SETTINGS_KEY, "compress_output",   settings[:compress_output].to_s)
       Sketchup.write_default(SETTINGS_KEY, "compact_geometry",  settings[:compact_geometry].to_s)
       Sketchup.write_default(SETTINGS_KEY, "binary_geometry",   settings[:binary_geometry].to_s)
+      Sketchup.write_default(SETTINGS_KEY, "output_format",     settings[:output_format].to_s)
     end
 
     def self.load_last_settings
@@ -342,7 +435,8 @@ module BOMEngine
         pretty_print:      Sketchup.read_default(SETTINGS_KEY, "pretty_print")      == "true",
         compress_output:   Sketchup.read_default(SETTINGS_KEY, "compress_output")   != "false",
         compact_geometry:  Sketchup.read_default(SETTINGS_KEY, "compact_geometry")  != "false",
-        binary_geometry:   Sketchup.read_default(SETTINGS_KEY, "binary_geometry")   != "false"
+        binary_geometry:   Sketchup.read_default(SETTINGS_KEY, "binary_geometry")   != "false",
+        output_format:     Sketchup.read_default(SETTINGS_KEY, "output_format").to_s
       }
     end
 

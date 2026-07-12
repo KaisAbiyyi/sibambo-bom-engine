@@ -1,0 +1,188 @@
+{
+  "format": {
+    "name": "BOM Engine Canonical",
+    "version": "3.0.0",
+    "schema": "https://sibambo.dev/schemas/bom-engine/3.0.0/schema.json",
+    "generator": {
+      "name": "BOM Engine SketchUp Exporter",
+      "version": "3.0.0"
+    }
+  },
+  "source": {
+    "kind": "SketchUp",
+    "identity": {
+      "guid": "example-model-guid",
+      "entity_type": "Sketchup::Model"
+    },
+    "file_path": "example.skp",
+    "file_name": "example.skp",
+    "model_name": "Canonical v3 example",
+    "model_description": "One indexed square face.",
+    "sketchup_version": "2026",
+    "sketchup_locale": "en-US",
+    "exported_at": "2026-07-13T00:00:00Z",
+    "scope": "model",
+    "source_modified": false
+  },
+  "units": {
+    "source_length_unit": "Meters",
+    "geometry_length_unit": "meter",
+    "area_unit": "square_meter",
+    "angle_unit": "degree"
+  },
+  "coordinate_system": {
+    "handedness": "right",
+    "up_axis": "+Z",
+    "forward_axis": "-Y",
+    "x_axis": "+X",
+    "storage": "SketchUp world axes; definition geometry is local",
+    "threejs_mapping": "{x,y,z}->{x,z,-y}"
+  },
+  "metadata": {
+    "model_bounds_m": {
+      "min": [0, 0, 0],
+      "max": [1, 1, 0],
+      "size": [1, 1, 0]
+    },
+    "georeferenced": false,
+    "attributes": {},
+    "export_settings": {
+      "selection_only": false,
+      "include_edges": false
+    }
+  },
+  "tags": [
+    {
+      "id": "tag:0",
+      "source_identity": {
+        "persistent_id": "0",
+        "entity_type": "Sketchup::Layer"
+      },
+      "name": "Untagged",
+      "visible": true,
+      "color": null
+    }
+  ],
+  "materials": [
+    {
+      "id": "material:1",
+      "source_identity": {
+        "persistent_id": "1",
+        "entity_type": "Sketchup::Material"
+      },
+      "name": "Example material",
+      "display_name": "Example material",
+      "color": {
+        "r": 170,
+        "g": 85,
+        "b": 34,
+        "a": 255,
+        "hex": "#AA5522"
+      },
+      "opacity": 1,
+      "material_type": 0,
+      "attributes": {}
+    }
+  ],
+  "transforms": [
+    [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+  ],
+  "meshes": [
+    {
+      "id": "mesh:definition:root:example-model-guid:model",
+      "definition_id": "definition:root:example-model-guid:model",
+      "coordinate_space": "definition_local",
+      "positions_m": [
+        0, 0, 0,
+        1, 0, 0,
+        1, 1, 0,
+        0, 1, 0
+      ],
+      "faces": [
+        {
+          "id": "face:10",
+          "source_identity": {
+            "persistent_id": "10",
+            "entity_type": "Sketchup::Face"
+          },
+          "outer": [0, 1, 2, 3],
+          "holes": [],
+          "front_material_id": "material:1",
+          "back_material_id": null,
+          "tag_id": "tag:0",
+          "normal": [0, 0, 1],
+          "area_m2": 1,
+          "area_space": "definition_local",
+          "surface_hint": "floor",
+          "hidden": false,
+          "attributes": {}
+        }
+      ],
+      "edges": [],
+      "bounds_m": {
+        "min": [0, 0, 0],
+        "max": [1, 1, 0],
+        "size": [1, 1, 0]
+      }
+    }
+  ],
+  "definitions": [
+    {
+      "id": "definition:root:example-model-guid:model",
+      "kind": "root",
+      "name": "Model Root",
+      "description": "",
+      "source_identity": {
+        "guid": "example-model-guid",
+        "entity_type": "Sketchup::Model"
+      },
+      "mesh_id": "mesh:definition:root:example-model-guid:model",
+      "node_ids": [],
+      "bounds_m": {
+        "min": [0, 0, 0],
+        "max": [1, 1, 0],
+        "size": [1, 1, 0]
+      },
+      "attributes": {}
+    }
+  ],
+  "nodes": [
+    {
+      "id": "node:root",
+      "kind": "root",
+      "name": "Model Root",
+      "owner_definition_id": null,
+      "definition_id": "definition:root:example-model-guid:model",
+      "transform_id": 0,
+      "material_override_id": null,
+      "tag_id": null,
+      "source_identity": {
+        "guid": "example-model-guid",
+        "entity_type": "Sketchup::Model"
+      },
+      "attributes": {}
+    }
+  ],
+  "scenes": [],
+  "spaces": [],
+  "relationships": {
+    "openings": [],
+    "room_boundaries": [],
+    "adjacency": []
+  },
+  "analysis": {},
+  "statistics": {
+    "definitions": 1,
+    "meshes": 1,
+    "nodes": 1,
+    "component_instances": 0,
+    "group_instances": 0,
+    "faces": 1,
+    "unique_vertices": 4,
+    "materials": 1,
+    "tags": 1,
+    "transforms": 1,
+    "identity_transform_id": 0,
+    "skipped": {}
+  }
+}

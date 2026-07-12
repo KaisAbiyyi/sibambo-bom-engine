@@ -1,3 +1,5 @@
+import { canonicalV3ToLegacyBom, isCanonicalV3 } from './formats/canonical-v3';
+
 export type SurfaceKey =
 	| 'wall_x_pos'
 	| 'wall_x_neg'
@@ -1024,6 +1026,7 @@ function materialRows(materials: BomModelJson['materials']) {
 }
 
 export function parseBomModelJson(data: BomModelJson, sourceName: string, defaultHeight = DEFAULT_INPUTS.roomHeightM): ParsedBuildingModel {
+	if (isCanonicalV3(data)) data = canonicalV3ToLegacyBom(data);
 	const compactMesh = data.geometry_format === 'compact_mesh_v1' ? data.mesh : null;
 	if (!compactMesh && !Array.isArray(data.entities)) {
 		throw new Error('JSON model harus punya array entities atau compact mesh.');
