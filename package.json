@@ -5,6 +5,7 @@
   "type": "module",
   "license": "GPL-3.0-only",
   "scripts": {
+    "benchmark:final": "bun scripts/benchmarks/final-regression-summary.ts",
     "dev:model-viewer": "npm --prefix model-viewer run dev -- --host 127.0.0.1 --port 5200",
     "build:model-viewer": "npm --prefix model-viewer run build",
     "dev:model-eval": "npm --prefix model-eval run dev -- --host 127.0.0.1 --port 5300",

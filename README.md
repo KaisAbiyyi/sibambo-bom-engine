@@ -8,7 +8,7 @@ The repository is structured as a product workspace, not a pure public community
 
 | Area | Purpose |
 | --- | --- |
-| `bom_engine_plugin/` | SketchUp/Ruby plugin source and exporter support files. |
+| `bom_engine_plugin/` | SketchUp/Ruby plugin source; Canonical JSON v3 and BOME2 exporters. |
 | `model-viewer/` | Canonical browser viewer for legacy Svelte and React prototypes, exposed as native routes. |
 | `model-eval/` | SvelteKit analysis app for parsing model JSON and running guided building-performance estimates. |
 | `Model_SBMBOOST_bom.json` | Source BOM model export. |
@@ -105,14 +105,21 @@ npm --prefix model-eval install
 
 ```text
 SketchUp model
-  -> bom_engine_plugin exporter
-  -> BOM JSON / visual JSON
+  -> bom_engine_plugin shared canonical graph
+  -> Canonical JSON v3 for analysis and interchange
+  -> BOME2 indexed/instanced runtime for Three.js
   -> model-viewer route previews
   -> model-eval parser
   -> readiness checks
   -> deterministic analysis results
   -> HTML report export
 ```
+
+Format contracts and measured corpus results:
+
+- `bom_engine_plugin/FORMAT_V3.md`
+- `bom_engine_plugin/BOME2_FORMAT.md`
+- `docs/benchmarks/2026-07-13-bom-v3-results.md`
 
 ## Repository Principles
 

@@ -143,6 +143,13 @@ async function benchmarkBome1() {
 }
 
 async function benchmarkGlb() {
+	if (!(await Bun.file(paths.glb).exists())) {
+		return {
+			status: 'not_generated',
+			format: 'GLB 2 derived visual runtime',
+			reason: 'GLB is optional and was benchmarked on project-sboost-2 as the representative corpus model.'
+		};
+	}
 	const before = snapshot();
 	const readStart = performance.now();
 	const buffer = await Bun.file(paths.glb).arrayBuffer();
@@ -159,6 +166,7 @@ async function benchmarkGlb() {
 	const after = process.memoryUsage();
 	const indexAccessors = json.meshes.flatMap((mesh: { primitives: Array<{ indices: number }> }) => mesh.primitives.map((primitive) => json.accessors[primitive.indices]));
 	return {
+		status: 'ok',
 		format: 'GLB 2 derived visual runtime',
 		file_bytes: buffer.byteLength,
 		read_ms: round(readMs),

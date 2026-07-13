@@ -1,0 +1,3913 @@
+{
+  "workflow_version": "3.0.0",
+  "generated_at": "2026-07-13T00:27:08.467Z",
+  "corpus_models": 5,
+  "models": [
+    {
+      "slug": "house2",
+      "source": {
+        "path": "D:\\projects\\sibambo-bom-engine\\skps\\house2.skp",
+        "skp_bytes": 440016,
+        "units": "Inches",
+        "bounds_m": {
+          "min_m": {
+            "x": -0.4699,
+            "y": -5.740288,
+            "z": 0
+          },
+          "max_m": {
+            "x": 6.87705,
+            "y": 9.840502,
+            "z": 6.5659
+          },
+          "size_m": {
+            "x": 7.34695,
+            "y": 15.58079,
+            "z": 6.5659
+          },
+          "width_m": 7.34695,
+          "depth_m": 15.58079,
+          "height_m": 6.5659,
+          "diagonal_m": 18.435014
+        },
+        "groups": 4,
+        "component_instances": 97,
+        "materials": 19,
+        "tags": 5,
+        "scenes": 0
+      },
+      "export": {
+        "baseline_full": {
+          "status": "ok",
+          "bytes": 6794325,
+          "plugin_elapsed_ms": 1180
+        },
+        "baseline_visual_bome1": {
+          "status": "ok",
+          "bytes": 102744,
+          "plugin_elapsed_ms": 880
+        },
+        "canonical_v3": {
+          "status": "ok",
+          "gzip_bytes": 194670,
+          "uncompressed_bytes": 1572675,
+          "plugin_elapsed_ms": 902,
+          "gzip_change_vs_baseline_full_percent": -97.13
+        },
+        "bome2": {
+          "status": "ok",
+          "gzip_bytes": 98366,
+          "uncompressed_bytes": 574848,
+          "plugin_elapsed_ms": 915,
+          "gzip_change_vs_bome1_percent": -4.26,
+          "triangles": 5600,
+          "quantization_max_error_m": 0.000136316304
+        },
+        "canonical_statistics": {
+          "definitions": 41,
+          "meshes": 37,
+          "nodes": 91,
+          "component_instances": 87,
+          "group_instances": 3,
+          "faces": 1777,
+          "unique_vertices": 2815,
+          "materials": 19,
+          "tags": 5,
+          "transforms": 90,
+          "identity_transform_id": 0,
+          "skipped": {
+            "hidden_or_invalid_entity": 138
+          }
+        },
+        "source_modified_after": false
+      },
+      "runtime_benchmark": {
+        "baseline_bome1": {
+          "format": "BOME1 flattened baseline",
+          "file_bytes": 102744,
+          "decode_ms": 36.38,
+          "model_parse_ms": 435.04,
+          "total_ms": 471.43,
+          "memory_delta": {
+            "heap_bytes": 32007504,
+            "rss_bytes": 152354816,
+            "external_bytes": 4271998
+          },
+          "faces": 9490,
+          "vertices": 28470
+        },
+        "canonical_v3": {
+          "format": "Canonical JSON v3 compatibility analysis",
+          "file_bytes": 194670,
+          "decompressed_bytes": 1572675,
+          "decompress_ms": 5.72,
+          "json_parse_ms": 13.41,
+          "model_parse_ms": 231.84,
+          "total_ms": 250.98,
+          "memory_delta": {
+            "heap_bytes": -8899665,
+            "rss_bytes": 24580096,
+            "external_bytes": 2540671
+          },
+          "faces": 3657,
+          "vertices": 17013
+        },
+        "bome2_runtime": {
+          "format": "BOME2 runtime-only indexed/instanced",
+          "file_bytes": 98366,
+          "decompressed_bytes": 574848,
+          "decompress_ms": 2.34,
+          "decode_validate_ms": 28.35,
+          "runtime_group_build_ms": 29.29,
+          "total_ms": 59.98,
+          "memory_delta": {
+            "heap_bytes": -4793662,
+            "rss_bytes": -3497984,
+            "external_bytes": 2543040
+          },
+          "unique_meshes": 37,
+          "unique_vertices": 2815,
+          "unique_triangles": 5600,
+          "render_groups": 153,
+          "instance_matrices": 350,
+          "quantization_max_error_m": 0.000136316304
+        },
+        "bome2_analysis_compatibility": {
+          "format": "BOME2 analysis compatibility expansion",
+          "decode_ms": 24.9,
+          "model_parse_ms": 222.14,
+          "total_ms": 249.31,
+          "memory_delta": {
+            "heap_bytes": 2204047,
+            "rss_bytes": -34074624,
+            "external_bytes": 2218506
+          },
+          "faces": 3657,
+          "vertices": 17013
+        },
+        "glb": {
+          "status": "not_generated",
+          "format": "GLB 2 derived visual runtime",
+          "reason": "GLB is optional and was benchmarked on project-sboost-2 as the representative corpus model."
+        },
+        "bome2_speedup_vs_bome1": 7.8598
+      },
+      "browser_qa": {
+        "cold_load_to_render_ms": 1045.1,
+        "cold_used_js_heap_bytes": 65366711,
+        "views_ready": 6,
+        "view_count": 6,
+        "runtime_groups": 88,
+        "visible_runtime_groups": 88,
+        "visible_runtime_instances": 202
+      },
+      "classification": {
+        "ground_truth": {
+          "kind": "silver_explicit_metadata_not_human_verified",
+          "description": "Only unambiguous explicit multilingual category tokens in face name/path/layer are scored. Geometry-only and contextual predictions are excluded from precision/recall ground truth.",
+          "labelled_faces": 1849,
+          "total_faces": 3657,
+          "coverage": 0.505606
+        },
+        "performance": {
+          "compressed_bytes": 194670,
+          "decompressed_bytes": 1572675,
+          "json_parse_ms": 12.338,
+          "model_parse_and_classify_ms": 221.4042
+        },
+        "whole_model": {
+          "category_distribution": {
+            "roof": 110,
+            "floor": 38,
+            "ceiling": 5,
+            "exterior_wall": 34,
+            "interior_wall": 15,
+            "door": 294,
+            "window": 695,
+            "column": 0,
+            "beam": 0,
+            "stair": 0,
+            "railing": 0,
+            "furniture": 1750,
+            "fixture": 0,
+            "opening": 0,
+            "room_boundary": 0,
+            "unknown": 716
+          },
+          "unknown_rate": 0.195789,
+          "ambiguous_rate": 0.162702
+        },
+        "silver_metrics": {
+          "sampleCount": 1849,
+          "accuracy": 1,
+          "macroF1": 1,
+          "unknownRate": 0,
+          "ambiguousRate": 0,
+          "perCategory": {
+            "roof": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "floor": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "ceiling": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "exterior_wall": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "interior_wall": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "door": {
+              "precision": 1,
+              "recall": 1,
+              "f1": 1,
+              "support": 294
+            },
+            "window": {
+              "precision": 1,
+              "recall": 1,
+              "f1": 1,
+              "support": 672
+            },
+            "column": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "beam": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "stair": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "railing": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "furniture": {
+              "precision": 1,
+              "recall": 1,
+              "f1": 1,
+              "support": 883
+            },
+            "fixture": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "opening": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "room_boundary": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "unknown": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            }
+          },
+          "confusionMatrix": {
+            "roof": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "floor": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "ceiling": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "exterior_wall": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "interior_wall": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "door": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 294,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "window": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 672,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "column": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "beam": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "stair": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "railing": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "furniture": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 883,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "fixture": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "opening": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "room_boundary": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "unknown": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            }
+          }
+        }
+      },
+      "visual": {
+        "status": "PASS_WITH_RENDERING_DIFFERENCE",
+        "views": [
+          {
+            "view": "isometric",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "front",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "back",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "left",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "right",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "top",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          }
+        ],
+        "geometry_alignment": {
+          "axis_mapping": "SketchUp {x,y,z} -> Three.js {x,z,-y}",
+          "canonical_visible_bounds": {
+            "min": {
+              "x": -0.4699,
+              "y": -5.08e-11,
+              "z": -9.84050182
+            },
+            "max": {
+              "x": 6.87705,
+              "y": 6.5659,
+              "z": 5.740288438
+            }
+          },
+          "bome2_rendered_bounds": {
+            "min": {
+              "x": -0.4699000120162964,
+              "y": -5.079999794935006e-11,
+              "z": -9.84050178527832
+            },
+            "max": {
+              "x": 6.877049922943115,
+              "y": 6.565899848937988,
+              "z": 5.740288257598877
+            }
+          },
+          "visible_runtime_absolute_error_m": {
+            "min_x": 1.2e-8,
+            "min_y": 0,
+            "min_z": 3.5e-8,
+            "max_x": 7.7e-8,
+            "max_y": 1.51e-7,
+            "max_z": 1.8e-7
+          },
+          "visible_runtime_maximum_absolute_error_m": 1.8e-7,
+          "visible_runtime_tolerance_m": 0.02,
+          "all_runtime_groups_visible": true,
+          "visible_runtime_aligned_within_tolerance": true,
+          "source_model_vs_visible_geometry": {
+            "source_full_bounds_mapped_to_three": {
+              "min": {
+                "x": -0.4699,
+                "y": 0,
+                "z": -9.840502
+              },
+              "max": {
+                "x": 6.87705,
+                "y": 6.5659,
+                "z": 5.740288
+              }
+            },
+            "absolute_error_m": {
+              "min_x": 0,
+              "min_y": 0,
+              "min_z": 1.8e-7,
+              "max_x": 0,
+              "max_y": 0,
+              "max_z": 4.38e-7
+            },
+            "maximum_absolute_error_m": 4.38e-7,
+            "skipped_entities": {
+              "hidden_or_invalid_entity": 138
+            },
+            "pass_fail_gate": false,
+            "reason": "SketchUp model bounds include hidden/non-renderable extents; visual QA compares renderable exported geometry."
+          }
+        }
+      }
+    },
+    {
+      "slug": "presentation20",
+      "source": {
+        "path": "D:\\projects\\sibambo-bom-engine\\skps\\presentation20.skp",
+        "skp_bytes": 2155445,
+        "units": "Inches",
+        "bounds_m": {
+          "min_m": {
+            "x": 15.376525,
+            "y": -4.572,
+            "z": -1.826859
+          },
+          "max_m": {
+            "x": 45.856525,
+            "y": 27.432,
+            "z": 14.986
+          },
+          "size_m": {
+            "x": 30.48,
+            "y": 32.004,
+            "z": 16.812859
+          },
+          "width_m": 30.48,
+          "depth_m": 32.004,
+          "height_m": 16.812859,
+          "diagonal_m": 47.285924
+        },
+        "groups": 5537,
+        "component_instances": 8977,
+        "materials": 31,
+        "tags": 5,
+        "scenes": 0
+      },
+      "export": {
+        "baseline_full": {
+          "status": "ok",
+          "bytes": 466925640,
+          "plugin_elapsed_ms": 132760
+        },
+        "baseline_visual_bome1": {
+          "status": "ok",
+          "bytes": 2201139,
+          "plugin_elapsed_ms": 59000
+        },
+        "canonical_v3": {
+          "status": "ok",
+          "gzip_bytes": 2476929,
+          "uncompressed_bytes": 19090346,
+          "plugin_elapsed_ms": 38405,
+          "gzip_change_vs_baseline_full_percent": -99.47
+        },
+        "bome2": {
+          "status": "ok",
+          "gzip_bytes": 380049,
+          "uncompressed_bytes": 3308136,
+          "plugin_elapsed_ms": 38939,
+          "gzip_change_vs_bome1_percent": -82.73,
+          "triangles": 25518,
+          "quantization_max_error_m": 0.000335028464
+        },
+        "canonical_statistics": {
+          "definitions": 187,
+          "meshes": 115,
+          "nodes": 484,
+          "component_instances": 148,
+          "group_instances": 335,
+          "faces": 11625,
+          "unique_vertices": 14511,
+          "materials": 31,
+          "tags": 5,
+          "transforms": 206,
+          "identity_transform_id": 0,
+          "skipped": {
+            "hidden_or_invalid_entity": 354
+          }
+        },
+        "source_modified_after": false
+      },
+      "runtime_benchmark": {
+        "baseline_bome1": {
+          "format": "BOME1 flattened baseline",
+          "file_bytes": 2201139,
+          "decode_ms": 119.11,
+          "model_parse_ms": 6738.31,
+          "total_ms": 6857.42,
+          "memory_delta": {
+            "heap_bytes": 407774288,
+            "rss_bytes": 912035840,
+            "external_bytes": 27886739
+          },
+          "faces": 145338,
+          "vertices": 436014
+        },
+        "canonical_v3": {
+          "format": "Canonical JSON v3 compatibility analysis",
+          "file_bytes": 2476929,
+          "decompressed_bytes": 19090346,
+          "decompress_ms": 57.36,
+          "json_parse_ms": 137.1,
+          "model_parse_ms": 25628.17,
+          "total_ms": 25822.63,
+          "memory_delta": {
+            "heap_bytes": 976927418,
+            "rss_bytes": 2519158784,
+            "external_bytes": 47040798
+          },
+          "faces": 452937,
+          "vertices": 1718355
+        },
+        "bome2_runtime": {
+          "format": "BOME2 runtime-only indexed/instanced",
+          "file_bytes": 380049,
+          "decompressed_bytes": 3308136,
+          "decompress_ms": 8.08,
+          "decode_validate_ms": 110.31,
+          "runtime_group_build_ms": 180.95,
+          "total_ms": 299.34,
+          "memory_delta": {
+            "heap_bytes": -1362379027,
+            "rss_bytes": -224616448,
+            "external_bytes": 11644419
+          },
+          "unique_meshes": 115,
+          "unique_vertices": 14511,
+          "unique_triangles": 25518,
+          "render_groups": 400,
+          "instance_matrices": 23370,
+          "quantization_max_error_m": 0.000335028464
+        },
+        "bome2_analysis_compatibility": {
+          "format": "BOME2 analysis compatibility expansion",
+          "decode_ms": 89.7,
+          "model_parse_ms": 24205.58,
+          "total_ms": 24303.16,
+          "memory_delta": {
+            "heap_bytes": 1358521828,
+            "rss_bytes": 181723136,
+            "external_bytes": 52330538
+          },
+          "faces": 452937,
+          "vertices": 1718355
+        },
+        "glb": {
+          "status": "not_generated",
+          "format": "GLB 2 derived visual runtime",
+          "reason": "GLB is optional and was benchmarked on project-sboost-2 as the representative corpus model."
+        },
+        "bome2_speedup_vs_bome1": 22.9085
+      },
+      "browser_qa": {
+        "cold_load_to_render_ms": 137931.5,
+        "cold_used_js_heap_bytes": 2687922343,
+        "views_ready": 6,
+        "view_count": 6,
+        "runtime_groups": 294,
+        "visible_runtime_groups": 294,
+        "visible_runtime_instances": 18414
+      },
+      "classification": {
+        "ground_truth": {
+          "kind": "silver_explicit_metadata_not_human_verified",
+          "description": "Only unambiguous explicit multilingual category tokens in face name/path/layer are scored. Geometry-only and contextual predictions are excluded from precision/recall ground truth.",
+          "labelled_faces": 1919,
+          "total_faces": 452937,
+          "coverage": 0.004237
+        },
+        "performance": {
+          "compressed_bytes": 2476929,
+          "decompressed_bytes": 19090346,
+          "json_parse_ms": 131.6952,
+          "model_parse_and_classify_ms": 23463.0916
+        },
+        "whole_model": {
+          "category_distribution": {
+            "roof": 335,
+            "floor": 71,
+            "ceiling": 495,
+            "exterior_wall": 0,
+            "interior_wall": 431,
+            "door": 0,
+            "window": 1881,
+            "column": 0,
+            "beam": 0,
+            "stair": 0,
+            "railing": 0,
+            "furniture": 403884,
+            "fixture": 0,
+            "opening": 0,
+            "room_boundary": 1,
+            "unknown": 45839
+          },
+          "unknown_rate": 0.101204,
+          "ambiguous_rate": 0.101045
+        },
+        "silver_metrics": {
+          "sampleCount": 1919,
+          "accuracy": 0.980198,
+          "macroF1": 0.99,
+          "unknownRate": 0.019802,
+          "ambiguousRate": 0.019802,
+          "perCategory": {
+            "roof": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "floor": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "ceiling": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "exterior_wall": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "interior_wall": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "door": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "window": {
+              "precision": 1,
+              "recall": 0.980198,
+              "f1": 0.99,
+              "support": 1919
+            },
+            "column": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "beam": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "stair": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "railing": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "furniture": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "fixture": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "opening": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "room_boundary": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "unknown": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            }
+          },
+          "confusionMatrix": {
+            "roof": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "floor": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "ceiling": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "exterior_wall": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "interior_wall": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "door": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "window": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 1881,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 38
+            },
+            "column": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "beam": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "stair": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "railing": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "furniture": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "fixture": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "opening": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "room_boundary": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "unknown": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            }
+          }
+        }
+      },
+      "visual": {
+        "status": "PASS_WITH_RENDERING_DIFFERENCE",
+        "views": [
+          {
+            "view": "isometric",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "front",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "back",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "left",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "right",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "top",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          }
+        ],
+        "geometry_alignment": {
+          "axis_mapping": "SketchUp {x,y,z} -> Three.js {x,z,-y}",
+          "canonical_visible_bounds": {
+            "min": {
+              "x": 15.376525,
+              "y": -1.7661343979987312,
+              "z": -27.432
+            },
+            "max": {
+              "x": 45.856525,
+              "y": 14.985999999999999,
+              "z": 4.572
+            }
+          },
+          "bome2_rendered_bounds": {
+            "min": {
+              "x": 15.376524925231934,
+              "y": -1.7826628437112453,
+              "z": -27.43199920654297
+            },
+            "max": {
+              "x": 45.85652542114258,
+              "y": 14.985999882221222,
+              "z": 4.572000026702881
+            }
+          },
+          "visible_runtime_absolute_error_m": {
+            "min_x": 7.5e-8,
+            "min_y": 0.016528446,
+            "min_z": 7.93e-7,
+            "max_x": 4.21e-7,
+            "max_y": 1.18e-7,
+            "max_z": 2.7e-8
+          },
+          "visible_runtime_maximum_absolute_error_m": 0.016528446,
+          "visible_runtime_tolerance_m": 0.02,
+          "all_runtime_groups_visible": true,
+          "visible_runtime_aligned_within_tolerance": true,
+          "source_model_vs_visible_geometry": {
+            "source_full_bounds_mapped_to_three": {
+              "min": {
+                "x": 15.376525,
+                "y": -1.826859,
+                "z": -27.432
+              },
+              "max": {
+                "x": 45.856525,
+                "y": 14.986,
+                "z": 4.572
+              }
+            },
+            "absolute_error_m": {
+              "min_x": 0,
+              "min_y": 0.060724602,
+              "min_z": 0,
+              "max_x": 0,
+              "max_y": 0,
+              "max_z": 0
+            },
+            "maximum_absolute_error_m": 0.060724602,
+            "skipped_entities": {
+              "hidden_or_invalid_entity": 354
+            },
+            "pass_fail_gate": false,
+            "reason": "SketchUp model bounds include hidden/non-renderable extents; visual QA compares renderable exported geometry."
+          }
+        }
+      }
+    },
+    {
+      "slug": "project-sboost",
+      "source": {
+        "path": "D:\\projects\\sibambo-bom-engine\\skps\\PROJECT SBOOST !.skp",
+        "skp_bytes": 3548875,
+        "units": "Millimeters",
+        "bounds_m": {
+          "min_m": {
+            "x": -0.865355,
+            "y": -1.119355,
+            "z": -0.1
+          },
+          "max_m": {
+            "x": 13.134862,
+            "y": 28.596293,
+            "z": 8.509401
+          },
+          "size_m": {
+            "x": 14.000217,
+            "y": 29.715648,
+            "z": 8.609401
+          },
+          "width_m": 14.000217,
+          "depth_m": 29.715648,
+          "height_m": 8.609401,
+          "diagonal_m": 33.958027
+        },
+        "groups": 144,
+        "component_instances": 85,
+        "materials": 50,
+        "tags": 22,
+        "scenes": 0
+      },
+      "export": {
+        "baseline_full": {
+          "status": "ok",
+          "bytes": 20393828,
+          "plugin_elapsed_ms": 4520
+        },
+        "baseline_visual_bome1": {
+          "status": "ok",
+          "bytes": 70200,
+          "plugin_elapsed_ms": 1990
+        },
+        "canonical_v3": {
+          "status": "ok",
+          "gzip_bytes": 805228,
+          "uncompressed_bytes": 5860481,
+          "plugin_elapsed_ms": 2883,
+          "gzip_change_vs_baseline_full_percent": -96.05
+        },
+        "bome2": {
+          "status": "ok",
+          "gzip_bytes": 308707,
+          "uncompressed_bytes": 2044156,
+          "plugin_elapsed_ms": 2507,
+          "gzip_change_vs_bome1_percent": 339.75,
+          "triangles": 13868,
+          "quantization_max_error_m": 0.000125845768
+        },
+        "canonical_statistics": {
+          "definitions": 115,
+          "meshes": 70,
+          "nodes": 134,
+          "component_instances": 56,
+          "group_instances": 77,
+          "faces": 7092,
+          "unique_vertices": 7296,
+          "materials": 50,
+          "tags": 22,
+          "transforms": 100,
+          "identity_transform_id": 0,
+          "skipped": {
+            "hidden_or_invalid_entity": 340
+          }
+        },
+        "source_modified_after": false
+      },
+      "runtime_benchmark": {
+        "baseline_bome1": {
+          "format": "BOME1 flattened baseline",
+          "file_bytes": 70200,
+          "decode_ms": 40.98,
+          "model_parse_ms": 491.76,
+          "total_ms": 532.74,
+          "memory_delta": {
+            "heap_bytes": 24211191,
+            "rss_bytes": 118964224,
+            "external_bytes": 3835179
+          },
+          "faces": 7002,
+          "vertices": 21006
+        },
+        "canonical_v3": {
+          "format": "Canonical JSON v3 compatibility analysis",
+          "file_bytes": 805228,
+          "decompressed_bytes": 5860481,
+          "decompress_ms": 23.81,
+          "json_parse_ms": 49.57,
+          "model_parse_ms": 1052.8,
+          "total_ms": 1126.18,
+          "memory_delta": {
+            "heap_bytes": 51561508,
+            "rss_bytes": 115089408,
+            "external_bytes": 11631469
+          },
+          "faces": 14371,
+          "vertices": 54542
+        },
+        "bome2_runtime": {
+          "format": "BOME2 runtime-only indexed/instanced",
+          "file_bytes": 308707,
+          "decompressed_bytes": 2044156,
+          "decompress_ms": 6.7,
+          "decode_validate_ms": 70.27,
+          "runtime_group_build_ms": 39.32,
+          "total_ms": 116.3,
+          "memory_delta": {
+            "heap_bytes": -26276354,
+            "rss_bytes": -2641920,
+            "external_bytes": 6459600
+          },
+          "unique_meshes": 70,
+          "unique_vertices": 7296,
+          "unique_triangles": 13868,
+          "render_groups": 229,
+          "instance_matrices": 409,
+          "quantization_max_error_m": 0.000125845768
+        },
+        "bome2_analysis_compatibility": {
+          "format": "BOME2 analysis compatibility expansion",
+          "decode_ms": 88.05,
+          "model_parse_ms": 934.82,
+          "total_ms": 1029.33,
+          "memory_delta": {
+            "heap_bytes": 22261419,
+            "rss_bytes": 6979584,
+            "external_bytes": 9876706
+          },
+          "faces": 14371,
+          "vertices": 54542
+        },
+        "glb": {
+          "status": "not_generated",
+          "format": "GLB 2 derived visual runtime",
+          "reason": "GLB is optional and was benchmarked on project-sboost-2 as the representative corpus model."
+        },
+        "bome2_speedup_vs_bome1": 4.5807
+      },
+      "browser_qa": {
+        "cold_load_to_render_ms": 3574.6,
+        "cold_used_js_heap_bytes": 196189657,
+        "views_ready": 6,
+        "view_count": 6,
+        "runtime_groups": 117,
+        "visible_runtime_groups": 117,
+        "visible_runtime_instances": 176
+      },
+      "classification": {
+        "ground_truth": {
+          "kind": "silver_explicit_metadata_not_human_verified",
+          "description": "Only unambiguous explicit multilingual category tokens in face name/path/layer are scored. Geometry-only and contextual predictions are excluded from precision/recall ground truth.",
+          "labelled_faces": 14154,
+          "total_faces": 14371,
+          "coverage": 0.9849
+        },
+        "performance": {
+          "compressed_bytes": 805228,
+          "decompressed_bytes": 5860481,
+          "json_parse_ms": 43.1129,
+          "model_parse_and_classify_ms": 852.5524
+        },
+        "whole_model": {
+          "category_distribution": {
+            "roof": 268,
+            "floor": 166,
+            "ceiling": 1,
+            "exterior_wall": 7,
+            "interior_wall": 25,
+            "door": 13284,
+            "window": 484,
+            "column": 0,
+            "beam": 15,
+            "stair": 0,
+            "railing": 0,
+            "furniture": 2,
+            "fixture": 0,
+            "opening": 1,
+            "room_boundary": 0,
+            "unknown": 118
+          },
+          "unknown_rate": 0.008211,
+          "ambiguous_rate": 0.003688
+        },
+        "silver_metrics": {
+          "sampleCount": 14154,
+          "accuracy": 0.999576,
+          "macroF1": 0.995192,
+          "unknownRate": 0.000424,
+          "ambiguousRate": 0.000424,
+          "perCategory": {
+            "roof": {
+              "precision": 1,
+              "recall": 1,
+              "f1": 1,
+              "support": 227
+            },
+            "floor": {
+              "precision": 1,
+              "recall": 0.962264,
+              "f1": 0.980769,
+              "support": 159
+            },
+            "ceiling": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "exterior_wall": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "interior_wall": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "door": {
+              "precision": 1,
+              "recall": 1,
+              "f1": 1,
+              "support": 13284
+            },
+            "window": {
+              "precision": 1,
+              "recall": 1,
+              "f1": 1,
+              "support": 484
+            },
+            "column": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "beam": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "stair": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "railing": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "furniture": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "fixture": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "opening": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "room_boundary": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "unknown": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            }
+          },
+          "confusionMatrix": {
+            "roof": {
+              "roof": 227,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "floor": {
+              "roof": 0,
+              "floor": 153,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 6
+            },
+            "ceiling": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "exterior_wall": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "interior_wall": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "door": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 13284,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "window": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 484,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "column": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "beam": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "stair": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "railing": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "furniture": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "fixture": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "opening": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "room_boundary": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "unknown": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            }
+          }
+        }
+      },
+      "visual": {
+        "status": "PASS_WITH_RENDERING_DIFFERENCE",
+        "views": [
+          {
+            "view": "isometric",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "front",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "back",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "left",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "right",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "top",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          }
+        ],
+        "geometry_alignment": {
+          "axis_mapping": "SketchUp {x,y,z} -> Three.js {x,z,-y}",
+          "canonical_visible_bounds": {
+            "min": {
+              "x": -0.6064629834895341,
+              "y": -0.1,
+              "z": -18.56211850337315
+            },
+            "max": {
+              "x": 13.12375266737315,
+              "y": 8.509401077000001,
+              "z": 0.6866889483815318
+            }
+          },
+          "bome2_rendered_bounds": {
+            "min": {
+              "x": -0.6064629968071626,
+              "y": -0.10000000149011612,
+              "z": -18.57322783095715
+            },
+            "max": {
+              "x": 13.134861831175854,
+              "y": 8.509401131421328,
+              "z": 0.6866889402723169
+            }
+          },
+          "visible_runtime_absolute_error_m": {
+            "min_x": 1.3e-8,
+            "min_y": 1e-9,
+            "min_z": 0.011109328,
+            "max_x": 0.011109164,
+            "max_y": 5.4e-8,
+            "max_z": 8e-9
+          },
+          "visible_runtime_maximum_absolute_error_m": 0.011109328,
+          "visible_runtime_tolerance_m": 0.02,
+          "all_runtime_groups_visible": true,
+          "visible_runtime_aligned_within_tolerance": true,
+          "source_model_vs_visible_geometry": {
+            "source_full_bounds_mapped_to_three": {
+              "min": {
+                "x": -0.865355,
+                "y": -0.1,
+                "z": -28.596293
+              },
+              "max": {
+                "x": 13.134862,
+                "y": 8.509401,
+                "z": 1.119355
+              }
+            },
+            "absolute_error_m": {
+              "min_x": 0.258892017,
+              "min_y": 0,
+              "min_z": 10.034174497,
+              "max_x": 0.011109333,
+              "max_y": 7.7e-8,
+              "max_z": 0.432666052
+            },
+            "maximum_absolute_error_m": 10.034174497,
+            "skipped_entities": {
+              "hidden_or_invalid_entity": 340
+            },
+            "pass_fail_gate": false,
+            "reason": "SketchUp model bounds include hidden/non-renderable extents; visual QA compares renderable exported geometry."
+          }
+        }
+      }
+    },
+    {
+      "slug": "project-sboost-2",
+      "source": {
+        "path": "D:\\projects\\sibambo-bom-engine\\skps\\PROJECT SBOOST 2.skp",
+        "skp_bytes": 3363219,
+        "units": "Millimeters",
+        "bounds_m": {
+          "min_m": {
+            "x": -0.860141,
+            "y": -1.114141,
+            "z": -0.011238
+          },
+          "max_m": {
+            "x": 12.699263,
+            "y": 28.596293,
+            "z": 8.505692
+          },
+          "size_m": {
+            "x": 13.559404,
+            "y": 29.710435,
+            "z": 8.51693
+          },
+          "width_m": 13.559404,
+          "depth_m": 29.710435,
+          "height_m": 8.51693,
+          "diagonal_m": 33.750637
+        },
+        "groups": 126,
+        "component_instances": 107,
+        "materials": 48,
+        "tags": 19,
+        "scenes": 0
+      },
+      "export": {
+        "baseline_full": {
+          "status": "ok",
+          "bytes": 31316909,
+          "plugin_elapsed_ms": 10160
+        },
+        "baseline_visual_bome1": {
+          "status": "ok",
+          "bytes": 68529,
+          "plugin_elapsed_ms": 3580
+        },
+        "canonical_v3": {
+          "status": "ok",
+          "gzip_bytes": 825128,
+          "uncompressed_bytes": 5999755,
+          "plugin_elapsed_ms": 3453,
+          "gzip_change_vs_baseline_full_percent": -97.37
+        },
+        "bome2": {
+          "status": "ok",
+          "gzip_bytes": 307978,
+          "uncompressed_bytes": 2024608,
+          "plugin_elapsed_ms": 3238,
+          "gzip_change_vs_bome1_percent": 349.41,
+          "triangles": 13842,
+          "quantization_max_error_m": 0.000104131587
+        },
+        "canonical_statistics": {
+          "definitions": 101,
+          "meshes": 66,
+          "nodes": 117,
+          "component_instances": 49,
+          "group_instances": 67,
+          "faces": 7047,
+          "unique_vertices": 7319,
+          "materials": 48,
+          "tags": 19,
+          "transforms": 98,
+          "identity_transform_id": 0,
+          "skipped": {
+            "hidden_or_invalid_entity": 336
+          }
+        },
+        "source_modified_after": false
+      },
+      "runtime_benchmark": {
+        "baseline_bome1": {
+          "format": "BOME1 flattened baseline",
+          "file_bytes": 68529,
+          "decode_ms": 28,
+          "model_parse_ms": 387.53,
+          "total_ms": 415.53,
+          "memory_delta": {
+            "heap_bytes": 23329467,
+            "rss_bytes": 117149696,
+            "external_bytes": 3727162
+          },
+          "faces": 6579,
+          "vertices": 19737
+        },
+        "canonical_v3": {
+          "format": "Canonical JSON v3 compatibility analysis",
+          "file_bytes": 825128,
+          "decompressed_bytes": 5999755,
+          "decompress_ms": 19.49,
+          "json_parse_ms": 42.79,
+          "model_parse_ms": 1651.86,
+          "total_ms": 1714.13,
+          "memory_delta": {
+            "heap_bytes": 98083119,
+            "rss_bytes": 231530496,
+            "external_bytes": 15891376
+          },
+          "faces": 25786,
+          "vertices": 92267
+        },
+        "bome2_runtime": {
+          "format": "BOME2 runtime-only indexed/instanced",
+          "file_bytes": 307978,
+          "decompressed_bytes": 2024608,
+          "decompress_ms": 5.82,
+          "decode_validate_ms": 58.77,
+          "runtime_group_build_ms": 36.71,
+          "total_ms": 101.3,
+          "memory_delta": {
+            "heap_bytes": -37483028,
+            "rss_bytes": -4763648,
+            "external_bytes": 6399270
+          },
+          "unique_meshes": 66,
+          "unique_vertices": 7319,
+          "unique_triangles": 13842,
+          "render_groups": 212,
+          "instance_matrices": 437,
+          "quantization_max_error_m": 0.000104131587
+        },
+        "bome2_analysis_compatibility": {
+          "format": "BOME2 analysis compatibility expansion",
+          "decode_ms": 69.06,
+          "model_parse_ms": 1333.26,
+          "total_ms": 1407.6,
+          "memory_delta": {
+            "heap_bytes": 27823656,
+            "rss_bytes": -33300480,
+            "external_bytes": 13362795
+          },
+          "faces": 25786,
+          "vertices": 92267
+        },
+        "glb": {
+          "status": "ok",
+          "format": "GLB 2 derived visual runtime",
+          "file_bytes": 354472,
+          "read_ms": 3.99,
+          "container_json_parse_ms": 0.62,
+          "total_ms": 4.61,
+          "memory_delta": {
+            "heap_bytes": -105786834,
+            "rss_bytes": 290816,
+            "external_bytes": 354888
+          },
+          "unique_meshes": 66,
+          "nodes": 221,
+          "draw_primitives": 98,
+          "unique_triangles": 13842,
+          "retained_semantics": [
+            "mesh_definition_reuse",
+            "node_hierarchy",
+            "materials",
+            "source_definition_ids"
+          ],
+          "omitted_semantics": [
+            "polygon_loops",
+            "room_analysis",
+            "full_source_identity",
+            "attribute_dictionaries"
+          ]
+        },
+        "bome2_speedup_vs_bome1": 4.102
+      },
+      "browser_qa": {
+        "cold_load_to_render_ms": 5482.8,
+        "cold_used_js_heap_bytes": 278975674,
+        "views_ready": 6,
+        "view_count": 6,
+        "runtime_groups": 105,
+        "visible_runtime_groups": 105,
+        "visible_runtime_instances": 178
+      },
+      "classification": {
+        "ground_truth": {
+          "kind": "silver_explicit_metadata_not_human_verified",
+          "description": "Only unambiguous explicit multilingual category tokens in face name/path/layer are scored. Geometry-only and contextual predictions are excluded from precision/recall ground truth.",
+          "labelled_faces": 25551,
+          "total_faces": 25786,
+          "coverage": 0.990887
+        },
+        "performance": {
+          "compressed_bytes": 825128,
+          "decompressed_bytes": 5999755,
+          "json_parse_ms": 45.4934,
+          "model_parse_and_classify_ms": 1381.7183
+        },
+        "whole_model": {
+          "category_distribution": {
+            "roof": 242,
+            "floor": 357,
+            "ceiling": 2,
+            "exterior_wall": 1,
+            "interior_wall": 20,
+            "door": 24482,
+            "window": 544,
+            "column": 0,
+            "beam": 0,
+            "stair": 0,
+            "railing": 0,
+            "furniture": 2,
+            "fixture": 0,
+            "opening": 6,
+            "room_boundary": 0,
+            "unknown": 130
+          },
+          "unknown_rate": 0.005041,
+          "ambiguous_rate": 0.002831
+        },
+        "silver_metrics": {
+          "sampleCount": 25551,
+          "accuracy": 0.999843,
+          "macroF1": 0.998447,
+          "unknownRate": 0.000157,
+          "ambiguousRate": 0.000157,
+          "perCategory": {
+            "roof": {
+              "precision": 1,
+              "recall": 1,
+              "f1": 1,
+              "support": 201
+            },
+            "floor": {
+              "precision": 1,
+              "recall": 0.987654,
+              "f1": 0.993789,
+              "support": 324
+            },
+            "ceiling": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "exterior_wall": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "interior_wall": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "door": {
+              "precision": 1,
+              "recall": 1,
+              "f1": 1,
+              "support": 24482
+            },
+            "window": {
+              "precision": 1,
+              "recall": 1,
+              "f1": 1,
+              "support": 544
+            },
+            "column": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "beam": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "stair": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "railing": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "furniture": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "fixture": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "opening": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "room_boundary": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "unknown": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            }
+          },
+          "confusionMatrix": {
+            "roof": {
+              "roof": 201,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "floor": {
+              "roof": 0,
+              "floor": 320,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 4
+            },
+            "ceiling": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "exterior_wall": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "interior_wall": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "door": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 24482,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "window": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 544,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "column": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "beam": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "stair": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "railing": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "furniture": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "fixture": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "opening": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "room_boundary": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "unknown": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            }
+          }
+        }
+      },
+      "visual": {
+        "status": "PASS_WITH_RENDERING_DIFFERENCE",
+        "views": [
+          {
+            "view": "isometric",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "front",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "back",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "left",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "right",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "top",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          }
+        ],
+        "geometry_alignment": {
+          "axis_mapping": "SketchUp {x,y,z} -> Three.js {x,z,-y}",
+          "canonical_visible_bounds": {
+            "min": {
+              "x": -0.6095422077458781,
+              "y": 0,
+              "z": -11.18035058637315
+            },
+            "max": {
+              "x": 11.241883042025297,
+              "y": 8.50569208229796,
+              "z": 0.8132353557447163
+            }
+          },
+          "bome2_rendered_bounds": {
+            "min": {
+              "x": -0.6095422180771379,
+              "y": 0,
+              "z": -11.191459604333616
+            },
+            "max": {
+              "x": 11.2529925811818,
+              "y": 8.505692505705092,
+              "z": 0.8132353437340827
+            }
+          },
+          "visible_runtime_absolute_error_m": {
+            "min_x": 1e-8,
+            "min_y": 0,
+            "min_z": 0.011109018,
+            "max_x": 0.011109539,
+            "max_y": 4.23e-7,
+            "max_z": 1.2e-8
+          },
+          "visible_runtime_maximum_absolute_error_m": 0.011109539,
+          "visible_runtime_tolerance_m": 0.02,
+          "all_runtime_groups_visible": true,
+          "visible_runtime_aligned_within_tolerance": true,
+          "source_model_vs_visible_geometry": {
+            "source_full_bounds_mapped_to_three": {
+              "min": {
+                "x": -0.860141,
+                "y": -0.011238,
+                "z": -28.596293
+              },
+              "max": {
+                "x": 12.699263,
+                "y": 8.505692,
+                "z": 1.114141
+              }
+            },
+            "absolute_error_m": {
+              "min_x": 0.250598792,
+              "min_y": 0.011238,
+              "min_z": 17.415942414,
+              "max_x": 1.457379958,
+              "max_y": 8.2e-8,
+              "max_z": 0.300905644
+            },
+            "maximum_absolute_error_m": 17.415942414,
+            "skipped_entities": {
+              "hidden_or_invalid_entity": 336
+            },
+            "pass_fail_gate": false,
+            "reason": "SketchUp model bounds include hidden/non-renderable extents; visual QA compares renderable exported geometry."
+          }
+        }
+      }
+    },
+    {
+      "slug": "test",
+      "source": {
+        "path": "D:\\projects\\sibambo-bom-engine\\skps\\test.skp",
+        "skp_bytes": 163941,
+        "units": "Meters",
+        "bounds_m": {
+          "min_m": {
+            "x": -0.898076,
+            "y": -1.15714,
+            "z": -0.001367
+          },
+          "max_m": {
+            "x": 19.638329,
+            "y": 26.041184,
+            "z": 1.592087
+          },
+          "size_m": {
+            "x": 20.536405,
+            "y": 27.198325,
+            "z": 1.593454
+          },
+          "width_m": 20.536405,
+          "depth_m": 27.198325,
+          "height_m": 1.593454,
+          "diagonal_m": 34.117912
+        },
+        "groups": 0,
+        "component_instances": 1,
+        "materials": 21,
+        "tags": 1,
+        "scenes": 0
+      },
+      "export": {
+        "baseline_full": {
+          "status": "ok",
+          "bytes": 1038263,
+          "plugin_elapsed_ms": 270
+        },
+        "baseline_visual_bome1": {
+          "status": "ok",
+          "bytes": 10653,
+          "plugin_elapsed_ms": 210
+        },
+        "canonical_v3": {
+          "status": "ok",
+          "gzip_bytes": 81312,
+          "uncompressed_bytes": 343783,
+          "plugin_elapsed_ms": 238,
+          "gzip_change_vs_baseline_full_percent": -92.17
+        },
+        "bome2": {
+          "status": "ok",
+          "gzip_bytes": 32607,
+          "uncompressed_bytes": 90068,
+          "plugin_elapsed_ms": 242,
+          "gzip_change_vs_bome1_percent": 206.08,
+          "triangles": 3010,
+          "quantization_max_error_m": 0.000012862849
+        },
+        "canonical_statistics": {
+          "definitions": 2,
+          "meshes": 2,
+          "nodes": 2,
+          "component_instances": 1,
+          "group_instances": 0,
+          "faces": 111,
+          "unique_vertices": 1682,
+          "materials": 21,
+          "tags": 1,
+          "transforms": 2,
+          "identity_transform_id": 0,
+          "skipped": {}
+        },
+        "source_modified_after": false
+      },
+      "runtime_benchmark": {
+        "baseline_bome1": {
+          "format": "BOME1 flattened baseline",
+          "file_bytes": 10653,
+          "decode_ms": 20.1,
+          "model_parse_ms": 50,
+          "total_ms": 70.1,
+          "memory_delta": {
+            "heap_bytes": 2086197,
+            "rss_bytes": 64974848,
+            "external_bytes": 173619
+          },
+          "faces": 932,
+          "vertices": 2796
+        },
+        "canonical_v3": {
+          "format": "Canonical JSON v3 compatibility analysis",
+          "file_bytes": 81312,
+          "decompressed_bytes": 343783,
+          "decompress_ms": 1.38,
+          "json_parse_ms": 2.15,
+          "model_parse_ms": 9.47,
+          "total_ms": 13.01,
+          "memory_delta": {
+            "heap_bytes": 0,
+            "rss_bytes": 3620864,
+            "external_bytes": 425319
+          },
+          "faces": 111,
+          "vertices": 3034
+        },
+        "bome2_runtime": {
+          "format": "BOME2 runtime-only indexed/instanced",
+          "file_bytes": 32607,
+          "decompressed_bytes": 90068,
+          "decompress_ms": 0.42,
+          "decode_validate_ms": 7.28,
+          "runtime_group_build_ms": 12.1,
+          "total_ms": 19.79,
+          "memory_delta": {
+            "heap_bytes": 2799161,
+            "rss_bytes": 1908736,
+            "external_bytes": 304925
+          },
+          "unique_meshes": 2,
+          "unique_vertices": 1682,
+          "unique_triangles": 3010,
+          "render_groups": 22,
+          "instance_matrices": 22,
+          "quantization_max_error_m": 0.000012862849
+        },
+        "bome2_analysis_compatibility": {
+          "format": "BOME2 analysis compatibility expansion",
+          "decode_ms": 6.4,
+          "model_parse_ms": 6.05,
+          "total_ms": 12.93,
+          "memory_delta": {
+            "heap_bytes": 0,
+            "rss_bytes": 1978368,
+            "external_bytes": 303789
+          },
+          "faces": 111,
+          "vertices": 3034
+        },
+        "glb": {
+          "status": "not_generated",
+          "format": "GLB 2 derived visual runtime",
+          "reason": "GLB is optional and was benchmarked on project-sboost-2 as the representative corpus model."
+        },
+        "bome2_speedup_vs_bome1": 3.5422
+      },
+      "browser_qa": {
+        "cold_load_to_render_ms": 428.9,
+        "cold_used_js_heap_bytes": 42573860,
+        "views_ready": 6,
+        "view_count": 6,
+        "runtime_groups": 22,
+        "visible_runtime_groups": 22,
+        "visible_runtime_instances": 22
+      },
+      "classification": {
+        "ground_truth": {
+          "kind": "silver_explicit_metadata_not_human_verified",
+          "description": "Only unambiguous explicit multilingual category tokens in face name/path/layer are scored. Geometry-only and contextual predictions are excluded from precision/recall ground truth.",
+          "labelled_faces": 0,
+          "total_faces": 111,
+          "coverage": 0
+        },
+        "performance": {
+          "compressed_bytes": 81312,
+          "decompressed_bytes": 343783,
+          "json_parse_ms": 2.7551,
+          "model_parse_and_classify_ms": 23.8557
+        },
+        "whole_model": {
+          "category_distribution": {
+            "roof": 0,
+            "floor": 1,
+            "ceiling": 0,
+            "exterior_wall": 0,
+            "interior_wall": 0,
+            "door": 0,
+            "window": 0,
+            "column": 0,
+            "beam": 0,
+            "stair": 0,
+            "railing": 0,
+            "furniture": 0,
+            "fixture": 0,
+            "opening": 0,
+            "room_boundary": 0,
+            "unknown": 110
+          },
+          "unknown_rate": 0.990991,
+          "ambiguous_rate": 0.990991
+        },
+        "silver_metrics": {
+          "sampleCount": 0,
+          "accuracy": 0,
+          "macroF1": 0,
+          "unknownRate": 0,
+          "ambiguousRate": 0,
+          "perCategory": {
+            "roof": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "floor": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "ceiling": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "exterior_wall": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "interior_wall": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "door": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "window": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "column": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "beam": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "stair": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "railing": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "furniture": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "fixture": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "opening": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "room_boundary": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            },
+            "unknown": {
+              "precision": 0,
+              "recall": 0,
+              "f1": 0,
+              "support": 0
+            }
+          },
+          "confusionMatrix": {
+            "roof": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "floor": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "ceiling": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "exterior_wall": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "interior_wall": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "door": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "window": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "column": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "beam": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "stair": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "railing": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "furniture": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "fixture": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "opening": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "room_boundary": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            },
+            "unknown": {
+              "roof": 0,
+              "floor": 0,
+              "ceiling": 0,
+              "exterior_wall": 0,
+              "interior_wall": 0,
+              "door": 0,
+              "window": 0,
+              "column": 0,
+              "beam": 0,
+              "stair": 0,
+              "railing": 0,
+              "furniture": 0,
+              "fixture": 0,
+              "opening": 0,
+              "room_boundary": 0,
+              "unknown": 0
+            }
+          }
+        }
+      },
+      "visual": {
+        "status": "PASS_WITH_RENDERING_DIFFERENCE",
+        "views": [
+          {
+            "view": "isometric",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "front",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "back",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "left",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "right",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          },
+          {
+            "view": "top",
+            "status": "PASS_WITH_RENDERING_DIFFERENCE"
+          }
+        ],
+        "geometry_alignment": {
+          "axis_mapping": "SketchUp {x,y,z} -> Three.js {x,z,-y}",
+          "canonical_visible_bounds": {
+            "min": {
+              "x": -0.46506775223875235,
+              "y": -0.001367078,
+              "z": -26.041184428
+            },
+            "max": {
+              "x": 19.638329019,
+              "y": 1.592087312,
+              "z": 0.780538562782034
+            }
+          },
+          "bome2_rendered_bounds": {
+            "min": {
+              "x": -0.4650677587884342,
+              "y": -0.0013670780463144183,
+              "z": -26.04118537902832
+            },
+            "max": {
+              "x": 19.638328552246094,
+              "y": 1.5920872688293457,
+              "z": 0.7805385457685023
+            }
+          },
+          "visible_runtime_absolute_error_m": {
+            "min_x": 7e-9,
+            "min_y": 0,
+            "min_z": 9.51e-7,
+            "max_x": 4.67e-7,
+            "max_y": 4.3e-8,
+            "max_z": 1.7e-8
+          },
+          "visible_runtime_maximum_absolute_error_m": 9.51e-7,
+          "visible_runtime_tolerance_m": 0.02,
+          "all_runtime_groups_visible": true,
+          "visible_runtime_aligned_within_tolerance": true,
+          "source_model_vs_visible_geometry": {
+            "source_full_bounds_mapped_to_three": {
+              "min": {
+                "x": -0.898076,
+                "y": -0.001367,
+                "z": -26.041184
+              },
+              "max": {
+                "x": 19.638329,
+                "y": 1.592087,
+                "z": 1.15714
+              }
+            },
+            "absolute_error_m": {
+              "min_x": 0.433008248,
+              "min_y": 7.8e-8,
+              "min_z": 4.28e-7,
+              "max_x": 1.9e-8,
+              "max_y": 3.12e-7,
+              "max_z": 0.376601437
+            },
+            "maximum_absolute_error_m": 0.433008248,
+            "skipped_entities": {},
+            "pass_fail_gate": false,
+            "reason": "SketchUp model bounds include hidden/non-renderable extents; visual QA compares renderable exported geometry."
+          }
+        }
+      }
+    }
+  ],
+  "aggregates": {
+    "export_success_rate": 1,
+    "load_success_rate": 1,
+    "visual_pass_rate": 1,
+    "source_skp_bytes": 9671496,
+    "baseline_full_bytes": 526468965,
+    "canonical_v3_gzip_bytes": 4383267,
+    "canonical_gzip_change_vs_baseline_full_percent": -99.17,
+    "baseline_bome1_gzip_bytes": 2453265,
+    "bome2_gzip_bytes": 1127707,
+    "bome2_size_change_vs_bome1_percent": -54.03,
+    "baseline_bome1_runtime_total_ms": 8347.22,
+    "bome2_runtime_total_ms": 596.71,
+    "bome2_runtime_speedup": 13.9887,
+    "maximum_quantization_error_m": 0.000335028464,
+    "classifier": {
+      "ground_truth": "silver_explicit_metadata_not_human_verified",
+      "labelled_faces": 43473,
+      "total_faces": 496862,
+      "coverage": 0.0875,
+      "accuracy": 0.9989,
+      "macro_f1_supported_categories": 0.996852,
+      "unknown_rate": 0.0944,
+      "ambiguous_rate": 0.0938,
+      "category_distribution": {
+        "roof": 955,
+        "floor": 633,
+        "ceiling": 503,
+        "exterior_wall": 42,
+        "interior_wall": 491,
+        "door": 38060,
+        "window": 3604,
+        "column": 0,
+        "beam": 15,
+        "stair": 0,
+        "railing": 0,
+        "furniture": 405638,
+        "fixture": 0,
+        "opening": 7,
+        "room_boundary": 1,
+        "unknown": 46913
+      },
+      "per_category": {
+        "roof": {
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "support": 428
+        },
+        "floor": {
+          "precision": 1,
+          "recall": 0.979296,
+          "f1": 0.98954,
+          "support": 483
+        },
+        "ceiling": {
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "support": 0
+        },
+        "exterior_wall": {
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "support": 0
+        },
+        "interior_wall": {
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "support": 0
+        },
+        "door": {
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "support": 38060
+        },
+        "window": {
+          "precision": 1,
+          "recall": 0.9895,
+          "f1": 0.994722,
+          "support": 3619
+        },
+        "column": {
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "support": 0
+        },
+        "beam": {
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "support": 0
+        },
+        "stair": {
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "support": 0
+        },
+        "railing": {
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "support": 0
+        },
+        "furniture": {
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "support": 883
+        },
+        "fixture": {
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "support": 0
+        },
+        "opening": {
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "support": 0
+        },
+        "room_boundary": {
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "support": 0
+        },
+        "unknown": {
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "support": 0
+        }
+      },
+      "confusion_matrix": {
+        "roof": {
+          "roof": 428,
+          "floor": 0,
+          "ceiling": 0,
+          "exterior_wall": 0,
+          "interior_wall": 0,
+          "door": 0,
+          "window": 0,
+          "column": 0,
+          "beam": 0,
+          "stair": 0,
+          "railing": 0,
+          "furniture": 0,
+          "fixture": 0,
+          "opening": 0,
+          "room_boundary": 0,
+          "unknown": 0
+        },
+        "floor": {
+          "roof": 0,
+          "floor": 473,
+          "ceiling": 0,
+          "exterior_wall": 0,
+          "interior_wall": 0,
+          "door": 0,
+          "window": 0,
+          "column": 0,
+          "beam": 0,
+          "stair": 0,
+          "railing": 0,
+          "furniture": 0,
+          "fixture": 0,
+          "opening": 0,
+          "room_boundary": 0,
+          "unknown": 10
+        },
+        "ceiling": {
+          "roof": 0,
+          "floor": 0,
+          "ceiling": 0,
+          "exterior_wall": 0,
+          "interior_wall": 0,
+          "door": 0,
+          "window": 0,
+          "column": 0,
+          "beam": 0,
+          "stair": 0,
+          "railing": 0,
+          "furniture": 0,
+          "fixture": 0,
+          "opening": 0,
+          "room_boundary": 0,
+          "unknown": 0
+        },
+        "exterior_wall": {
+          "roof": 0,
+          "floor": 0,
+          "ceiling": 0,
+          "exterior_wall": 0,
+          "interior_wall": 0,
+          "door": 0,
+          "window": 0,
+          "column": 0,
+          "beam": 0,
+          "stair": 0,
+          "railing": 0,
+          "furniture": 0,
+          "fixture": 0,
+          "opening": 0,
+          "room_boundary": 0,
+          "unknown": 0
+        },
+        "interior_wall": {
+          "roof": 0,
+          "floor": 0,
+          "ceiling": 0,
+          "exterior_wall": 0,
+          "interior_wall": 0,
+          "door": 0,
+          "window": 0,
+          "column": 0,
+          "beam": 0,
+          "stair": 0,
+          "railing": 0,
+          "furniture": 0,
+          "fixture": 0,
+          "opening": 0,
+          "room_boundary": 0,
+          "unknown": 0
+        },
+        "door": {
+          "roof": 0,
+          "floor": 0,
+          "ceiling": 0,
+          "exterior_wall": 0,
+          "interior_wall": 0,
+          "door": 38060,
+          "window": 0,
+          "column": 0,
+          "beam": 0,
+          "stair": 0,
+          "railing": 0,
+          "furniture": 0,
+          "fixture": 0,
+          "opening": 0,
+          "room_boundary": 0,
+          "unknown": 0
+        },
+        "window": {
+          "roof": 0,
+          "floor": 0,
+          "ceiling": 0,
+          "exterior_wall": 0,
+          "interior_wall": 0,
+          "door": 0,
+          "window": 3581,
+          "column": 0,
+          "beam": 0,
+          "stair": 0,
+          "railing": 0,
+          "furniture": 0,
+          "fixture": 0,
+          "opening": 0,
+          "room_boundary": 0,
+          "unknown": 38
+        },
+        "column": {
+          "roof": 0,
+          "floor": 0,
+          "ceiling": 0,
+          "exterior_wall": 0,
+          "interior_wall": 0,
+          "door": 0,
+          "window": 0,
+          "column": 0,
+          "beam": 0,
+          "stair": 0,
+          "railing": 0,
+          "furniture": 0,
+          "fixture": 0,
+          "opening": 0,
+          "room_boundary": 0,
+          "unknown": 0
+        },
+        "beam": {
+          "roof": 0,
+          "floor": 0,
+          "ceiling": 0,
+          "exterior_wall": 0,
+          "interior_wall": 0,
+          "door": 0,
+          "window": 0,
+          "column": 0,
+          "beam": 0,
+          "stair": 0,
+          "railing": 0,
+          "furniture": 0,
+          "fixture": 0,
+          "opening": 0,
+          "room_boundary": 0,
+          "unknown": 0
+        },
+        "stair": {
+          "roof": 0,
+          "floor": 0,
+          "ceiling": 0,
+          "exterior_wall": 0,
+          "interior_wall": 0,
+          "door": 0,
+          "window": 0,
+          "column": 0,
+          "beam": 0,
+          "stair": 0,
+          "railing": 0,
+          "furniture": 0,
+          "fixture": 0,
+          "opening": 0,
+          "room_boundary": 0,
+          "unknown": 0
+        },
+        "railing": {
+          "roof": 0,
+          "floor": 0,
+          "ceiling": 0,
+          "exterior_wall": 0,
+          "interior_wall": 0,
+          "door": 0,
+          "window": 0,
+          "column": 0,
+          "beam": 0,
+          "stair": 0,
+          "railing": 0,
+          "furniture": 0,
+          "fixture": 0,
+          "opening": 0,
+          "room_boundary": 0,
+          "unknown": 0
+        },
+        "furniture": {
+          "roof": 0,
+          "floor": 0,
+          "ceiling": 0,
+          "exterior_wall": 0,
+          "interior_wall": 0,
+          "door": 0,
+          "window": 0,
+          "column": 0,
+          "beam": 0,
+          "stair": 0,
+          "railing": 0,
+          "furniture": 883,
+          "fixture": 0,
+          "opening": 0,
+          "room_boundary": 0,
+          "unknown": 0
+        },
+        "fixture": {
+          "roof": 0,
+          "floor": 0,
+          "ceiling": 0,
+          "exterior_wall": 0,
+          "interior_wall": 0,
+          "door": 0,
+          "window": 0,
+          "column": 0,
+          "beam": 0,
+          "stair": 0,
+          "railing": 0,
+          "furniture": 0,
+          "fixture": 0,
+          "opening": 0,
+          "room_boundary": 0,
+          "unknown": 0
+        },
+        "opening": {
+          "roof": 0,
+          "floor": 0,
+          "ceiling": 0,
+          "exterior_wall": 0,
+          "interior_wall": 0,
+          "door": 0,
+          "window": 0,
+          "column": 0,
+          "beam": 0,
+          "stair": 0,
+          "railing": 0,
+          "furniture": 0,
+          "fixture": 0,
+          "opening": 0,
+          "room_boundary": 0,
+          "unknown": 0
+        },
+        "room_boundary": {
+          "roof": 0,
+          "floor": 0,
+          "ceiling": 0,
+          "exterior_wall": 0,
+          "interior_wall": 0,
+          "door": 0,
+          "window": 0,
+          "column": 0,
+          "beam": 0,
+          "stair": 0,
+          "railing": 0,
+          "furniture": 0,
+          "fixture": 0,
+          "opening": 0,
+          "room_boundary": 0,
+          "unknown": 0
+        },
+        "unknown": {
+          "roof": 0,
+          "floor": 0,
+          "ceiling": 0,
+          "exterior_wall": 0,
+          "interior_wall": 0,
+          "door": 0,
+          "window": 0,
+          "column": 0,
+          "beam": 0,
+          "stair": 0,
+          "railing": 0,
+          "furniture": 0,
+          "fixture": 0,
+          "opening": 0,
+          "room_boundary": 0,
+          "unknown": 0
+        }
+      }
+    },
+    "artifacts": {
+      "sketchup_reference_screenshots": 30,
+      "model_eval_screenshots": 30,
+      "comparison_images": 90,
+      "per_model_visual_reports": 5
+    }
+  },
+  "acceptance": {
+    "plugin_build_and_tests_passed": true,
+    "plugin_installed_and_loaded_sketchup_2026": true,
+    "all_skp_opened_directly": true,
+    "all_models_export_attempted": true,
+    "all_exports_loaded_in_model_eval": true,
+    "matched_view_screenshots_available": true,
+    "visual_report_per_model_available": true,
+    "canonical_schema_and_documentation_available": true,
+    "classifier_rule_bank_trace_confidence_unknown_fallback_available": true,
+    "regression_metrics_available": true,
+    "source_skp_files_modified": false
+  }
+}

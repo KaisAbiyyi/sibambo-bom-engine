@@ -1,0 +1,80 @@
+{
+  "workflow_version": "2.0.0",
+  "measured_at": "2026-07-13T00:20:13.387Z",
+  "model": "project-sboost",
+  "runtime": {
+    "bun": "1.3.10",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "formats": {
+    "bome1": {
+      "format": "BOME1 flattened baseline",
+      "file_bytes": 70200,
+      "decode_ms": 40.98,
+      "model_parse_ms": 491.76,
+      "total_ms": 532.74,
+      "memory_delta": {
+        "heap_bytes": 24211191,
+        "rss_bytes": 118964224,
+        "external_bytes": 3835179
+      },
+      "faces": 7002,
+      "vertices": 21006
+    },
+    "canonical_v3": {
+      "format": "Canonical JSON v3 compatibility analysis",
+      "file_bytes": 805228,
+      "decompressed_bytes": 5860481,
+      "decompress_ms": 23.81,
+      "json_parse_ms": 49.57,
+      "model_parse_ms": 1052.8,
+      "total_ms": 1126.18,
+      "memory_delta": {
+        "heap_bytes": 51561508,
+        "rss_bytes": 115089408,
+        "external_bytes": 11631469
+      },
+      "faces": 14371,
+      "vertices": 54542
+    },
+    "bome2_runtime": {
+      "format": "BOME2 runtime-only indexed/instanced",
+      "file_bytes": 308707,
+      "decompressed_bytes": 2044156,
+      "decompress_ms": 6.7,
+      "decode_validate_ms": 70.27,
+      "runtime_group_build_ms": 39.32,
+      "total_ms": 116.3,
+      "memory_delta": {
+        "heap_bytes": -26276354,
+        "rss_bytes": -2641920,
+        "external_bytes": 6459600
+      },
+      "unique_meshes": 70,
+      "unique_vertices": 7296,
+      "unique_triangles": 13868,
+      "render_groups": 229,
+      "instance_matrices": 409,
+      "quantization_max_error_m": 0.000125845768
+    },
+    "bome2_analysis_compatibility": {
+      "format": "BOME2 analysis compatibility expansion",
+      "decode_ms": 88.05,
+      "model_parse_ms": 934.82,
+      "total_ms": 1029.33,
+      "memory_delta": {
+        "heap_bytes": 22261419,
+        "rss_bytes": 6979584,
+        "external_bytes": 9876706
+      },
+      "faces": 14371,
+      "vertices": 54542
+    },
+    "glb": {
+      "status": "not_generated",
+      "format": "GLB 2 derived visual runtime",
+      "reason": "GLB is optional and was benchmarked on project-sboost-2 as the representative corpus model."
+    }
+  }
+}
