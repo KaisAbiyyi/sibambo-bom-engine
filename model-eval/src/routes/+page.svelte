@@ -32,6 +32,11 @@
 		type TouchedInputs,
 		type WindDirection
 	} from '$lib/model';
+	import {
+		sketchUpCaptureToThreeCamera,
+		type QACameraSpec,
+		type SketchUpCameraCapture
+	} from '$lib/render/qa-camera';
 
 	type NumberInputKey = 'peopleCount' | 'operationHours' | 'setPointC' | 'orientationDeg' | 'glassRatio' | 'roomHeightM';
 	type ModelCanvasProps = {
@@ -40,6 +45,17 @@
 		result: AnalysisResult | null;
 		spaces: SpaceZone[];
 		visiblePartKeys: PartKey[];
+		qaMode?: boolean;
+		qaCamera?: QACameraSpec | null;
+		onQaReady?: (payload: {
+			viewName: string;
+			width: number;
+			height: number;
+			runtimeGroups: number;
+			visibleRuntimeGroups: number;
+			visibleRuntimeInstances: number;
+			renderedBounds: { min: { x: number; y: number; z: number }; max: { x: number; y: number; z: number } } | null;
+		}) => void;
 	};
 
 	const SAMPLE_URL = `${import.meta.env.BASE_URL}Model_SBMBOOST_bom_visual_nonPretty-print.json`;
@@ -47,6 +63,7 @@
 	const MAX_MODEL_FILE_BYTES = 80 * 1024 * 1024;
 	const MAX_DECOMPRESSED_MODEL_BYTES = 120 * 1024 * 1024;
 	const MAX_TEMPLATE_BYTES = 512 * 1024;
+	const QA_VIEWS = ['isometric', 'front', 'back', 'left', 'right', 'top'] as const;
 	const analysisOptions = Object.entries(ANALYSIS_META) as Array<[AnalysisKind, (typeof ANALYSIS_META)[AnalysisKind]]>;
 	const roomOptions = Object.entries(ROOM_FUNCTIONS) as Array<[RoomFunctionKey, (typeof ROOM_FUNCTIONS)[RoomFunctionKey]]>;
 	const wallOptions = Object.entries(WALL_PRESETS) as Array<[ProjectInputs['wallMaterial'], (typeof WALL_PRESETS)[ProjectInputs['wallMaterial']]]>;
@@ -91,6 +108,13 @@
 	let templateMessage = $state('');
 	let parseMessage = $state('Belum ada model');
 	let ModelCanvasComponent = $state<Component<ModelCanvasProps> | null>(null);
+	let qaMode = $state(false);
+	let qaCamera = $state<QACameraSpec | null>(null);
+	let qaReady = $state(false);
+	let qaMetricsJson = $state('');
+	let qaSlug = $state('');
+	let qaLoadStartedAt = 0;
+	let qaSourceBytes = 0;
 	let readiness = $derived<ReadinessItem[]>(getReadiness(model, inputs, touched));
 	let selectedReadiness = $derived<ReadinessItem | undefined>(readiness.find((item) => item.kind === selectedAnalysis));
 	let presentParts = $derived(model ? model.partStats.filter((part) => part.count > 0) : []);
@@ -136,7 +160,13 @@
 		const params = new URLSearchParams(window.location.search);
 		const corpus = params.get('corpus');
 		const format = params.get('format') || 'bome2';
-		if (corpus) void loadCorpus(corpus, format);
+		qaMode = params.get('qa') === '1';
+		qaSlug = corpus || '';
+		const view = params.get('view') || 'isometric';
+		if (corpus) {
+			if (qaMode) void Promise.all([loadQaCamera(corpus, view), loadCorpus(corpus, format)]);
+			else void loadCorpus(corpus, format);
+		}
 	});
 
 	async function ensureModelCanvas() {
@@ -166,21 +196,80 @@
 
 	async function loadCorpus(slug: string, format: string) {
 		isLoading = true;
+		qaReady = false;
+		qaLoadStartedAt = performance.now();
 		loadError = '';
 		parseMessage = `Load regression corpus ${slug} (${format})...`;
 		try {
 			const response = await fetch(`/api/corpus/${encodeURIComponent(slug)}/${encodeURIComponent(format)}`);
 			if (!response.ok) throw new Error(`Corpus tidak bisa dibaca: ${response.status}`);
 			const bytes = await response.arrayBuffer();
+			qaSourceBytes = bytes.byteLength;
 			const filename = response.headers.get('x-bom-corpus-file') || `${slug}.${format}.gz`;
 			const file = new File([bytes], filename, { type: response.headers.get('content-type') || 'application/octet-stream' });
 			const data = await readBomModelData(file, MAX_DECOMPRESSED_MODEL_BYTES);
 			acceptModel(data, filename);
 		} catch (error) {
 			loadError = error instanceof Error ? error.message : 'Gagal load regression corpus';
+			if (qaMode) {
+				(window as Window & { __BOM_QA__?: unknown }).__BOM_QA__ = { status: 'error', error: loadError };
+			}
 		} finally {
 			isLoading = false;
 		}
+	}
+
+	async function loadQaCamera(slug: string, view: string) {
+		try {
+			const response = await fetch(`/api/corpus/${encodeURIComponent(slug)}/camera/${encodeURIComponent(view)}`);
+			if (!response.ok) throw new Error(`Camera metadata tidak bisa dibaca: ${response.status}`);
+			const payload = (await response.json()) as { capture: SketchUpCameraCapture; backgroundColor?: string };
+			qaCamera = sketchUpCaptureToThreeCamera(payload.capture, payload.backgroundColor);
+		} catch (error) {
+			loadError = error instanceof Error ? error.message : 'Gagal load camera QA';
+			(window as Window & { __BOM_QA__?: unknown }).__BOM_QA__ = { status: 'error', error: loadError };
+		}
+	}
+
+	function switchQaView(event: Event) {
+		const view = (event.currentTarget as HTMLSelectElement).value;
+		if (!qaSlug || !QA_VIEWS.includes(view as (typeof QA_VIEWS)[number])) return;
+		qaReady = false;
+		qaMetricsJson = '';
+		qaLoadStartedAt = performance.now();
+		void loadQaCamera(qaSlug, view);
+	}
+
+	function handleQaReady(payload: {
+		viewName: string;
+		width: number;
+		height: number;
+		runtimeGroups: number;
+		visibleRuntimeGroups: number;
+		visibleRuntimeInstances: number;
+		renderedBounds: { min: { x: number; y: number; z: number }; max: { x: number; y: number; z: number } } | null;
+	}) {
+		qaReady = true;
+		const memory = (performance as Performance & { memory?: { usedJSHeapSize?: number } }).memory;
+		const metrics = {
+			status: 'ready',
+			slug: qaSlug,
+			view: payload.viewName,
+			viewport: { width: payload.width, height: payload.height },
+			expectedViewport: qaCamera?.viewport,
+			camera: qaCamera,
+			sourceBytes: qaSourceBytes,
+			faceCount: model?.faceCount || 0,
+			runtimeGroups: payload.runtimeGroups,
+			visibleRuntimeGroups: payload.visibleRuntimeGroups,
+			visibleRuntimeInstances: payload.visibleRuntimeInstances,
+			renderedBounds: payload.renderedBounds,
+			loadToRenderMs: Number((performance.now() - qaLoadStartedAt).toFixed(2)),
+			usedJSHeapBytes: memory?.usedJSHeapSize || null,
+			warnings: model?.warnings || []
+		};
+		qaMetricsJson = JSON.stringify(metrics);
+		(window as Window & { __BOM_QA__?: unknown }).__BOM_QA__ = metrics;
 	}
 
 	async function handleFileChange(event: Event) {
@@ -483,7 +572,18 @@
 	<title>Model Evaluation</title>
 </svelte:head>
 
-<main class="app-shell">
+<main
+	class="app-shell"
+	class:qa-mode={qaMode}
+	data-qa-status={qaReady ? 'ready' : qaMode ? 'loading' : 'interactive'}
+	data-qa-metrics={qaMetricsJson || undefined}
+	style={qaMode && qaCamera ? `--qa-width:${qaCamera.viewport.width}px;--qa-height:${qaCamera.viewport.height}px` : undefined}
+>
+	{#if qaMode}
+		<select class="qa-view-selector" aria-label="QA matched view" value={qaCamera?.viewName || ''} onchange={switchQaView}>
+			{#each QA_VIEWS as view}<option value={view}>{view}</option>{/each}
+		</select>
+	{/if}
 	<aside class="left-panel">
 		<section class="panel-block upload-block">
 			<div>
@@ -661,7 +761,7 @@
 
 	<section class="stage-panel">
 		{#if ModelCanvasComponent}
-			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} activeAnalysis={selectedAnalysis} {result} />
+			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} activeAnalysis={selectedAnalysis} {result} {qaMode} {qaCamera} onQaReady={handleQaReady} />
 		{:else}
 			<div class="model-stage-placeholder">
 				<strong>JSON belum dimuat</strong>
@@ -1117,6 +1217,36 @@
 		display: grid;
 		gap: 7px;
 		margin-top: 12px;
+	}
+
+	.app-shell.qa-mode {
+		display: block;
+		width: var(--qa-width, 100vw);
+		height: var(--qa-height, 100vh);
+		min-height: var(--qa-height, 100vh);
+		overflow: hidden;
+	}
+
+	.app-shell.qa-mode > .left-panel,
+	.app-shell.qa-mode > .right-panel,
+	.app-shell.qa-mode .stage-hud {
+		display: none;
+	}
+
+	.app-shell.qa-mode > .stage-panel {
+		width: var(--qa-width, 100vw);
+		height: var(--qa-height, 100vh);
+		min-height: var(--qa-height, 100vh);
+	}
+
+	.qa-view-selector {
+		position: absolute;
+		top: 0;
+		left: 0;
+		z-index: 20;
+		width: 1px;
+		height: 1px;
+		opacity: 0;
 	}
 
 	.classifier-inspector {

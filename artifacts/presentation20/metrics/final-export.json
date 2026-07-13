@@ -1,0 +1,96 @@
+{
+  "workflow_version": "1.0.0",
+  "measured_at": "2026-07-12T23:28:52Z",
+  "status": "ok",
+  "plugin_version": "3.0.0",
+  "sketchup_version": "26.2.243",
+  "source_skp": "D:\\projects\\sibambo-bom-engine\\skps\\presentation20.skp",
+  "source_bytes": 2155445,
+  "source_sha256": "d82c05d4fd062ebf0315f5fa3cc1dbfc5f39a1e421d33dd1fa1d459ed21c286e",
+  "source_modified_before": false,
+  "source_modified_after": false,
+  "formats": [
+    {
+      "format": "canonical_v3",
+      "status": "ok",
+      "output_path": "D:/projects/sibambo-bom-engine/artifacts/presentation20/exported/presentation20_canonical.json.gz",
+      "output_bytes": 2476929,
+      "output_sha256": "f7ce43f5ff4e1e8983ba391376d6bc75402d1c1824c1e4a9a45c8efb4666b3e5",
+      "wall_elapsed_ms": 39098.01,
+      "plugin_elapsed_ms": 38405.0,
+      "heap_live_slots_delta": 1013614,
+      "result": {
+        "path": "D:/projects/sibambo-bom-engine/artifacts/presentation20/exported/presentation20_canonical.json.gz",
+        "compressed": true,
+        "pretty": false,
+        "bytes": 2476929,
+        "uncompressed_bytes": 19090346,
+        "sha256": "f7ce43f5ff4e1e8983ba391376d6bc75402d1c1824c1e4a9a45c8efb4666b3e5",
+        "elapsed_seconds": 38.405,
+        "format": "canonical_v3",
+        "statistics": {
+          "definitions": 187,
+          "meshes": 115,
+          "nodes": 484,
+          "component_instances": 148,
+          "group_instances": 335,
+          "faces": 11625,
+          "unique_vertices": 14511,
+          "materials": 31,
+          "tags": 5,
+          "transforms": 206,
+          "identity_transform_id": 0,
+          "skipped": {
+            "hidden_or_invalid_entity": 354
+          }
+        }
+      },
+      "validation": {
+        "format": "3.0.0",
+        "uncompressed_bytes": 19090346,
+        "meshes": 115,
+        "definitions": 187,
+        "nodes": 484,
+        "materials": 31,
+        "transforms": 206
+      }
+    },
+    {
+      "format": "bome2",
+      "status": "ok",
+      "output_path": "D:/projects/sibambo-bom-engine/artifacts/presentation20/exported/presentation20_runtime.bome2.gz",
+      "output_bytes": 380049,
+      "output_sha256": "ca3e4fa2b383f835a7c3c4e24be9dd6cfa4b6fab7ad47ab74b98ddca43e5c035",
+      "wall_elapsed_ms": 39123.87,
+      "plugin_elapsed_ms": 38939.0,
+      "heap_live_slots_delta": 610117,
+      "result": {
+        "path": "D:/projects/sibambo-bom-engine/artifacts/presentation20/exported/presentation20_runtime.bome2.gz",
+        "compressed": true,
+        "bytes": 380049,
+        "uncompressed_bytes": 3308136,
+        "sha256": "ca3e4fa2b383f835a7c3c4e24be9dd6cfa4b6fab7ad47ab74b98ddca43e5c035",
+        "format": "bome2",
+        "meshes": 115,
+        "definitions": 187,
+        "nodes": 484,
+        "instances": 148,
+        "triangles": 25518,
+        "sections": 346,
+        "quantization_max_error_m": 0.000335028464,
+        "elapsed_seconds": 38.939
+      },
+      "validation": {
+        "format": "2.0.0",
+        "meshes": 115,
+        "definitions": 187,
+        "nodes": 484,
+        "instances": 148,
+        "triangles": 25518,
+        "sections": 346,
+        "quantization_max_error_m": 0.000335028464,
+        "uncompressed_bytes": 3308136
+      }
+    }
+  ]
+}

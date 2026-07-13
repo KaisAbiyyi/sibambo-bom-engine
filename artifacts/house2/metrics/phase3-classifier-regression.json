@@ -1,87 +1,87 @@
 {
   "workflow_version": "3.0.0",
-  "measured_at": "2026-07-12T23:57:04.723Z",
-  "model": "project-sboost-2",
-  "source": "D:\\projects\\sibambo-bom-engine\\artifacts\\project-sboost-2\\exported\\project-sboost-2_canonical.json.gz",
+  "measured_at": "2026-07-12T23:56:36.033Z",
+  "model": "house2",
+  "source": "D:\\projects\\sibambo-bom-engine\\artifacts\\house2\\exported\\house2_canonical.json.gz",
   "ground_truth": {
     "kind": "silver_explicit_metadata_not_human_verified",
     "description": "Only unambiguous explicit multilingual category tokens in face name/path/layer are scored. Geometry-only and contextual predictions are excluded from precision/recall ground truth.",
-    "labelled_faces": 25551,
-    "total_faces": 25786,
-    "coverage": 0.990887
+    "labelled_faces": 1849,
+    "total_faces": 3657,
+    "coverage": 0.505606
   },
   "performance": {
-    "compressed_bytes": 825128,
-    "decompressed_bytes": 5999755,
-    "json_parse_ms": 45.4934,
-    "model_parse_and_classify_ms": 1381.7183
+    "compressed_bytes": 194670,
+    "decompressed_bytes": 1572675,
+    "json_parse_ms": 12.338,
+    "model_parse_and_classify_ms": 221.4042
   },
   "geometry": {
     "bounds": {
       "min": {
-        "x": -0.6095422077458781,
-        "y": 0,
-        "z": -11.18035058637315
+        "x": -0.4699,
+        "y": -5.08e-11,
+        "z": -9.84050182
       },
       "max": {
-        "x": 11.241883042025297,
-        "y": 8.50569208229796,
-        "z": 0.8132353557447163
+        "x": 6.87705,
+        "y": 6.5659,
+        "z": 5.740288438
       },
       "size": {
-        "x": 11.851425249771175,
-        "y": 8.50569208229796,
-        "z": 11.993585942117866
+        "x": 7.34695,
+        "y": 6.5659000000508,
+        "z": 15.580790258
       },
       "center": {
-        "x": 5.316170417139709,
-        "y": 4.25284604114898,
-        "z": -5.183557615314217
+        "x": 3.203575,
+        "y": 3.2829499999746004,
+        "z": -2.050106691
       }
     },
-    "face_count": 25786,
+    "face_count": 3657,
     "runtime_scene_present": false
   },
   "whole_model": {
     "category_distribution": {
-      "roof": 242,
-      "floor": 357,
-      "ceiling": 2,
-      "exterior_wall": 1,
-      "interior_wall": 20,
-      "door": 24482,
-      "window": 544,
+      "roof": 110,
+      "floor": 38,
+      "ceiling": 5,
+      "exterior_wall": 34,
+      "interior_wall": 15,
+      "door": 294,
+      "window": 695,
       "column": 0,
       "beam": 0,
       "stair": 0,
       "railing": 0,
-      "furniture": 2,
+      "furniture": 1750,
       "fixture": 0,
-      "opening": 6,
+      "opening": 0,
       "room_boundary": 0,
-      "unknown": 130
+      "unknown": 716
     },
-    "unknown_rate": 0.005041,
-    "ambiguous_rate": 0.002831
+    "unknown_rate": 0.195789,
+    "ambiguous_rate": 0.162702
   },
   "silver_metrics": {
-    "sampleCount": 25551,
-    "accuracy": 0.999843,
-    "macroF1": 0.998447,
-    "unknownRate": 0.000157,
-    "ambiguousRate": 0.000157,
+    "sampleCount": 1849,
+    "accuracy": 1,
+    "macroF1": 1,
+    "unknownRate": 0,
+    "ambiguousRate": 0,
     "perCategory": {
       "roof": {
-        "precision": 1,
-        "recall": 1,
-        "f1": 1,
-        "support": 201
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "support": 0
       },
       "floor": {
-        "precision": 1,
-        "recall": 0.987654,
-        "f1": 0.993789,
-        "support": 324
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "support": 0
       },
       "ceiling": {
         "precision": 0,
@@ -105,13 +105,13 @@
         "precision": 1,
         "recall": 1,
         "f1": 1,
-        "support": 24482
+        "support": 294
       },
       "window": {
         "precision": 1,
         "recall": 1,
         "f1": 1,
-        "support": 544
+        "support": 672
       },
       "column": {
         "precision": 0,
@@ -138,10 +138,10 @@
         "support": 0
       },
       "furniture": {
-        "precision": 0,
-        "recall": 0,
-        "f1": 0,
-        "support": 0
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 883
       },
       "fixture": {
         "precision": 0,
@@ -170,7 +170,7 @@
     },
     "confusionMatrix": {
       "roof": {
-        "roof": 201,
+        "roof": 0,
         "floor": 0,
         "ceiling": 0,
         "exterior_wall": 0,
@@ -189,7 +189,7 @@
       },
       "floor": {
         "roof": 0,
-        "floor": 320,
+        "floor": 0,
         "ceiling": 0,
         "exterior_wall": 0,
         "interior_wall": 0,
@@ -203,7 +203,7 @@
         "fixture": 0,
         "opening": 0,
         "room_boundary": 0,
-        "unknown": 4
+        "unknown": 0
       },
       "ceiling": {
         "roof": 0,
@@ -265,7 +265,7 @@
         "ceiling": 0,
         "exterior_wall": 0,
         "interior_wall": 0,
-        "door": 24482,
+        "door": 294,
         "window": 0,
         "column": 0,
         "beam": 0,
@@ -284,7 +284,7 @@
         "exterior_wall": 0,
         "interior_wall": 0,
         "door": 0,
-        "window": 544,
+        "window": 672,
         "column": 0,
         "beam": 0,
         "stair": 0,
@@ -379,7 +379,7 @@
         "beam": 0,
         "stair": 0,
         "railing": 0,
-        "furniture": 0,
+        "furniture": 883,
         "fixture": 0,
         "opening": 0,
         "room_boundary": 0,

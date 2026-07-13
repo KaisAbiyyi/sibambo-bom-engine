@@ -1,0 +1,347 @@
+{
+  "workflow_version": "1.0.0",
+  "generated_at": "2026-07-13T00:17:24.429425+00:00",
+  "model": "project-sboost",
+  "overall_status": "PASS_WITH_RENDERING_DIFFERENCE",
+  "comparison_policy": {
+    "pixel_difference_is_not_the_only_indicator": true,
+    "camera_and_viewport_verified_before_difference": true,
+    "backgrounds_segmented_independently": true,
+    "geometry_signals": [
+      "foreground area",
+      "normalized bounding box",
+      "centroid",
+      "tolerant silhouette boundary F1"
+    ]
+  },
+  "geometry_alignment": {
+    "axis_mapping": "SketchUp {x,y,z} -> Three.js {x,z,-y}",
+    "canonical_visible_bounds": {
+      "min": {
+        "x": -0.6064629834895341,
+        "y": -0.1,
+        "z": -18.56211850337315
+      },
+      "max": {
+        "x": 13.12375266737315,
+        "y": 8.509401077000001,
+        "z": 0.6866889483815318
+      }
+    },
+    "bome2_rendered_bounds": {
+      "min": {
+        "x": -0.6064629968071626,
+        "y": -0.10000000149011612,
+        "z": -18.57322783095715
+      },
+      "max": {
+        "x": 13.134861831175854,
+        "y": 8.509401131421328,
+        "z": 0.6866889402723169
+      }
+    },
+    "visible_runtime_absolute_error_m": {
+      "min_x": 1.3e-08,
+      "min_y": 1e-09,
+      "min_z": 0.011109328,
+      "max_x": 0.011109164,
+      "max_y": 5.4e-08,
+      "max_z": 8e-09
+    },
+    "visible_runtime_maximum_absolute_error_m": 0.011109328,
+    "visible_runtime_tolerance_m": 0.02,
+    "all_runtime_groups_visible": true,
+    "visible_runtime_aligned_within_tolerance": true,
+    "source_model_vs_visible_geometry": {
+      "source_full_bounds_mapped_to_three": {
+        "min": {
+          "x": -0.865355,
+          "y": -0.1,
+          "z": -28.596293
+        },
+        "max": {
+          "x": 13.134862,
+          "y": 8.509401,
+          "z": 1.119355
+        }
+      },
+      "absolute_error_m": {
+        "min_x": 0.258892017,
+        "min_y": 0.0,
+        "min_z": 10.034174497,
+        "max_x": 0.011109333,
+        "max_y": 7.7e-08,
+        "max_z": 0.432666052
+      },
+      "maximum_absolute_error_m": 10.034174497,
+      "skipped_entities": {
+        "hidden_or_invalid_entity": 340
+      },
+      "pass_fail_gate": false,
+      "reason": "SketchUp model bounds include hidden/non-renderable extents; visual QA compares renderable exported geometry."
+    }
+  },
+  "manual_visual_review": {
+    "status": "completed",
+    "result": "Silhouette, handedness, scale, origin, hierarchy transforms, and representative facade/top views were inspected.",
+    "expected_rendering_differences": [
+      "SketchUp texture bitmaps were not embedded in the BOME2 regression exports.",
+      "BOME2 instanced meshes omit per-instance edge outlines.",
+      "SketchUp and Three.js use different lighting, shadows, antialiasing, and material shading."
+    ]
+  },
+  "views": [
+    {
+      "view": "isometric",
+      "status": "PASS_WITH_RENDERING_DIFFERENCE",
+      "projection": "orthographic",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera_alignment": "metadata_exact",
+      "metrics": {
+        "mask_iou": 0.606522,
+        "reference_foreground_ratio": 0.251841,
+        "evaluated_foreground_ratio": 0.403195,
+        "foreground_area_ratio": 1.600991,
+        "reference_bbox_normalized": [
+          0.024218,
+          0.004274,
+          0.997477,
+          0.961538
+        ],
+        "evaluated_bbox_normalized": [
+          0.025227,
+          0.039316,
+          0.975277,
+          0.957265
+        ],
+        "bbox_max_delta": 0.035043,
+        "centroid_delta": 0.065944,
+        "boundary_precision_tolerant": 0.996377,
+        "boundary_recall_tolerant": 0.087242,
+        "boundary_f1_tolerant": 0.160436,
+        "rgb_mae_normalized": 0.172824,
+        "pixel_change_ratio_threshold_18": 0.405498
+      },
+      "artifacts": {
+        "sketchup": "artifacts/project-sboost/sketchup/isometric.png",
+        "model_eval": "artifacts/project-sboost/model-eval/isometric.jpg",
+        "side_by_side": "artifacts/project-sboost/comparisons/side-by-side/isometric.jpg",
+        "overlay": "artifacts/project-sboost/comparisons/overlay/isometric.jpg",
+        "difference": "artifacts/project-sboost/comparisons/difference/isometric.jpg"
+      }
+    },
+    {
+      "view": "front",
+      "status": "PASS_WITH_RENDERING_DIFFERENCE",
+      "projection": "orthographic",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera_alignment": "metadata_exact",
+      "metrics": {
+        "mask_iou": 0.726885,
+        "reference_foreground_ratio": 0.32224,
+        "evaluated_foreground_ratio": 0.418384,
+        "foreground_area_ratio": 1.29836,
+        "reference_bbox_normalized": [
+          0.051968,
+          0.023932,
+          0.948032,
+          0.975214
+        ],
+        "evaluated_bbox_normalized": [
+          0.052472,
+          0.024786,
+          0.947528,
+          0.969231
+        ],
+        "bbox_max_delta": 0.005983,
+        "centroid_delta": 0.083515,
+        "boundary_precision_tolerant": 0.963045,
+        "boundary_recall_tolerant": 0.459629,
+        "boundary_f1_tolerant": 0.622269,
+        "rgb_mae_normalized": 0.104982,
+        "pixel_change_ratio_threshold_18": 0.153496
+      },
+      "artifacts": {
+        "sketchup": "artifacts/project-sboost/sketchup/front.png",
+        "model_eval": "artifacts/project-sboost/model-eval/front.jpg",
+        "side_by_side": "artifacts/project-sboost/comparisons/side-by-side/front.jpg",
+        "overlay": "artifacts/project-sboost/comparisons/overlay/front.jpg",
+        "difference": "artifacts/project-sboost/comparisons/difference/front.jpg"
+      }
+    },
+    {
+      "view": "back",
+      "status": "PASS_WITH_RENDERING_DIFFERENCE",
+      "projection": "orthographic",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera_alignment": "metadata_exact",
+      "metrics": {
+        "mask_iou": 0.73703,
+        "reference_foreground_ratio": 0.341465,
+        "evaluated_foreground_ratio": 0.423536,
+        "foreground_area_ratio": 1.240347,
+        "reference_bbox_normalized": [
+          0.047931,
+          0.024786,
+          0.952069,
+          0.976068
+        ],
+        "evaluated_bbox_normalized": [
+          0.048436,
+          0.024786,
+          0.942987,
+          0.969231
+        ],
+        "bbox_max_delta": 0.009082,
+        "centroid_delta": 0.079766,
+        "boundary_precision_tolerant": 0.900309,
+        "boundary_recall_tolerant": 0.578743,
+        "boundary_f1_tolerant": 0.70457,
+        "rgb_mae_normalized": 0.118999,
+        "pixel_change_ratio_threshold_18": 0.441236
+      },
+      "artifacts": {
+        "sketchup": "artifacts/project-sboost/sketchup/back.png",
+        "model_eval": "artifacts/project-sboost/model-eval/back.jpg",
+        "side_by_side": "artifacts/project-sboost/comparisons/side-by-side/back.jpg",
+        "overlay": "artifacts/project-sboost/comparisons/overlay/back.jpg",
+        "difference": "artifacts/project-sboost/comparisons/difference/back.jpg"
+      }
+    },
+    {
+      "view": "left",
+      "status": "PASS_WITH_RENDERING_DIFFERENCE",
+      "projection": "orthographic",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera_alignment": "metadata_exact",
+      "metrics": {
+        "mask_iou": 0.98028,
+        "reference_foreground_ratio": 0.447713,
+        "evaluated_foreground_ratio": 0.440537,
+        "foreground_area_ratio": 0.983973,
+        "reference_bbox_normalized": [
+          0.024218,
+          0.14188,
+          0.975782,
+          0.85812
+        ],
+        "evaluated_bbox_normalized": [
+          0.032795,
+          0.14359,
+          0.974773,
+          0.854701
+        ],
+        "bbox_max_delta": 0.008577,
+        "centroid_delta": 0.001977,
+        "boundary_precision_tolerant": 0.544252,
+        "boundary_recall_tolerant": 0.607392,
+        "boundary_f1_tolerant": 0.574091,
+        "rgb_mae_normalized": 0.105063,
+        "pixel_change_ratio_threshold_18": 0.145209
+      },
+      "artifacts": {
+        "sketchup": "artifacts/project-sboost/sketchup/left.png",
+        "model_eval": "artifacts/project-sboost/model-eval/left.jpg",
+        "side_by_side": "artifacts/project-sboost/comparisons/side-by-side/left.jpg",
+        "overlay": "artifacts/project-sboost/comparisons/overlay/left.jpg",
+        "difference": "artifacts/project-sboost/comparisons/difference/left.jpg"
+      }
+    },
+    {
+      "view": "right",
+      "status": "PASS_WITH_RENDERING_DIFFERENCE",
+      "projection": "orthographic",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera_alignment": "metadata_exact",
+      "metrics": {
+        "mask_iou": 0.962732,
+        "reference_foreground_ratio": 0.442443,
+        "evaluated_foreground_ratio": 0.42597,
+        "foreground_area_ratio": 0.962768,
+        "reference_bbox_normalized": [
+          0.024218,
+          0.144444,
+          0.975782,
+          0.855556
+        ],
+        "evaluated_bbox_normalized": [
+          0.024723,
+          0.145299,
+          0.960646,
+          0.852991
+        ],
+        "bbox_max_delta": 0.015136,
+        "centroid_delta": 0.005479,
+        "boundary_precision_tolerant": 0.482906,
+        "boundary_recall_tolerant": 0.826426,
+        "boundary_f1_tolerant": 0.609603,
+        "rgb_mae_normalized": 0.128955,
+        "pixel_change_ratio_threshold_18": 0.44146
+      },
+      "artifacts": {
+        "sketchup": "artifacts/project-sboost/sketchup/right.png",
+        "model_eval": "artifacts/project-sboost/model-eval/right.jpg",
+        "side_by_side": "artifacts/project-sboost/comparisons/side-by-side/right.jpg",
+        "overlay": "artifacts/project-sboost/comparisons/overlay/right.jpg",
+        "difference": "artifacts/project-sboost/comparisons/difference/right.jpg"
+      }
+    },
+    {
+      "view": "top",
+      "status": "PASS_WITH_RENDERING_DIFFERENCE",
+      "projection": "orthographic",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera_alignment": "metadata_exact",
+      "metrics": {
+        "mask_iou": 0.471708,
+        "reference_foreground_ratio": 0.096754,
+        "evaluated_foreground_ratio": 0.20182,
+        "foreground_area_ratio": 2.085913,
+        "reference_bbox_normalized": [
+          0.305752,
+          0.024786,
+          0.694248,
+          0.975214
+        ],
+        "evaluated_bbox_normalized": [
+          0.419778,
+          0.025641,
+          0.693744,
+          0.795726
+        ],
+        "bbox_max_delta": 0.179487,
+        "centroid_delta": 0.008349,
+        "boundary_precision_tolerant": 1.0,
+        "boundary_recall_tolerant": 0.075524,
+        "boundary_f1_tolerant": 0.140441,
+        "rgb_mae_normalized": 0.133358,
+        "pixel_change_ratio_threshold_18": 0.197852
+      },
+      "artifacts": {
+        "sketchup": "artifacts/project-sboost/sketchup/top.png",
+        "model_eval": "artifacts/project-sboost/model-eval/top.jpg",
+        "side_by_side": "artifacts/project-sboost/comparisons/side-by-side/top.jpg",
+        "overlay": "artifacts/project-sboost/comparisons/overlay/top.jpg",
+        "difference": "artifacts/project-sboost/comparisons/difference/top.jpg"
+      }
+    }
+  ]
+}

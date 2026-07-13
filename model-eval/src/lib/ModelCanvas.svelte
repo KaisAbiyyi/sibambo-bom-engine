@@ -3,6 +3,7 @@
 	import {
 		AmbientLight,
 		ArrowHelper,
+		Box3,
 		BufferGeometry,
 		CanvasTexture,
 		Color,
@@ -18,6 +19,7 @@
 		Mesh,
 		MeshStandardMaterial,
 		Object3D,
+		OrthographicCamera,
 		PerspectiveCamera,
 		PlaneGeometry,
 		RepeatWrapping,
@@ -33,20 +35,35 @@
 	import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 	import type { AnalysisKind, AnalysisResult, FaceRecord, OverlayMarker, ParsedBuildingModel, PartKey, SpaceZone } from './model';
 	import { PART_META } from './model';
-	import { buildRuntimeGeometryGroups } from './render/build-runtime-scene';
+	import { buildRuntimeGeometryGroups, runtimePartOverrides } from './render/build-runtime-scene';
+	import type { QACameraSpec } from './render/qa-camera';
 
 	let {
 		model = null,
 		activeAnalysis = 'lighting',
 		result = null,
 		spaces = [],
-		visiblePartKeys = []
+		visiblePartKeys = [],
+		qaMode = false,
+		qaCamera = null,
+		onQaReady = undefined
 	}: {
 		model: ParsedBuildingModel | null;
 		activeAnalysis: AnalysisKind;
 		result: AnalysisResult | null;
 		spaces: SpaceZone[];
 		visiblePartKeys: PartKey[];
+		qaMode?: boolean;
+		qaCamera?: QACameraSpec | null;
+		onQaReady?: (payload: {
+			viewName: string;
+			width: number;
+			height: number;
+			runtimeGroups: number;
+			visibleRuntimeGroups: number;
+			visibleRuntimeInstances: number;
+			renderedBounds: { min: { x: number; y: number; z: number }; max: { x: number; y: number; z: number } } | null;
+		}) => void;
 	} = $props();
 
 	type PartRuntime = {
@@ -68,7 +85,7 @@
 	let canvasHost: HTMLDivElement;
 	let renderer: WebGLRenderer | null = null;
 	let scene: Scene | null = null;
-	let camera: PerspectiveCamera | null = null;
+	let camera: PerspectiveCamera | OrthographicCamera | null = null;
 	let controls: OrbitControls | null = null;
 	let root = new Group();
 	let overlayRoot = new Group();
@@ -113,10 +130,7 @@
 		scene.add(ground);
 
 		controls = new OrbitControls(camera, renderer.domElement);
-		controls.enableDamping = true;
-		controls.dampingFactor = 0.08;
-		controls.minPolarAngle = Math.PI * 0.12;
-		controls.maxPolarAngle = Math.PI * 0.88;
+		configureControls();
 
 		resizeObserver = new ResizeObserver(resize);
 		resizeObserver.observe(stageEl);
@@ -136,8 +150,84 @@
 		const width = Math.max(stageEl.clientWidth, 1);
 		const height = Math.max(stageEl.clientHeight, 1);
 		renderer.setSize(width, height, false);
-		camera.aspect = width / height;
+		if (camera instanceof PerspectiveCamera) {
+			camera.aspect = width / height;
+		} else {
+			const halfHeight = Math.max(qaCamera?.orthographicHeightM || 1, 0.001) / 2;
+			const halfWidth = halfHeight * (width / height);
+			camera.left = -halfWidth;
+			camera.right = halfWidth;
+			camera.top = halfHeight;
+			camera.bottom = -halfHeight;
+		}
 		camera.updateProjectionMatrix();
+	}
+
+	function configureControls() {
+		if (!controls) return;
+		controls.enableDamping = !qaMode;
+		controls.enabled = !qaMode;
+		controls.dampingFactor = 0.08;
+		controls.minPolarAngle = Math.PI * 0.12;
+		controls.maxPolarAngle = Math.PI * 0.88;
+	}
+
+	function applyQaCamera() {
+		if (!renderer || !scene || !qaMode || !qaCamera) return;
+		const distance = Math.max(
+			Math.hypot(
+				qaCamera.position.x - qaCamera.target.x,
+				qaCamera.position.y - qaCamera.target.y,
+				qaCamera.position.z - qaCamera.target.z
+			),
+			1
+		);
+		const nextCamera = qaCamera.projectionMode === 'orthographic'
+			? new OrthographicCamera(-1, 1, 1, -1, 0.01, Math.max(distance * 20, 2000))
+			: new PerspectiveCamera(qaCamera.fieldOfViewDegrees || 42, qaCamera.aspectRatio, 0.01, Math.max(distance * 20, 2000));
+		nextCamera.position.set(qaCamera.position.x, qaCamera.position.y, qaCamera.position.z);
+		nextCamera.up.set(qaCamera.up.x, qaCamera.up.y, qaCamera.up.z).normalize();
+		nextCamera.lookAt(qaCamera.target.x, qaCamera.target.y, qaCamera.target.z);
+		camera = nextCamera;
+		controls?.dispose();
+		controls = new OrbitControls(camera, renderer.domElement);
+		controls.target.set(qaCamera.target.x, qaCamera.target.y, qaCamera.target.z);
+		configureControls();
+		scene.background = new Color(qaCamera.backgroundColor);
+		if (ground) ground.visible = false;
+		resize();
+		camera.updateMatrixWorld(true);
+		signalQaReady();
+	}
+
+	function signalQaReady() {
+		if (!qaMode || !qaCamera || !model || !onQaReady) return;
+		window.requestAnimationFrame(() => {
+			window.requestAnimationFrame(() => {
+				if (!renderer || !camera || !stageEl) return;
+				renderer.render(scene!, camera);
+				root.updateMatrixWorld(true);
+				const visibleRuntimes = runtimes.filter((runtime) => runtime.mesh.visible);
+				const renderedBounds = visibleRuntimes.reduce((bounds, runtime) => bounds.expandByObject(runtime.mesh), new Box3());
+				onQaReady({
+					viewName: qaCamera.viewName,
+					width: stageEl.clientWidth,
+					height: stageEl.clientHeight,
+					runtimeGroups: runtimes.length,
+					visibleRuntimeGroups: visibleRuntimes.length,
+					visibleRuntimeInstances: visibleRuntimes.reduce(
+						(sum, runtime) => sum + (runtime.mesh instanceof InstancedMesh ? runtime.mesh.count : 1),
+						0
+					),
+					renderedBounds: renderedBounds.isEmpty()
+						? null
+						: {
+								min: { x: renderedBounds.min.x, y: renderedBounds.min.y, z: renderedBounds.min.z },
+								max: { x: renderedBounds.max.x, y: renderedBounds.max.y, z: renderedBounds.max.z }
+							}
+				});
+			});
+		});
 	}
 
 	function clearModel() {
@@ -250,7 +340,7 @@
 
 	function buildIndexedRuntimeModel(sourceModel: ParsedBuildingModel, wallGuide: ReturnType<typeof modelWallGuide>) {
 		if (!sourceModel.runtimeScene) return;
-		const groups = buildRuntimeGeometryGroups(sourceModel.runtimeScene);
+		const groups = buildRuntimeGeometryGroups(sourceModel.runtimeScene, runtimePartOverrides(sourceModel.faces));
 		groups.forEach((group) => {
 			const material = makeSurfaceMaterial(group.key, group.baseColor, group.textureName);
 			const mesh = new InstancedMesh(group.geometry, material, group.matrices.length);
@@ -617,6 +707,10 @@
 
 	function fitCamera() {
 		if (!camera || !controls || !model) return;
+		if (qaMode && qaCamera) {
+			applyQaCamera();
+			return;
+		}
 		const size = model.bounds.size;
 		const center = model.bounds.center;
 		const span = Math.max(size.x, size.y, size.z, 6);
@@ -752,6 +846,15 @@
 	$effect(() => {
 		spaces;
 		if (mounted) applyEditTransform();
+	});
+
+	$effect(() => {
+		qaMode;
+		qaCamera;
+		if (mounted) {
+			if (ground) ground.visible = !qaMode;
+			if (qaMode && qaCamera) applyQaCamera();
+		}
 	});
 </script>
 

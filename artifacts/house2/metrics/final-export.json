@@ -1,0 +1,96 @@
+{
+  "workflow_version": "1.0.0",
+  "measured_at": "2026-07-12T23:21:40Z",
+  "status": "ok",
+  "plugin_version": "3.0.0",
+  "sketchup_version": "26.2.243",
+  "source_skp": "D:\\projects\\sibambo-bom-engine\\skps\\house2.skp",
+  "source_bytes": 440016,
+  "source_sha256": "4da3321be5da8d1999ea6a2019d0c7d9b2b8b2d5f17db28831d54f5f8db46bd4",
+  "source_modified_before": false,
+  "source_modified_after": false,
+  "formats": [
+    {
+      "format": "canonical_v3",
+      "status": "ok",
+      "output_path": "D:/projects/sibambo-bom-engine/artifacts/house2/exported/house2_canonical.json.gz",
+      "output_bytes": 194670,
+      "output_sha256": "ff6808b9efed71aed1541c44be8352d9b061f547a3f0661050d6de6a2268ca58",
+      "wall_elapsed_ms": 973.32,
+      "plugin_elapsed_ms": 902.0,
+      "heap_live_slots_delta": 88552,
+      "result": {
+        "path": "D:/projects/sibambo-bom-engine/artifacts/house2/exported/house2_canonical.json.gz",
+        "compressed": true,
+        "pretty": false,
+        "bytes": 194670,
+        "uncompressed_bytes": 1572675,
+        "sha256": "ff6808b9efed71aed1541c44be8352d9b061f547a3f0661050d6de6a2268ca58",
+        "elapsed_seconds": 0.902,
+        "format": "canonical_v3",
+        "statistics": {
+          "definitions": 41,
+          "meshes": 37,
+          "nodes": 91,
+          "component_instances": 87,
+          "group_instances": 3,
+          "faces": 1777,
+          "unique_vertices": 2815,
+          "materials": 19,
+          "tags": 5,
+          "transforms": 90,
+          "identity_transform_id": 0,
+          "skipped": {
+            "hidden_or_invalid_entity": 138
+          }
+        }
+      },
+      "validation": {
+        "format": "3.0.0",
+        "uncompressed_bytes": 1572675,
+        "meshes": 37,
+        "definitions": 41,
+        "nodes": 91,
+        "materials": 19,
+        "transforms": 90
+      }
+    },
+    {
+      "format": "bome2",
+      "status": "ok",
+      "output_path": "D:/projects/sibambo-bom-engine/artifacts/house2/exported/house2_runtime.bome2.gz",
+      "output_bytes": 98366,
+      "output_sha256": "2e170918b6fa645936c8460ec7ea74bf6084cf6af8009af8067fa46e7a083313",
+      "wall_elapsed_ms": 954.87,
+      "plugin_elapsed_ms": 915.0,
+      "heap_live_slots_delta": 85117,
+      "result": {
+        "path": "D:/projects/sibambo-bom-engine/artifacts/house2/exported/house2_runtime.bome2.gz",
+        "compressed": true,
+        "bytes": 98366,
+        "uncompressed_bytes": 574848,
+        "sha256": "2e170918b6fa645936c8460ec7ea74bf6084cf6af8009af8067fa46e7a083313",
+        "format": "bome2",
+        "meshes": 37,
+        "definitions": 41,
+        "nodes": 91,
+        "instances": 87,
+        "triangles": 5600,
+        "sections": 112,
+        "quantization_max_error_m": 0.000136316304,
+        "elapsed_seconds": 0.915
+      },
+      "validation": {
+        "format": "2.0.0",
+        "meshes": 37,
+        "definitions": 41,
+        "nodes": 91,
+        "instances": 87,
+        "triangles": 5600,
+        "sections": 112,
+        "quantization_max_error_m": 0.000136316304,
+        "uncompressed_bytes": 574848
+      }
+    }
+  ]
+}

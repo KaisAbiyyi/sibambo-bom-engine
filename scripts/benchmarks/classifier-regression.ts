@@ -55,6 +55,11 @@ const report = {
 		json_parse_ms: round(jsonParseMs),
 		model_parse_and_classify_ms: round(classifierParseMs)
 	},
+	geometry: {
+		bounds: parsed.bounds,
+		face_count: parsed.faceCount,
+		runtime_scene_present: Boolean(parsed.runtimeScene)
+	},
 	whole_model: {
 		category_distribution: categoryDistribution,
 		unknown_rate: round(categoryDistribution.unknown / Math.max(parsed.faceCount, 1)),

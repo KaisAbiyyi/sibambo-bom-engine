@@ -1,0 +1,347 @@
+{
+  "workflow_version": "1.0.0",
+  "generated_at": "2026-07-13T00:17:03.968746+00:00",
+  "model": "house2",
+  "overall_status": "PASS_WITH_RENDERING_DIFFERENCE",
+  "comparison_policy": {
+    "pixel_difference_is_not_the_only_indicator": true,
+    "camera_and_viewport_verified_before_difference": true,
+    "backgrounds_segmented_independently": true,
+    "geometry_signals": [
+      "foreground area",
+      "normalized bounding box",
+      "centroid",
+      "tolerant silhouette boundary F1"
+    ]
+  },
+  "geometry_alignment": {
+    "axis_mapping": "SketchUp {x,y,z} -> Three.js {x,z,-y}",
+    "canonical_visible_bounds": {
+      "min": {
+        "x": -0.4699,
+        "y": -5.08e-11,
+        "z": -9.84050182
+      },
+      "max": {
+        "x": 6.87705,
+        "y": 6.5659,
+        "z": 5.740288438
+      }
+    },
+    "bome2_rendered_bounds": {
+      "min": {
+        "x": -0.4699000120162964,
+        "y": -5.079999794935006e-11,
+        "z": -9.84050178527832
+      },
+      "max": {
+        "x": 6.877049922943115,
+        "y": 6.565899848937988,
+        "z": 5.740288257598877
+      }
+    },
+    "visible_runtime_absolute_error_m": {
+      "min_x": 1.2e-08,
+      "min_y": 0.0,
+      "min_z": 3.5e-08,
+      "max_x": 7.7e-08,
+      "max_y": 1.51e-07,
+      "max_z": 1.8e-07
+    },
+    "visible_runtime_maximum_absolute_error_m": 1.8e-07,
+    "visible_runtime_tolerance_m": 0.02,
+    "all_runtime_groups_visible": true,
+    "visible_runtime_aligned_within_tolerance": true,
+    "source_model_vs_visible_geometry": {
+      "source_full_bounds_mapped_to_three": {
+        "min": {
+          "x": -0.4699,
+          "y": 0.0,
+          "z": -9.840502
+        },
+        "max": {
+          "x": 6.87705,
+          "y": 6.5659,
+          "z": 5.740288
+        }
+      },
+      "absolute_error_m": {
+        "min_x": 0.0,
+        "min_y": 0.0,
+        "min_z": 1.8e-07,
+        "max_x": 0.0,
+        "max_y": 0.0,
+        "max_z": 4.38e-07
+      },
+      "maximum_absolute_error_m": 4.38e-07,
+      "skipped_entities": {
+        "hidden_or_invalid_entity": 138
+      },
+      "pass_fail_gate": false,
+      "reason": "SketchUp model bounds include hidden/non-renderable extents; visual QA compares renderable exported geometry."
+    }
+  },
+  "manual_visual_review": {
+    "status": "completed",
+    "result": "Silhouette, handedness, scale, origin, hierarchy transforms, and representative facade/top views were inspected.",
+    "expected_rendering_differences": [
+      "SketchUp texture bitmaps were not embedded in the BOME2 regression exports.",
+      "BOME2 instanced meshes omit per-instance edge outlines.",
+      "SketchUp and Three.js use different lighting, shadows, antialiasing, and material shading."
+    ]
+  },
+  "views": [
+    {
+      "view": "isometric",
+      "status": "PASS_WITH_RENDERING_DIFFERENCE",
+      "projection": "orthographic",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera_alignment": "metadata_exact",
+      "metrics": {
+        "mask_iou": 0.87659,
+        "reference_foreground_ratio": 0.398712,
+        "evaluated_foreground_ratio": 0.354944,
+        "foreground_area_ratio": 0.890227,
+        "reference_bbox_normalized": [
+          0.15338,
+          0.024786,
+          0.847124,
+          0.975214
+        ],
+        "evaluated_bbox_normalized": [
+          0.15338,
+          0.024786,
+          0.84662,
+          0.975214
+        ],
+        "bbox_max_delta": 0.000505,
+        "centroid_delta": 0.024468,
+        "boundary_precision_tolerant": 0.291748,
+        "boundary_recall_tolerant": 0.443577,
+        "boundary_f1_tolerant": 0.351988,
+        "rgb_mae_normalized": 0.283204,
+        "pixel_change_ratio_threshold_18": 0.957252
+      },
+      "artifacts": {
+        "sketchup": "artifacts/house2/sketchup/isometric.png",
+        "model_eval": "artifacts/house2/model-eval/isometric.jpg",
+        "side_by_side": "artifacts/house2/comparisons/side-by-side/isometric.jpg",
+        "overlay": "artifacts/house2/comparisons/overlay/isometric.jpg",
+        "difference": "artifacts/house2/comparisons/difference/isometric.jpg"
+      }
+    },
+    {
+      "view": "front",
+      "status": "PASS_WITH_RENDERING_DIFFERENCE",
+      "projection": "orthographic",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera_alignment": "metadata_exact",
+      "metrics": {
+        "mask_iou": 0.772453,
+        "reference_foreground_ratio": 0.451743,
+        "evaluated_foreground_ratio": 0.348973,
+        "foreground_area_ratio": 0.772502,
+        "reference_bbox_normalized": [
+          0.185671,
+          0.024786,
+          0.813824,
+          0.975214
+        ],
+        "evaluated_bbox_normalized": [
+          0.186176,
+          0.024786,
+          0.75328,
+          0.975214
+        ],
+        "bbox_max_delta": 0.060545,
+        "centroid_delta": 0.038115,
+        "boundary_precision_tolerant": 0.15521,
+        "boundary_recall_tolerant": 0.625889,
+        "boundary_f1_tolerant": 0.248737,
+        "rgb_mae_normalized": 0.297035,
+        "pixel_change_ratio_threshold_18": 0.967333
+      },
+      "artifacts": {
+        "sketchup": "artifacts/house2/sketchup/front.png",
+        "model_eval": "artifacts/house2/model-eval/front.jpg",
+        "side_by_side": "artifacts/house2/comparisons/side-by-side/front.jpg",
+        "overlay": "artifacts/house2/comparisons/overlay/front.jpg",
+        "difference": "artifacts/house2/comparisons/difference/front.jpg"
+      }
+    },
+    {
+      "view": "back",
+      "status": "PASS_WITH_RENDERING_DIFFERENCE",
+      "projection": "orthographic",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera_alignment": "metadata_exact",
+      "metrics": {
+        "mask_iou": 0.736671,
+        "reference_foreground_ratio": 0.451745,
+        "evaluated_foreground_ratio": 0.33281,
+        "foreground_area_ratio": 0.736721,
+        "reference_bbox_normalized": [
+          0.186176,
+          0.024786,
+          0.814329,
+          0.975214
+        ],
+        "evaluated_bbox_normalized": [
+          0.24672,
+          0.025641,
+          0.81332,
+          0.976068
+        ],
+        "bbox_max_delta": 0.060545,
+        "centroid_delta": 0.040268,
+        "boundary_precision_tolerant": 0.193801,
+        "boundary_recall_tolerant": 0.858615,
+        "boundary_f1_tolerant": 0.316226,
+        "rgb_mae_normalized": 0.308395,
+        "pixel_change_ratio_threshold_18": 0.988483
+      },
+      "artifacts": {
+        "sketchup": "artifacts/house2/sketchup/back.png",
+        "model_eval": "artifacts/house2/model-eval/back.jpg",
+        "side_by_side": "artifacts/house2/comparisons/side-by-side/back.jpg",
+        "overlay": "artifacts/house2/comparisons/overlay/back.jpg",
+        "difference": "artifacts/house2/comparisons/difference/back.jpg"
+      }
+    },
+    {
+      "view": "left",
+      "status": "PASS_WITH_RENDERING_DIFFERENCE",
+      "projection": "orthographic",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera_alignment": "metadata_exact",
+      "metrics": {
+        "mask_iou": 0.952107,
+        "reference_foreground_ratio": 0.366604,
+        "evaluated_foreground_ratio": 0.35345,
+        "foreground_area_ratio": 0.964121,
+        "reference_bbox_normalized": [
+          0.024723,
+          0.159829,
+          0.975277,
+          0.840171
+        ],
+        "evaluated_bbox_normalized": [
+          0.057013,
+          0.160684,
+          0.974268,
+          0.840171
+        ],
+        "bbox_max_delta": 0.032291,
+        "centroid_delta": 0.008906,
+        "boundary_precision_tolerant": 0.643388,
+        "boundary_recall_tolerant": 0.556144,
+        "boundary_f1_tolerant": 0.596593,
+        "rgb_mae_normalized": 0.25466,
+        "pixel_change_ratio_threshold_18": 0.938639
+      },
+      "artifacts": {
+        "sketchup": "artifacts/house2/sketchup/left.png",
+        "model_eval": "artifacts/house2/model-eval/left.jpg",
+        "side_by_side": "artifacts/house2/comparisons/side-by-side/left.jpg",
+        "overlay": "artifacts/house2/comparisons/overlay/left.jpg",
+        "difference": "artifacts/house2/comparisons/difference/left.jpg"
+      }
+    },
+    {
+      "view": "right",
+      "status": "PASS_WITH_RENDERING_DIFFERENCE",
+      "projection": "orthographic",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera_alignment": "metadata_exact",
+      "metrics": {
+        "mask_iou": 0.970459,
+        "reference_foreground_ratio": 0.366674,
+        "evaluated_foreground_ratio": 0.360147,
+        "foreground_area_ratio": 0.982201,
+        "reference_bbox_normalized": [
+          0.024723,
+          0.159829,
+          0.975277,
+          0.840171
+        ],
+        "evaluated_bbox_normalized": [
+          0.025227,
+          0.160684,
+          0.943996,
+          0.840171
+        ],
+        "bbox_max_delta": 0.031282,
+        "centroid_delta": 0.005552,
+        "boundary_precision_tolerant": 0.705344,
+        "boundary_recall_tolerant": 0.635187,
+        "boundary_f1_tolerant": 0.66843,
+        "rgb_mae_normalized": 0.297924,
+        "pixel_change_ratio_threshold_18": 0.983356
+      },
+      "artifacts": {
+        "sketchup": "artifacts/house2/sketchup/right.png",
+        "model_eval": "artifacts/house2/model-eval/right.jpg",
+        "side_by_side": "artifacts/house2/comparisons/side-by-side/right.jpg",
+        "overlay": "artifacts/house2/comparisons/overlay/right.jpg",
+        "difference": "artifacts/house2/comparisons/difference/right.jpg"
+      }
+    },
+    {
+      "view": "top",
+      "status": "PASS_WITH_RENDERING_DIFFERENCE",
+      "projection": "orthographic",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera_alignment": "metadata_exact",
+      "metrics": {
+        "mask_iou": 0.577737,
+        "reference_foreground_ratio": 0.091175,
+        "evaluated_foreground_ratio": 0.155979,
+        "foreground_area_ratio": 1.710768,
+        "reference_bbox_normalized": [
+          0.367306,
+          0.024786,
+          0.63219,
+          0.975214
+        ],
+        "evaluated_bbox_normalized": [
+          0.36781,
+          0.024786,
+          0.63219,
+          0.975214
+        ],
+        "bbox_max_delta": 0.000505,
+        "centroid_delta": 0.003663,
+        "boundary_precision_tolerant": 0.99515,
+        "boundary_recall_tolerant": 0.05827,
+        "boundary_f1_tolerant": 0.110093,
+        "rgb_mae_normalized": 0.306724,
+        "pixel_change_ratio_threshold_18": 0.996197
+      },
+      "artifacts": {
+        "sketchup": "artifacts/house2/sketchup/top.png",
+        "model_eval": "artifacts/house2/model-eval/top.jpg",
+        "side_by_side": "artifacts/house2/comparisons/side-by-side/top.jpg",
+        "overlay": "artifacts/house2/comparisons/overlay/top.jpg",
+        "difference": "artifacts/house2/comparisons/difference/top.jpg"
+      }
+    }
+  ]
+}

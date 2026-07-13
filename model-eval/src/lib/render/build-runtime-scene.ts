@@ -25,7 +25,7 @@ const AXIS_TO_THREE = new Matrix4().set(
 );
 const AXIS_FROM_THREE = AXIS_TO_THREE.clone().invert();
 
-export function buildRuntimeGeometryGroups(scene: Bome2RuntimeScene): RuntimeGeometryGroup[] {
+export function buildRuntimeGeometryGroups(scene: Bome2RuntimeScene, partOverrides: ReadonlyMap<string, PartKey> = new Map()): RuntimeGeometryGroup[] {
 	const { manifest } = scene;
 	const occurrences = new Map<number, Occurrence[]>();
 	const rootNode = manifest.nodes[manifest.root_node];
@@ -67,7 +67,8 @@ export function buildRuntimeGeometryGroups(scene: Bome2RuntimeScene): RuntimeGeo
 
 		for (const occurrence of meshOccurrences) {
 			for (const [faceIndex, face] of mesh.faces.entries()) {
-				const key = partFromSurface(stringAt(manifest.strings, face.surface_hint));
+				const faceId = stringAt(manifest.strings, face.id);
+				const key = (faceId && partOverrides.get(faceId)) || partFromSurface(stringAt(manifest.strings, face.surface_hint));
 				const material = occurrence.materialOverride >= 0 ? occurrence.materialOverride : face.material;
 				const groupId = `${key}:${material}`;
 				let group = grouped.get(groupId);
@@ -107,6 +108,24 @@ export function buildRuntimeGeometryGroups(scene: Bome2RuntimeScene): RuntimeGeo
 		}
 	}
 	return groups;
+}
+
+export function runtimePartOverrides(faces: Array<{ id: string; partKey: PartKey }>) {
+	const counts = new Map<string, Map<PartKey, number>>();
+	for (const face of faces) {
+		const marker = face.id.lastIndexOf(':face:');
+		if (marker < 0) continue;
+		const sourceFaceId = face.id.slice(marker + 1);
+		const candidates = counts.get(sourceFaceId) || new Map<PartKey, number>();
+		candidates.set(face.partKey, (candidates.get(face.partKey) || 0) + 1);
+		counts.set(sourceFaceId, candidates);
+	}
+	return new Map(
+		[...counts].map(([faceId, candidates]) => [
+			faceId,
+			[...candidates].sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))[0][0]
+		])
+	);
 }
 
 function mapPositions(source: Float32Array) {

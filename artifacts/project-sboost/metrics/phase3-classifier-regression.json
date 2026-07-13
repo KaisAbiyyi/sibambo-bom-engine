@@ -1,87 +1,87 @@
 {
   "workflow_version": "3.0.0",
-  "measured_at": "2026-07-12T23:57:04.723Z",
-  "model": "project-sboost-2",
-  "source": "D:\\projects\\sibambo-bom-engine\\artifacts\\project-sboost-2\\exported\\project-sboost-2_canonical.json.gz",
+  "measured_at": "2026-07-12T23:57:03.000Z",
+  "model": "project-sboost",
+  "source": "D:\\projects\\sibambo-bom-engine\\artifacts\\project-sboost\\exported\\project-sboost_canonical.json.gz",
   "ground_truth": {
     "kind": "silver_explicit_metadata_not_human_verified",
     "description": "Only unambiguous explicit multilingual category tokens in face name/path/layer are scored. Geometry-only and contextual predictions are excluded from precision/recall ground truth.",
-    "labelled_faces": 25551,
-    "total_faces": 25786,
-    "coverage": 0.990887
+    "labelled_faces": 14154,
+    "total_faces": 14371,
+    "coverage": 0.9849
   },
   "performance": {
-    "compressed_bytes": 825128,
-    "decompressed_bytes": 5999755,
-    "json_parse_ms": 45.4934,
-    "model_parse_and_classify_ms": 1381.7183
+    "compressed_bytes": 805228,
+    "decompressed_bytes": 5860481,
+    "json_parse_ms": 43.1129,
+    "model_parse_and_classify_ms": 852.5524
   },
   "geometry": {
     "bounds": {
       "min": {
-        "x": -0.6095422077458781,
-        "y": 0,
-        "z": -11.18035058637315
+        "x": -0.6064629834895341,
+        "y": -0.1,
+        "z": -18.56211850337315
       },
       "max": {
-        "x": 11.241883042025297,
-        "y": 8.50569208229796,
-        "z": 0.8132353557447163
+        "x": 13.12375266737315,
+        "y": 8.509401077000001,
+        "z": 0.6866889483815318
       },
       "size": {
-        "x": 11.851425249771175,
-        "y": 8.50569208229796,
-        "z": 11.993585942117866
+        "x": 13.730215650862684,
+        "y": 8.609401077000001,
+        "z": 19.248807451754683
       },
       "center": {
-        "x": 5.316170417139709,
-        "y": 4.25284604114898,
-        "z": -5.183557615314217
+        "x": 6.258644841941808,
+        "y": 4.204700538500001,
+        "z": -8.937714777495808
       }
     },
-    "face_count": 25786,
+    "face_count": 14371,
     "runtime_scene_present": false
   },
   "whole_model": {
     "category_distribution": {
-      "roof": 242,
-      "floor": 357,
-      "ceiling": 2,
-      "exterior_wall": 1,
-      "interior_wall": 20,
-      "door": 24482,
-      "window": 544,
+      "roof": 268,
+      "floor": 166,
+      "ceiling": 1,
+      "exterior_wall": 7,
+      "interior_wall": 25,
+      "door": 13284,
+      "window": 484,
       "column": 0,
-      "beam": 0,
+      "beam": 15,
       "stair": 0,
       "railing": 0,
       "furniture": 2,
       "fixture": 0,
-      "opening": 6,
+      "opening": 1,
       "room_boundary": 0,
-      "unknown": 130
+      "unknown": 118
     },
-    "unknown_rate": 0.005041,
-    "ambiguous_rate": 0.002831
+    "unknown_rate": 0.008211,
+    "ambiguous_rate": 0.003688
   },
   "silver_metrics": {
-    "sampleCount": 25551,
-    "accuracy": 0.999843,
-    "macroF1": 0.998447,
-    "unknownRate": 0.000157,
-    "ambiguousRate": 0.000157,
+    "sampleCount": 14154,
+    "accuracy": 0.999576,
+    "macroF1": 0.995192,
+    "unknownRate": 0.000424,
+    "ambiguousRate": 0.000424,
     "perCategory": {
       "roof": {
         "precision": 1,
         "recall": 1,
         "f1": 1,
-        "support": 201
+        "support": 227
       },
       "floor": {
         "precision": 1,
-        "recall": 0.987654,
-        "f1": 0.993789,
-        "support": 324
+        "recall": 0.962264,
+        "f1": 0.980769,
+        "support": 159
       },
       "ceiling": {
         "precision": 0,
@@ -105,13 +105,13 @@
         "precision": 1,
         "recall": 1,
         "f1": 1,
-        "support": 24482
+        "support": 13284
       },
       "window": {
         "precision": 1,
         "recall": 1,
         "f1": 1,
-        "support": 544
+        "support": 484
       },
       "column": {
         "precision": 0,
@@ -170,7 +170,7 @@
     },
     "confusionMatrix": {
       "roof": {
-        "roof": 201,
+        "roof": 227,
         "floor": 0,
         "ceiling": 0,
         "exterior_wall": 0,
@@ -189,7 +189,7 @@
       },
       "floor": {
         "roof": 0,
-        "floor": 320,
+        "floor": 153,
         "ceiling": 0,
         "exterior_wall": 0,
         "interior_wall": 0,
@@ -203,7 +203,7 @@
         "fixture": 0,
         "opening": 0,
         "room_boundary": 0,
-        "unknown": 4
+        "unknown": 6
       },
       "ceiling": {
         "roof": 0,
@@ -265,7 +265,7 @@
         "ceiling": 0,
         "exterior_wall": 0,
         "interior_wall": 0,
-        "door": 24482,
+        "door": 13284,
         "window": 0,
         "column": 0,
         "beam": 0,
@@ -284,7 +284,7 @@
         "exterior_wall": 0,
         "interior_wall": 0,
         "door": 0,
-        "window": 544,
+        "window": 484,
         "column": 0,
         "beam": 0,
         "stair": 0,
