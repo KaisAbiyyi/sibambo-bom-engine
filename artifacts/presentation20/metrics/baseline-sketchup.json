@@ -1,0 +1,3477 @@
+{
+  "workflow_version": "1.0.0",
+  "captured_at": "2026-07-12T21:03:31Z",
+  "capture_elapsed_ms": 8380.49,
+  "model": {
+    "source_path": "D:\\projects\\sibambo-bom-engine\\skps\\presentation20.skp",
+    "source_bytes": 2155445,
+    "name": "",
+    "title": "presentation20",
+    "description": "",
+    "guid": "9fcde76c-8efd-4d0e-a0fb-856ccac86659",
+    "sketchup_version": "26.2.243",
+    "sketchup_locale": "en-US",
+    "modified": false,
+    "units": {
+      "length_unit_id": 0,
+      "length_unit_name": "Inches",
+      "length_precision": 4,
+      "length_format": 1,
+      "suppress_units_display": false
+    },
+    "bounds": {
+      "min_m": {
+        "x": 15.376525,
+        "y": -4.572,
+        "z": -1.826859
+      },
+      "max_m": {
+        "x": 45.856525,
+        "y": 27.432,
+        "z": 14.986
+      },
+      "size_m": {
+        "x": 30.48,
+        "y": 32.004,
+        "z": 16.812859
+      },
+      "width_m": 30.48,
+      "depth_m": 32.004,
+      "height_m": 16.812859,
+      "diagonal_m": 47.285924
+    },
+    "axes": {
+      "origin_m": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "x_axis": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      }
+    },
+    "entity_counts_expanded": {
+      "face": 457982,
+      "edge": 977323,
+      "group": 5537,
+      "component_instance": 8977,
+      "image": 0,
+      "construction_line": 0,
+      "text": 0,
+      "dimension": 0,
+      "other": 24
+    },
+    "top_level_entity_count": 2552,
+    "definitions": [
+      {
+        "persistent_id": 129673,
+        "name": "Group#16",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 338,
+        "bounds": {
+          "min_m": {
+            "x": 0.001189,
+            "y": 0.001189,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.636594,
+            "y": 0.636594,
+            "z": 6.725515
+          },
+          "size_m": {
+            "x": 0.635405,
+            "y": 0.635405,
+            "z": 6.725515
+          },
+          "width_m": 0.635405,
+          "depth_m": 0.635405,
+          "height_m": 6.725515,
+          "diagonal_m": 6.78528
+        }
+      },
+      {
+        "persistent_id": 130390,
+        "name": "Group#8",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 2,
+        "entity_count": 290,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.637783,
+            "y": 0.637783,
+            "z": 6.702201
+          },
+          "size_m": {
+            "x": 0.637783,
+            "y": 0.637783,
+            "z": 6.702201
+          },
+          "width_m": 0.637783,
+          "depth_m": 0.637783,
+          "height_m": 6.702201,
+          "diagonal_m": 6.76262
+        }
+      },
+      {
+        "persistent_id": 130389,
+        "name": "Group#22",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 22,
+        "entity_count": 248,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 4.885736,
+            "y": 4.749668,
+            "z": 2.391746
+          },
+          "size_m": {
+            "x": 4.885736,
+            "y": 4.749668,
+            "z": 2.391746
+          },
+          "width_m": 4.885736,
+          "depth_m": 4.749668,
+          "height_m": 2.391746,
+          "diagonal_m": 7.22151
+        }
+      },
+      {
+        "persistent_id": 129672,
+        "name": "Group#21",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 8,
+        "entity_count": 171,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 3.433695,
+            "y": 3.587075,
+            "z": 0.87335
+          },
+          "size_m": {
+            "x": 3.433695,
+            "y": 3.587075,
+            "z": 0.87335
+          },
+          "width_m": 3.433695,
+          "depth_m": 3.587075,
+          "height_m": 0.87335,
+          "diagonal_m": 5.041836
+        }
+      },
+      {
+        "persistent_id": 113695,
+        "name": "Group#19",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 386,
+        "bounds": {
+          "min_m": {
+            "x": 0.001189,
+            "y": -0.00799,
+            "z": -0.197844
+          },
+          "max_m": {
+            "x": 1.020478,
+            "y": 0.933235,
+            "z": 6.863158
+          },
+          "size_m": {
+            "x": 1.019289,
+            "y": 0.941225,
+            "z": 7.061002
+          },
+          "width_m": 1.019289,
+          "depth_m": 0.941225,
+          "height_m": 7.061002,
+          "diagonal_m": 7.196013
+        }
+      },
+      {
+        "persistent_id": 128308,
+        "name": "Group#17",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 5,
+        "entity_count": 146,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 3.947655,
+            "y": 4.749668,
+            "z": 2.391746
+          },
+          "size_m": {
+            "x": 3.947655,
+            "y": 4.749668,
+            "z": 2.391746
+          },
+          "width_m": 3.947655,
+          "depth_m": 4.749668,
+          "height_m": 2.391746,
+          "diagonal_m": 6.622973
+        }
+      },
+      {
+        "persistent_id": 127078,
+        "name": "Group#20",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 12,
+        "entity_count": 338,
+        "bounds": {
+          "min_m": {
+            "x": 0.001189,
+            "y": -0.00799,
+            "z": 0.003133
+          },
+          "max_m": {
+            "x": 0.853782,
+            "y": 0.746472,
+            "z": 6.863158
+          },
+          "size_m": {
+            "x": 0.852593,
+            "y": 0.754462,
+            "z": 6.860025
+          },
+          "width_m": 0.852593,
+          "depth_m": 0.754462,
+          "height_m": 6.860025,
+          "diagonal_m": 6.953853
+        }
+      },
+      {
+        "persistent_id": 122513,
+        "name": "Group#29",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 5,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.678061,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 6.747848,
+            "y": 5.908366,
+            "z": 2.925773
+          },
+          "size_m": {
+            "x": 6.747848,
+            "y": 6.586427,
+            "z": 2.925773
+          },
+          "width_m": 6.747848,
+          "depth_m": 6.586427,
+          "height_m": 2.925773,
+          "diagonal_m": 9.872923
+        }
+      },
+      {
+        "persistent_id": 111747,
+        "name": "Group#26",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 5,
+        "entity_count": 338,
+        "bounds": {
+          "min_m": {
+            "x": 0.001189,
+            "y": 0.001189,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.636594,
+            "y": 0.636594,
+            "z": 6.725515
+          },
+          "size_m": {
+            "x": 0.635405,
+            "y": 0.635405,
+            "z": 6.725515
+          },
+          "width_m": 0.635405,
+          "depth_m": 0.635405,
+          "height_m": 6.725515,
+          "diagonal_m": 6.78528
+        }
+      },
+      {
+        "persistent_id": 112464,
+        "name": "Group#25",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 5,
+        "bounds": {
+          "min_m": {
+            "x": -0.727328,
+            "y": -0.678061,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 8.29863,
+            "y": 5.908366,
+            "z": 3.740629
+          },
+          "size_m": {
+            "x": 9.025958,
+            "y": 6.586427,
+            "z": 3.740629
+          },
+          "width_m": 9.025958,
+          "depth_m": 6.586427,
+          "height_m": 3.740629,
+          "diagonal_m": 11.783092
+        }
+      },
+      {
+        "persistent_id": 121278,
+        "name": "Group#24",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 4,
+        "bounds": {
+          "min_m": {
+            "x": -0.727328,
+            "y": -0.678061,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 8.29863,
+            "y": 5.908366,
+            "z": 2.391746
+          },
+          "size_m": {
+            "x": 9.025958,
+            "y": 6.586427,
+            "z": 2.391746
+          },
+          "width_m": 9.025958,
+          "depth_m": 6.586427,
+          "height_m": 2.391746,
+          "diagonal_m": 11.426696
+        }
+      },
+      {
+        "persistent_id": 116782,
+        "name": "Group#23",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 5,
+        "entity_count": 5,
+        "bounds": {
+          "min_m": {
+            "x": -0.846954,
+            "y": -0.678061,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 8.449188,
+            "y": 6.833778,
+            "z": 4.727147
+          },
+          "size_m": {
+            "x": 9.296142,
+            "y": 7.511839,
+            "z": 4.727147
+          },
+          "width_m": 9.296142,
+          "depth_m": 7.511839,
+          "height_m": 4.727147,
+          "diagonal_m": 12.8527
+        }
+      },
+      {
+        "persistent_id": 127077,
+        "name": "Group#38",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 6,
+        "entity_count": 6,
+        "bounds": {
+          "min_m": {
+            "x": -0.846954,
+            "y": -0.678061,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 8.449188,
+            "y": 6.833778,
+            "z": 4.727147
+          },
+          "size_m": {
+            "x": 9.296142,
+            "y": 7.511839,
+            "z": 4.727147
+          },
+          "width_m": 9.296142,
+          "depth_m": 7.511839,
+          "height_m": 4.727147,
+          "diagonal_m": 12.8527
+        }
+      },
+      {
+        "persistent_id": 107203,
+        "name": "Group#37",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 4,
+        "entity_count": 5,
+        "bounds": {
+          "min_m": {
+            "x": -0.846954,
+            "y": -0.678061,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 8.449188,
+            "y": 6.833778,
+            "z": 4.727147
+          },
+          "size_m": {
+            "x": 9.296142,
+            "y": 7.511839,
+            "z": 4.727147
+          },
+          "width_m": 9.296142,
+          "depth_m": 7.511839,
+          "height_m": 4.727147,
+          "diagonal_m": 12.8527
+        }
+      },
+      {
+        "persistent_id": 121277,
+        "name": "Group#36",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 8,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": -1.5868,
+            "y": -1.258088,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 9.370735,
+            "y": 6.964525,
+            "z": 2.965517
+          },
+          "size_m": {
+            "x": 10.957535,
+            "y": 8.222613,
+            "z": 2.965517
+          },
+          "width_m": 10.957535,
+          "depth_m": 8.222613,
+          "height_m": 2.965517,
+          "diagonal_m": 14.016891
+        }
+      },
+      {
+        "persistent_id": 124026,
+        "name": "Group#35",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 4,
+        "entity_count": 6,
+        "bounds": {
+          "min_m": {
+            "x": -0.846954,
+            "y": -0.678061,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 8.449188,
+            "y": 6.833778,
+            "z": 4.727147
+          },
+          "size_m": {
+            "x": 9.296142,
+            "y": 7.511839,
+            "z": 4.727147
+          },
+          "width_m": 9.296142,
+          "depth_m": 7.511839,
+          "height_m": 4.727147,
+          "diagonal_m": 12.8527
+        }
+      },
+      {
+        "persistent_id": 106812,
+        "name": "Group#34",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 12,
+        "entity_count": 290,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.637783,
+            "y": 0.637783,
+            "z": 6.65
+          },
+          "size_m": {
+            "x": 0.637783,
+            "y": 0.637783,
+            "z": 6.65
+          },
+          "width_m": 0.637783,
+          "depth_m": 0.637783,
+          "height_m": 6.65,
+          "diagonal_m": 6.710889
+        }
+      },
+      {
+        "persistent_id": 111746,
+        "name": "Group#33",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 4,
+        "entity_count": 171,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 3.433695,
+            "y": 4.325719,
+            "z": 0.87335
+          },
+          "size_m": {
+            "x": 3.433695,
+            "y": 4.325719,
+            "z": 0.87335
+          },
+          "width_m": 3.433695,
+          "depth_m": 4.325719,
+          "height_m": 0.87335,
+          "diagonal_m": 5.591498
+        }
+      },
+      {
+        "persistent_id": 120886,
+        "name": "Group#32",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 8,
+        "entity_count": 290,
+        "bounds": {
+          "min_m": {
+            "x": -0.098856,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.636594,
+            "y": 0.636594,
+            "z": 6.65
+          },
+          "size_m": {
+            "x": 0.735451,
+            "y": 0.636594,
+            "z": 6.65
+          },
+          "width_m": 0.735451,
+          "depth_m": 0.636594,
+          "height_m": 6.65,
+          "diagonal_m": 6.720762
+        }
+      },
+      {
+        "persistent_id": 105576,
+        "name": "Group#31",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 4,
+        "entity_count": 5,
+        "bounds": {
+          "min_m": {
+            "x": -0.727328,
+            "y": -0.678061,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 8.29863,
+            "y": 5.908366,
+            "z": 3.740629
+          },
+          "size_m": {
+            "x": 9.025958,
+            "y": 6.586427,
+            "z": 3.740629
+          },
+          "width_m": 9.025958,
+          "depth_m": 6.586427,
+          "height_m": 3.740629,
+          "diagonal_m": 11.783092
+        }
+      },
+      {
+        "persistent_id": 100388,
+        "name": "Group#30",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 4,
+        "entity_count": 6,
+        "bounds": {
+          "min_m": {
+            "x": -0.846954,
+            "y": -0.678061,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 8.449188,
+            "y": 6.833778,
+            "z": 4.727147
+          },
+          "size_m": {
+            "x": 9.296142,
+            "y": 7.511839,
+            "z": 4.727147
+          },
+          "width_m": 9.296142,
+          "depth_m": 7.511839,
+          "height_m": 4.727147,
+          "diagonal_m": 12.8527
+        }
+      },
+      {
+        "persistent_id": 112463,
+        "name": "Group#28",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 4,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": -2.041272,
+            "y": -1.593355,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 9.787594,
+            "y": 9.688189,
+            "z": 5.913592
+          },
+          "size_m": {
+            "x": 11.828866,
+            "y": 11.281544,
+            "z": 5.913592
+          },
+          "width_m": 11.828866,
+          "depth_m": 11.281544,
+          "height_m": 5.913592,
+          "diagonal_m": 17.382919
+        }
+      },
+      {
+        "persistent_id": 129671,
+        "name": "Group#27",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 5,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": -0.210502,
+            "y": -0.118953,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 5.821686,
+            "y": 6.487721,
+            "z": 2.925773
+          },
+          "size_m": {
+            "x": 6.032188,
+            "y": 6.606674,
+            "z": 2.925773
+          },
+          "width_m": 6.032188,
+          "depth_m": 6.606674,
+          "height_m": 2.925773,
+          "diagonal_m": 9.412522
+        }
+      },
+      {
+        "persistent_id": 15514,
+        "name": "Group#1",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 26,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.299208,
+            "y": 0.495028,
+            "z": 0.120629
+          },
+          "size_m": {
+            "x": 0.299208,
+            "y": 0.495028,
+            "z": 0.120629
+          },
+          "width_m": 0.299208,
+          "depth_m": 0.495028,
+          "height_m": 0.120629,
+          "diagonal_m": 0.590872
+        }
+      },
+      {
+        "persistent_id": 15554,
+        "name": "Group#4",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 13,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.524487,
+            "y": 0.14723,
+            "z": 0.124319
+          },
+          "size_m": {
+            "x": 0.524487,
+            "y": 0.14723,
+            "z": 0.124319
+          },
+          "width_m": 0.524487,
+          "depth_m": 0.14723,
+          "height_m": 0.124319,
+          "diagonal_m": 0.558765
+        }
+      },
+      {
+        "persistent_id": 15577,
+        "name": "Group#2",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 26,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.299208,
+            "y": 0.495028,
+            "z": 0.120629
+          },
+          "size_m": {
+            "x": 0.299208,
+            "y": 0.495028,
+            "z": 0.120629
+          },
+          "width_m": 0.299208,
+          "depth_m": 0.495028,
+          "height_m": 0.120629,
+          "diagonal_m": 0.590872
+        }
+      },
+      {
+        "persistent_id": 15617,
+        "name": "Group#3",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 13,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.524487,
+            "y": 0.14723,
+            "z": 0.124319
+          },
+          "size_m": {
+            "x": 0.524487,
+            "y": 0.14723,
+            "z": 0.124319
+          },
+          "width_m": 0.524487,
+          "depth_m": 0.14723,
+          "height_m": 0.124319,
+          "diagonal_m": 0.558765
+        }
+      },
+      {
+        "persistent_id": 132343,
+        "name": "Plane.002",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 19,
+        "bounds": {
+          "min_m": {
+            "x": -0.074289,
+            "y": -0.02,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.074289,
+            "y": 4.633703,
+            "z": 11.807769
+          },
+          "size_m": {
+            "x": 0.148577,
+            "y": 4.653704,
+            "z": 11.807769
+          },
+          "width_m": 0.148577,
+          "depth_m": 4.653704,
+          "height_m": 11.807769,
+          "diagonal_m": 12.692613
+        }
+      },
+      {
+        "persistent_id": 132373,
+        "name": "Component#25",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 7,
+        "bounds": {
+          "min_m": {
+            "x": -0.0838,
+            "y": -0.055672,
+            "z": -0.034726
+          },
+          "max_m": {
+            "x": 0.085568,
+            "y": 0.045798,
+            "z": 0.065439
+          },
+          "size_m": {
+            "x": 0.169367,
+            "y": 0.10147,
+            "z": 0.100165
+          },
+          "width_m": 0.169367,
+          "depth_m": 0.10147,
+          "height_m": 0.100165,
+          "diagonal_m": 0.221392
+        }
+      },
+      {
+        "persistent_id": 132325,
+        "name": "Plane.003",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 9,
+        "bounds": {
+          "min_m": {
+            "x": -0.34925,
+            "y": -0.000832,
+            "z": -0.000611
+          },
+          "max_m": {
+            "x": 0.359688,
+            "y": 1.953416,
+            "z": 0.522344
+          },
+          "size_m": {
+            "x": 0.708938,
+            "y": 1.954248,
+            "z": 0.522955
+          },
+          "width_m": 0.708938,
+          "depth_m": 1.954248,
+          "height_m": 0.522955,
+          "diagonal_m": 2.143632
+        }
+      },
+      {
+        "persistent_id": 157785,
+        "name": "1.dwg#4",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 414,
+        "bounds": {
+          "min_m": {
+            "x": 0.003175,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.057785,
+            "y": 0.032055,
+            "z": 1.463675
+          },
+          "size_m": {
+            "x": 0.05461,
+            "y": 0.032055,
+            "z": 1.463675
+          },
+          "width_m": 0.05461,
+          "depth_m": 0.032055,
+          "height_m": 1.463675,
+          "diagonal_m": 1.465044
+        }
+      },
+      {
+        "persistent_id": 158406,
+        "name": "1.dwg#5",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 943,
+        "bounds": {
+          "min_m": {
+            "x": 0.002992,
+            "y": -0.000637,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.063317,
+            "y": 0.045705,
+            "z": 1.463675
+          },
+          "size_m": {
+            "x": 0.060325,
+            "y": 0.046342,
+            "z": 1.463675
+          },
+          "width_m": 0.060325,
+          "depth_m": 0.046342,
+          "height_m": 1.463675,
+          "diagonal_m": 1.46565
+        }
+      },
+      {
+        "persistent_id": 47885,
+        "name": "Group#44",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": -2.420509,
+            "y": -2.276578,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 14.50699,
+            "y": 16.595554,
+            "z": 38.123284
+          },
+          "size_m": {
+            "x": 16.927499,
+            "y": 18.872131,
+            "z": 38.123284
+          },
+          "width_m": 16.927499,
+          "depth_m": 18.872131,
+          "height_m": 38.123284,
+          "diagonal_m": 45.782992
+        }
+      },
+      {
+        "persistent_id": 74136,
+        "name": "Group#43",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": -2.420509,
+            "y": -2.276578,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 14.50699,
+            "y": 16.595554,
+            "z": 38.123284
+          },
+          "size_m": {
+            "x": 16.927499,
+            "y": 18.872131,
+            "z": 38.123284
+          },
+          "width_m": 16.927499,
+          "depth_m": 18.872131,
+          "height_m": 38.123284,
+          "diagonal_m": 45.782992
+        }
+      },
+      {
+        "persistent_id": 126638,
+        "name": "Group#42",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 3,
+        "entity_count": 338,
+        "bounds": {
+          "min_m": {
+            "x": 0.001189,
+            "y": 0.001189,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.636594,
+            "y": 0.636594,
+            "z": 6.725515
+          },
+          "size_m": {
+            "x": 0.635405,
+            "y": 0.635405,
+            "z": 6.725515
+          },
+          "width_m": 0.635405,
+          "depth_m": 0.635405,
+          "height_m": 6.725515,
+          "diagonal_m": 6.78528
+        }
+      },
+      {
+        "persistent_id": 100387,
+        "name": "Group#41",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": -2.420509,
+            "y": -2.276578,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 14.50699,
+            "y": 16.595554,
+            "z": 38.123284
+          },
+          "size_m": {
+            "x": 16.927499,
+            "y": 18.872131,
+            "z": 38.123284
+          },
+          "width_m": 16.927499,
+          "depth_m": 18.872131,
+          "height_m": 38.123284,
+          "diagonal_m": 45.782992
+        }
+      },
+      {
+        "persistent_id": 21634,
+        "name": "Group#40",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": -2.420509,
+            "y": -2.276578,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 14.50699,
+            "y": 16.595554,
+            "z": 38.123284
+          },
+          "size_m": {
+            "x": 16.927499,
+            "y": 18.872131,
+            "z": 38.123284
+          },
+          "width_m": 16.927499,
+          "depth_m": 18.872131,
+          "height_m": 38.123284,
+          "diagonal_m": 45.782992
+        }
+      },
+      {
+        "persistent_id": 21195,
+        "name": "Group#39",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 3,
+        "entity_count": 338,
+        "bounds": {
+          "min_m": {
+            "x": 0.001189,
+            "y": 0.001189,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.636594,
+            "y": 0.636594,
+            "z": 6.725515
+          },
+          "size_m": {
+            "x": 0.635405,
+            "y": 0.635405,
+            "z": 6.725515
+          },
+          "width_m": 0.635405,
+          "depth_m": 0.635405,
+          "height_m": 6.725515,
+          "diagonal_m": 6.78528
+        }
+      },
+      {
+        "persistent_id": 14635,
+        "name": "Group#11",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 4,
+        "entity_count": 627,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.272775,
+            "y": 0.549072,
+            "z": 1.272775
+          },
+          "size_m": {
+            "x": 1.272775,
+            "y": 0.549072,
+            "z": 1.272775
+          },
+          "width_m": 1.272775,
+          "depth_m": 0.549072,
+          "height_m": 1.272775,
+          "diagonal_m": 1.881859
+        }
+      },
+      {
+        "persistent_id": 15513,
+        "name": "Group#5",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.693521,
+            "y": 0.630728,
+            "z": 0.127913
+          },
+          "size_m": {
+            "x": 0.693521,
+            "y": 0.630728,
+            "z": 0.127913
+          },
+          "width_m": 0.693521,
+          "depth_m": 0.630728,
+          "height_m": 0.127913,
+          "diagonal_m": 0.946124
+        }
+      },
+      {
+        "persistent_id": 15576,
+        "name": "Group#6",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.693521,
+            "y": 0.630728,
+            "z": 0.127913
+          },
+          "size_m": {
+            "x": 0.693521,
+            "y": 0.630728,
+            "z": 0.127913
+          },
+          "width_m": 0.693521,
+          "depth_m": 0.630728,
+          "height_m": 0.127913,
+          "diagonal_m": 0.946124
+        }
+      },
+      {
+        "persistent_id": 132342,
+        "name": "spirea_stem",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 1,
+        "bounds": {
+          "min_m": {
+            "x": -0.074289,
+            "y": -0.02,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.074289,
+            "y": 4.633703,
+            "z": 11.807769
+          },
+          "size_m": {
+            "x": 0.148577,
+            "y": 4.653704,
+            "z": 11.807769
+          },
+          "width_m": 0.148577,
+          "depth_m": 4.653704,
+          "height_m": 11.807769,
+          "diagonal_m": 12.692613
+        }
+      },
+      {
+        "persistent_id": 132324,
+        "name": "spirea_leaf",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 39,
+        "entity_count": 1,
+        "bounds": {
+          "min_m": {
+            "x": -0.34925,
+            "y": -0.000832,
+            "z": -0.000611
+          },
+          "max_m": {
+            "x": 0.359688,
+            "y": 1.953416,
+            "z": 0.522344
+          },
+          "size_m": {
+            "x": 0.708938,
+            "y": 1.954248,
+            "z": 0.522955
+          },
+          "width_m": 0.708938,
+          "depth_m": 1.954248,
+          "height_m": 0.522955,
+          "diagonal_m": 2.143632
+        }
+      },
+      {
+        "persistent_id": 132372,
+        "name": "spirea_flower",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 1,
+        "bounds": {
+          "min_m": {
+            "x": -1.347078,
+            "y": -0.436532,
+            "z": -1.380913
+          },
+          "max_m": {
+            "x": 1.434022,
+            "y": 0.751751,
+            "z": 1.398268
+          },
+          "size_m": {
+            "x": 2.7811,
+            "y": 1.188283,
+            "z": 2.77918
+          },
+          "width_m": 2.7811,
+          "depth_m": 1.188283,
+          "height_m": 2.77918,
+          "diagonal_m": 4.107357
+        }
+      },
+      {
+        "persistent_id": 163780,
+        "name": "Component#31",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 629,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.0127,
+            "y": 0.010999,
+            "z": 0.080975
+          },
+          "size_m": {
+            "x": 0.0127,
+            "y": 0.010999,
+            "z": 0.080975
+          },
+          "width_m": 0.0127,
+          "depth_m": 0.010999,
+          "height_m": 0.080975,
+          "diagonal_m": 0.0827
+        }
+      },
+      {
+        "persistent_id": 163136,
+        "name": "Component#32",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 419,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.060325,
+            "y": 0.060325,
+            "z": 0.00635
+          },
+          "size_m": {
+            "x": 0.060325,
+            "y": 0.060325,
+            "z": 0.00635
+          },
+          "width_m": 0.060325,
+          "depth_m": 0.060325,
+          "height_m": 0.00635,
+          "diagonal_m": 0.085548
+        }
+      },
+      {
+        "persistent_id": 157784,
+        "name": "Component#33",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.003518,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.063843,
+            "y": 0.046342,
+            "z": 1.463675
+          },
+          "size_m": {
+            "x": 0.060325,
+            "y": 0.046342,
+            "z": 1.463675
+          },
+          "width_m": 0.060325,
+          "depth_m": 0.046342,
+          "height_m": 1.463675,
+          "diagonal_m": 1.46565
+        }
+      },
+      {
+        "persistent_id": 159848,
+        "name": "Component#34",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 4,
+        "entity_count": 410,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.015875,
+            "z": -0.002494
+          },
+          "max_m": {
+            "x": 0.01905,
+            "y": 0.079375,
+            "z": 0.016556
+          },
+          "size_m": {
+            "x": 0.01905,
+            "y": 0.09525,
+            "z": 0.01905
+          },
+          "width_m": 0.01905,
+          "depth_m": 0.09525,
+          "height_m": 0.01905,
+          "diagonal_m": 0.098987
+        }
+      },
+      {
+        "persistent_id": 164649,
+        "name": "1.dwg#2",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 444,
+        "bounds": {
+          "min_m": {
+            "x": 0.006185,
+            "y": 0.007617,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.070006,
+            "y": 0.020134,
+            "z": 1.463675
+          },
+          "size_m": {
+            "x": 0.063822,
+            "y": 0.012517,
+            "z": 1.463675
+          },
+          "width_m": 0.063822,
+          "depth_m": 0.012517,
+          "height_m": 1.463675,
+          "diagonal_m": 1.465119
+        }
+      },
+      {
+        "persistent_id": 165332,
+        "name": "1.dwg#12",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 444,
+        "bounds": {
+          "min_m": {
+            "x": 0.006185,
+            "y": 0.007617,
+            "z": 0.3048
+          },
+          "max_m": {
+            "x": 0.070006,
+            "y": 0.020134,
+            "z": 1.768475
+          },
+          "size_m": {
+            "x": 0.063822,
+            "y": 0.012517,
+            "z": 1.463675
+          },
+          "width_m": 0.063822,
+          "depth_m": 0.012517,
+          "height_m": 1.463675,
+          "diagonal_m": 1.465119
+        }
+      },
+      {
+        "persistent_id": 166015,
+        "name": "1.dwg#15",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 444,
+        "bounds": {
+          "min_m": {
+            "x": 0.006185,
+            "y": 0.007617,
+            "z": 0.3048
+          },
+          "max_m": {
+            "x": 0.070006,
+            "y": 0.020134,
+            "z": 1.768475
+          },
+          "size_m": {
+            "x": 0.063822,
+            "y": 0.012517,
+            "z": 1.463675
+          },
+          "width_m": 0.063822,
+          "depth_m": 0.012517,
+          "height_m": 1.463675,
+          "diagonal_m": 1.465119
+        }
+      },
+      {
+        "persistent_id": 166698,
+        "name": "Component#43",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.0254,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.438275,
+            "y": 0.00635,
+            "z": 0.930381
+          },
+          "size_m": {
+            "x": 1.412875,
+            "y": 0.00635,
+            "z": 0.930381
+          },
+          "width_m": 1.412875,
+          "depth_m": 0.00635,
+          "height_m": 0.930381,
+          "diagonal_m": 1.691705
+        }
+      },
+      {
+        "persistent_id": 160429,
+        "name": "Component#28",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 1798,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -0.259056
+          },
+          "max_m": {
+            "x": 0.060325,
+            "y": 0.060325,
+            "z": 1.066471
+          },
+          "size_m": {
+            "x": 0.060325,
+            "y": 0.060325,
+            "z": 1.325526
+          },
+          "width_m": 0.060325,
+          "depth_m": 0.060325,
+          "height_m": 1.325526,
+          "diagonal_m": 1.328269
+        }
+      },
+      {
+        "persistent_id": 157145,
+        "name": "Series 300",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 418,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.068263,
+            "y": 0.01905,
+            "z": 1.524
+          },
+          "size_m": {
+            "x": 0.068263,
+            "y": 0.01905,
+            "z": 1.524
+          },
+          "width_m": 0.068263,
+          "depth_m": 0.01905,
+          "height_m": 1.524,
+          "diagonal_m": 1.525647
+        }
+      },
+      {
+        "persistent_id": 19686,
+        "name": "Bamboo clump",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 15,
+        "bounds": {
+          "min_m": {
+            "x": -5.72242,
+            "y": -2.786593,
+            "z": -1.69859
+          },
+          "max_m": {
+            "x": 25.370008,
+            "y": 26.603099,
+            "z": 46.159174
+          },
+          "size_m": {
+            "x": 31.092428,
+            "y": 29.389692,
+            "z": 47.857764
+          },
+          "width_m": 31.092428,
+          "depth_m": 29.389692,
+          "height_m": 47.857764,
+          "diagonal_m": 64.193915
+        }
+      },
+      {
+        "persistent_id": 14634,
+        "name": "Group#10",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 3088,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -0.031235
+          },
+          "max_m": {
+            "x": 5.90459,
+            "y": 2.344806,
+            "z": 1.694385
+          },
+          "size_m": {
+            "x": 5.90459,
+            "y": 2.344806,
+            "z": 1.72562
+          },
+          "width_m": 5.90459,
+          "depth_m": 2.344806,
+          "height_m": 1.72562,
+          "diagonal_m": 6.583317
+        }
+      },
+      {
+        "persistent_id": 132323,
+        "name": "spirea_single",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 13,
+        "entity_count": 20,
+        "bounds": {
+          "min_m": {
+            "x": -0.239435,
+            "y": 0.03445,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 3.372881,
+            "y": 4.74611,
+            "z": 8.09148
+          },
+          "size_m": {
+            "x": 3.612316,
+            "y": 4.711659,
+            "z": 8.09148
+          },
+          "width_m": 3.612316,
+          "depth_m": 4.711659,
+          "height_m": 8.09148,
+          "diagonal_m": 10.035966
+        }
+      },
+      {
+        "persistent_id": 132252,
+        "name": "spirea_noflower",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 16,
+        "entity_count": 22,
+        "bounds": {
+          "min_m": {
+            "x": -0.001726,
+            "y": -0.017018,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.512588,
+            "y": 0.626476,
+            "z": 1.358597
+          },
+          "size_m": {
+            "x": 0.514314,
+            "y": 0.643494,
+            "z": 1.358597
+          },
+          "width_m": 0.514314,
+          "depth_m": 0.643494,
+          "height_m": 1.358597,
+          "diagonal_m": 1.588833
+        }
+      },
+      {
+        "persistent_id": 157144,
+        "name": "Component#46",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 9,
+        "entity_count": 12,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.0762,
+            "y": 1.524,
+            "z": 1.333464
+          },
+          "size_m": {
+            "x": 0.0762,
+            "y": 1.524,
+            "z": 1.333464
+          },
+          "width_m": 0.0762,
+          "depth_m": 1.524,
+          "height_m": 1.333464,
+          "diagonal_m": 2.026452
+        }
+      },
+      {
+        "persistent_id": 5757,
+        "name": "Component#37",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 726,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.003175,
+            "y": 0.089016,
+            "z": 0.050816
+          },
+          "size_m": {
+            "x": 0.003175,
+            "y": 0.089016,
+            "z": 0.050816
+          },
+          "width_m": 0.003175,
+          "depth_m": 0.089016,
+          "height_m": 0.050816,
+          "diagonal_m": 0.102549
+        }
+      },
+      {
+        "persistent_id": 9742,
+        "name": "1.dwg#7",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 2026,
+        "bounds": {
+          "min_m": {
+            "x": -0.007255,
+            "y": -0.024418,
+            "z": 0.3048
+          },
+          "max_m": {
+            "x": 0.06885,
+            "y": 0.048607,
+            "z": 4.937125
+          },
+          "size_m": {
+            "x": 0.076106,
+            "y": 0.073025,
+            "z": 4.632325
+          },
+          "width_m": 0.076106,
+          "depth_m": 0.073025,
+          "height_m": 4.632325,
+          "diagonal_m": 4.633526
+        }
+      },
+      {
+        "persistent_id": 12861,
+        "name": "400 cap",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 498,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.076106,
+            "y": 0.073025,
+            "z": 0.003175
+          },
+          "size_m": {
+            "x": 0.076106,
+            "y": 0.073025,
+            "z": 0.003175
+          },
+          "width_m": 0.076106,
+          "depth_m": 0.073025,
+          "height_m": 0.003175,
+          "diagonal_m": 0.105522
+        }
+      },
+      {
+        "persistent_id": 1320,
+        "name": "Component#40",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 610,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.0889,
+            "y": 0.046037,
+            "z": 0.003175
+          },
+          "size_m": {
+            "x": 0.0889,
+            "y": 0.046037,
+            "z": 0.003175
+          },
+          "width_m": 0.0889,
+          "depth_m": 0.046037,
+          "height_m": 0.003175,
+          "diagonal_m": 0.100164
+        }
+      },
+      {
+        "persistent_id": 2255,
+        "name": "Component#41",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 2274,
+        "bounds": {
+          "min_m": {
+            "x": 0.32385,
+            "y": 0.004762,
+            "z": 1.096979
+          },
+          "max_m": {
+            "x": 4.956175,
+            "y": 0.093663,
+            "z": 1.143016
+          },
+          "size_m": {
+            "x": 4.632325,
+            "y": 0.0889,
+            "z": 0.046038
+          },
+          "width_m": 4.632325,
+          "depth_m": 0.0889,
+          "height_m": 0.046038,
+          "diagonal_m": 4.633407
+        }
+      },
+      {
+        "persistent_id": 156942,
+        "name": "Drawing3.dwg#1",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 3,
+        "entity_count": 131,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.1016,
+            "y": 0.01988,
+            "z": 4.632325
+          },
+          "size_m": {
+            "x": 0.1016,
+            "y": 0.01988,
+            "z": 4.632325
+          },
+          "width_m": 0.1016,
+          "depth_m": 0.01988,
+          "height_m": 4.632325,
+          "diagonal_m": 4.633482
+        }
+      },
+      {
+        "persistent_id": 146440,
+        "name": "window#1",
+        "description": "window",
+        "internal": false,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 497,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.219784,
+            "y": 1.8288,
+            "z": 0.024942
+          },
+          "size_m": {
+            "x": 1.219784,
+            "y": 1.8288,
+            "z": 0.024942
+          },
+          "width_m": 1.219784,
+          "depth_m": 1.8288,
+          "height_m": 0.024942,
+          "diagonal_m": 2.19841
+        }
+      },
+      {
+        "persistent_id": 156941,
+        "name": "Component#54",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 4,
+        "bounds": {
+          "min_m": {
+            "x": 0.005346,
+            "y": -0.008521,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 5.409565,
+            "y": 0.1016,
+            "z": 1.350169
+          },
+          "size_m": {
+            "x": 5.404219,
+            "y": 0.110121,
+            "z": 1.350169
+          },
+          "width_m": 5.404219,
+          "depth_m": 0.110121,
+          "height_m": 1.350169,
+          "diagonal_m": 5.571415
+        }
+      },
+      {
+        "persistent_id": 147142,
+        "name": "Component#53",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 3,
+        "bounds": {
+          "min_m": {
+            "x": 1.78308,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 5.409565,
+            "y": 0.1016,
+            "z": 1.350169
+          },
+          "size_m": {
+            "x": 3.626485,
+            "y": 0.1016,
+            "z": 1.350169
+          },
+          "width_m": 3.626485,
+          "depth_m": 0.1016,
+          "height_m": 1.350169,
+          "diagonal_m": 3.871004
+        }
+      },
+      {
+        "persistent_id": 131198,
+        "name": "Modern window",
+        "description": "7'x3' modern window",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 187,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 2.1336,
+            "y": 0.0762,
+            "z": 0.9144
+          },
+          "size_m": {
+            "x": 2.1336,
+            "y": 0.0762,
+            "z": 0.9144
+          },
+          "width_m": 2.1336,
+          "depth_m": 0.0762,
+          "height_m": 0.9144,
+          "diagonal_m": 2.322538
+        }
+      },
+      {
+        "persistent_id": 19685,
+        "name": "Bamboo cluster",
+        "description": "3D model of a clump of bamboos",
+        "internal": false,
+        "group": false,
+        "instance_count": 10,
+        "entity_count": 1,
+        "bounds": {
+          "min_m": {
+            "x": -36.22544,
+            "y": -14.321142,
+            "z": -1.72859
+          },
+          "max_m": {
+            "x": -5.133012,
+            "y": 15.06855,
+            "z": 46.129174
+          },
+          "size_m": {
+            "x": 31.092428,
+            "y": 29.389692,
+            "z": 47.857764
+          },
+          "width_m": 31.092428,
+          "depth_m": 29.389692,
+          "height_m": 47.857764,
+          "diagonal_m": 64.193915
+        }
+      },
+      {
+        "persistent_id": 14633,
+        "name": "Car",
+        "description": "American car.             Thanks for ratings... and merry Christmas for everyone! UPDATE: New wheels!",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 1.734272,
+            "y": -0.881904,
+            "z": -0.034173
+          },
+          "max_m": {
+            "x": 7.638862,
+            "y": 1.462902,
+            "z": 1.92
+          },
+          "size_m": {
+            "x": 5.90459,
+            "y": 2.344806,
+            "z": 1.954173
+          },
+          "width_m": 5.90459,
+          "depth_m": 2.344806,
+          "height_m": 1.954173,
+          "diagonal_m": 6.646886
+        }
+      },
+      {
+        "persistent_id": 144,
+        "name": "- - - - - R O A ",
+        "description": "- - - - - R O A D - - - - - ",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 784,
+        "bounds": {
+          "min_m": {
+            "x": 0.014598,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 3.407266,
+            "y": 0.251567,
+            "z": 0.0254
+          },
+          "size_m": {
+            "x": 3.392668,
+            "y": 0.251567,
+            "z": 0.0254
+          },
+          "width_m": 3.392668,
+          "depth_m": 0.251567,
+          "height_m": 0.0254,
+          "diagonal_m": 3.402077
+        }
+      },
+      {
+        "persistent_id": 136612,
+        "name": "Component#20",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.2286,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 3.227388,
+            "y": 5.0292,
+            "z": 0.1778
+          },
+          "size_m": {
+            "x": 3.227388,
+            "y": 5.2578,
+            "z": 0.1778
+          },
+          "width_m": 3.227388,
+          "depth_m": 5.2578,
+          "height_m": 0.1778,
+          "diagonal_m": 6.17188
+        }
+      },
+      {
+        "persistent_id": 131462,
+        "name": "Component#4",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 55,
+        "bounds": {
+          "min_m": {
+            "x": -1.4478,
+            "y": -0.2286,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 4.8006,
+            "y": 3.2004,
+            "z": 0.1524
+          },
+          "size_m": {
+            "x": 6.2484,
+            "y": 3.429,
+            "z": 0.1524
+          },
+          "width_m": 6.2484,
+          "depth_m": 3.429,
+          "height_m": 0.1524,
+          "diagonal_m": 7.129079
+        }
+      },
+      {
+        "persistent_id": 136374,
+        "name": "Component#11",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 167,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -1.2192
+          },
+          "max_m": {
+            "x": 1.3716,
+            "y": 1.3716,
+            "z": 12.065
+          },
+          "size_m": {
+            "x": 1.3716,
+            "y": 1.3716,
+            "z": 13.2842
+          },
+          "width_m": 1.3716,
+          "depth_m": 1.3716,
+          "height_m": 13.2842,
+          "diagonal_m": 13.425071
+        }
+      },
+      {
+        "persistent_id": 13626,
+        "name": "Component#12",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 329,
+        "bounds": {
+          "min_m": {
+            "x": -0.254,
+            "y": -1.3716,
+            "z": -0.1778
+          },
+          "max_m": {
+            "x": 3.4036,
+            "y": 1.6256,
+            "z": 3.2004
+          },
+          "size_m": {
+            "x": 3.6576,
+            "y": 2.9972,
+            "z": 3.3782
+          },
+          "width_m": 3.6576,
+          "depth_m": 2.9972,
+          "height_m": 3.3782,
+          "diagonal_m": 5.811496
+        }
+      },
+      {
+        "persistent_id": 14115,
+        "name": "Component#13",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 42,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -1.0541,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 10.3632,
+            "y": 14.0716,
+            "z": 0.1778
+          },
+          "size_m": {
+            "x": 10.3632,
+            "y": 15.1257,
+            "z": 0.1778
+          },
+          "width_m": 10.3632,
+          "depth_m": 15.1257,
+          "height_m": 0.1778,
+          "diagonal_m": 18.336148
+        }
+      },
+      {
+        "persistent_id": 14178,
+        "name": "Component#18",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 305,
+        "bounds": {
+          "min_m": {
+            "x": 0.0508,
+            "y": 0.0,
+            "z": -0.3556
+          },
+          "max_m": {
+            "x": 3.4036,
+            "y": 1.6256,
+            "z": 2.8448
+          },
+          "size_m": {
+            "x": 3.3528,
+            "y": 1.6256,
+            "z": 3.2004
+          },
+          "width_m": 3.3528,
+          "depth_m": 1.6256,
+          "height_m": 3.2004,
+          "diagonal_m": 4.911864
+        }
+      },
+      {
+        "persistent_id": 131549,
+        "name": "window",
+        "description": "window",
+        "internal": false,
+        "group": false,
+        "instance_count": 10,
+        "entity_count": 497,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.219784,
+            "y": 1.8288,
+            "z": 0.024942
+          },
+          "size_m": {
+            "x": 1.219784,
+            "y": 1.8288,
+            "z": 0.024942
+          },
+          "width_m": 1.219784,
+          "depth_m": 1.8288,
+          "height_m": 0.024942,
+          "diagonal_m": 2.19841
+        }
+      },
+      {
+        "persistent_id": 132251,
+        "name": "Spirea japonica - Dwarf Spirea",
+        "description": "This model is from DynaSCAPE Software's Sketch3D download site, a huge online database of landscape components for SketchUp. This model is one of the FREE models offered on the site for anyone to use. This model is made up of 3D branches and leaves with 2D textures for the flowers and a poly count of just over 1300.       Note: when using models with 2D textures you will get the best appearance when you set your transparency quality to 'Medium' and uncheck the 'Use Anti-aliased Textures'  option under Rendering in your model info.      Check out the huge collection of plants, garden structures, pools, ponds etc. at DynaSCAPE.com. You will also find textures and plugins created specifically for landscape modeling using SketchUp.",
+        "internal": false,
+        "group": false,
+        "instance_count": 7,
+        "entity_count": 29,
+        "bounds": {
+          "min_m": {
+            "x": -0.716571,
+            "y": -0.819058,
+            "z": -0.110209
+          },
+          "max_m": {
+            "x": 0.772493,
+            "y": 0.67367,
+            "z": 0.83522
+          },
+          "size_m": {
+            "x": 1.489065,
+            "y": 1.492727,
+            "z": 0.945429
+          },
+          "width_m": 1.489065,
+          "depth_m": 1.492727,
+          "height_m": 0.945429,
+          "diagonal_m": 2.310711
+        }
+      },
+      {
+        "persistent_id": 136639,
+        "name": "Component#52",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 5,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 5.425227,
+            "y": 1.0902,
+            "z": 1.350169
+          },
+          "size_m": {
+            "x": 5.425227,
+            "y": 1.0902,
+            "z": 1.350169
+          },
+          "width_m": 5.425227,
+          "depth_m": 1.0902,
+          "height_m": 1.350169,
+          "diagonal_m": 5.696014
+        }
+      },
+      {
+        "persistent_id": 132437,
+        "name": "Component#45",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 4,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.0762,
+            "y": 0.060325,
+            "z": 1.331876
+          },
+          "size_m": {
+            "x": 0.0762,
+            "y": 0.060325,
+            "z": 1.331876
+          },
+          "width_m": 0.0762,
+          "depth_m": 0.060325,
+          "height_m": 1.331876,
+          "diagonal_m": 1.335418
+        }
+      },
+      {
+        "persistent_id": 1319,
+        "name": "Component#49",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.001934
+          },
+          "max_m": {
+            "x": 4.6355,
+            "y": 0.0889,
+            "z": 0.047972
+          },
+          "size_m": {
+            "x": 4.6355,
+            "y": 0.0889,
+            "z": 0.046038
+          },
+          "width_m": 4.6355,
+          "depth_m": 0.0889,
+          "height_m": 0.046038,
+          "diagonal_m": 4.636581
+        }
+      },
+      {
+        "persistent_id": 5756,
+        "name": "Component#50",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 1915,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 4.6355,
+            "y": 0.089016,
+            "z": 0.050819
+          },
+          "size_m": {
+            "x": 4.6355,
+            "y": 0.089016,
+            "z": 0.050819
+          },
+          "width_m": 4.6355,
+          "depth_m": 0.089016,
+          "height_m": 0.050819,
+          "diagonal_m": 4.636633
+        }
+      },
+      {
+        "persistent_id": 9741,
+        "name": "Component#51",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 2,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 4.6355,
+            "y": 0.076106,
+            "z": 0.073025
+          },
+          "size_m": {
+            "x": 4.6355,
+            "y": 0.076106,
+            "z": 0.073025
+          },
+          "width_m": 4.6355,
+          "depth_m": 0.076106,
+          "height_m": 0.073025,
+          "diagonal_m": 4.6367
+        }
+      }
+    ],
+    "definition_count": 85,
+    "component_instance_count": 307,
+    "tags": [
+      {
+        "persistent_id": 170493,
+        "name": "Layer0",
+        "visible": true,
+        "color": {
+          "red": 255,
+          "green": 84,
+          "blue": 84,
+          "alpha": 255,
+          "hex": "#FF5454"
+        }
+      },
+      {
+        "persistent_id": 170495,
+        "name": "CAP-400",
+        "visible": true,
+        "color": {
+          "red": 102,
+          "green": 68,
+          "blue": 0,
+          "alpha": 255,
+          "hex": "#664400"
+        }
+      },
+      {
+        "persistent_id": 170497,
+        "name": "CAP-350",
+        "visible": false,
+        "color": {
+          "red": 0,
+          "green": 153,
+          "blue": 135,
+          "alpha": 255,
+          "hex": "#009987"
+        }
+      },
+      {
+        "persistent_id": 170499,
+        "name": "CAP-300",
+        "visible": false,
+        "color": {
+          "red": 119,
+          "green": 119,
+          "blue": 153,
+          "alpha": 255,
+          "hex": "#777799"
+        }
+      },
+      {
+        "persistent_id": 170501,
+        "name": "CAP-200",
+        "visible": false,
+        "color": {
+          "red": 153,
+          "green": 0,
+          "blue": 255,
+          "alpha": 255,
+          "hex": "#9900FF"
+        }
+      }
+    ],
+    "tag_count": 5,
+    "materials": [
+      {
+        "persistent_id": 170503,
+        "name": "[Color_000]",
+        "display_name": "Color_000",
+        "color": {
+          "red": 255,
+          "green": 255,
+          "blue": 255,
+          "alpha": 255,
+          "hex": "#FFFFFF"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 170504,
+        "name": "[Color_003]",
+        "display_name": "Color_003",
+        "color": {
+          "red": 170,
+          "green": 170,
+          "blue": 170,
+          "alpha": 255,
+          "hex": "#AAAAAA"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 170505,
+        "name": "[Color_005]",
+        "display_name": "Color_005",
+        "color": {
+          "red": 114,
+          "green": 114,
+          "blue": 114,
+          "alpha": 255,
+          "hex": "#727272"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 170506,
+        "name": "[Groundcover_Sand_Smooth]",
+        "display_name": "Groundcover_Sand_Smooth",
+        "color": {
+          "red": 196,
+          "green": 159,
+          "blue": 108,
+          "alpha": 255,
+          "hex": "#C49F6C"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "Groundcover_Sand_Smooth.jpg",
+          "width_m": 0.4572,
+          "height_m": 0.4572,
+          "image_width": 256,
+          "image_height": 256
+        }
+      },
+      {
+        "persistent_id": 170507,
+        "name": "[Brick Red]",
+        "display_name": "Brick Red",
+        "color": {
+          "red": 115,
+          "green": 142,
+          "blue": 79,
+          "alpha": 255,
+          "hex": "#738E4F"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "D:\\Architecture\\image lib\\grass-texture-2.jpg",
+          "width_m": 3.048,
+          "height_m": 3.048,
+          "image_width": 1024,
+          "image_height": 1024
+        }
+      },
+      {
+        "persistent_id": 170508,
+        "name": "[Blue]",
+        "display_name": "Blue",
+        "color": {
+          "red": 161,
+          "green": 163,
+          "blue": 160,
+          "alpha": 255,
+          "hex": "#A1A3A0"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "D:\\Architecture\\image lib\\16622.jpg",
+          "width_m": 1.2192,
+          "height_m": 1.2192,
+          "image_width": 600,
+          "image_height": 600
+        }
+      },
+      {
+        "persistent_id": 170509,
+        "name": "[Translucent_Glass_Gray]1",
+        "display_name": "[Translucent_Glass_Gray]1",
+        "color": {
+          "red": 128,
+          "green": 128,
+          "blue": 128,
+          "alpha": 255,
+          "hex": "#808080"
+        },
+        "alpha": 0.5,
+        "texture": null
+      },
+      {
+        "persistent_id": 170510,
+        "name": "[Translucent_Glass_Sky_Reflection]",
+        "display_name": "Translucent_Glass_Sky_Reflection",
+        "color": {
+          "red": 154,
+          "green": 154,
+          "blue": 154,
+          "alpha": 255,
+          "hex": "#9A9A9A"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "Translucent_Glass_Sky_Reflection_.jpg",
+          "width_m": 0.6,
+          "height_m": 0.6,
+          "image_width": 146,
+          "image_height": 150
+        }
+      },
+      {
+        "persistent_id": 170511,
+        "name": "[Color_009]",
+        "display_name": "Color_009",
+        "color": {
+          "red": 0,
+          "green": 0,
+          "blue": 0,
+          "alpha": 255,
+          "hex": "#000000"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 170512,
+        "name": "Material3",
+        "display_name": "Material3",
+        "color": {
+          "red": 254,
+          "green": 163,
+          "blue": 35,
+          "alpha": 255,
+          "hex": "#FEA323"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "Translucent_Glass_Sky_Reflection_.jpg",
+          "width_m": 0.6,
+          "height_m": 0.6,
+          "image_width": 146,
+          "image_height": 150
+        }
+      },
+      {
+        "persistent_id": 170513,
+        "name": "[Color_007]",
+        "display_name": "Color_007",
+        "color": {
+          "red": 51,
+          "green": 51,
+          "blue": 51,
+          "alpha": 255,
+          "hex": "#333333"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 170514,
+        "name": "[Color_002]",
+        "display_name": "Color_002",
+        "color": {
+          "red": 198,
+          "green": 198,
+          "blue": 198,
+          "alpha": 255,
+          "hex": "#C6C6C6"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 170515,
+        "name": "[Color_008]",
+        "display_name": "Color_008",
+        "color": {
+          "red": 30,
+          "green": 30,
+          "blue": 30,
+          "alpha": 255,
+          "hex": "#1E1E1E"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 170516,
+        "name": "Material11",
+        "display_name": "Material11",
+        "color": {
+          "red": 83,
+          "green": 118,
+          "blue": 137,
+          "alpha": 255,
+          "hex": "#537689"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 170517,
+        "name": "Material10",
+        "display_name": "Material10",
+        "color": {
+          "red": 0,
+          "green": 0,
+          "blue": 0,
+          "alpha": 255,
+          "hex": "#000000"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "Fencing_Mesh_Blue.png",
+          "width_m": 0.04,
+          "height_m": 0.04,
+          "image_width": 128,
+          "image_height": 128
+        }
+      },
+      {
+        "persistent_id": 170518,
+        "name": "Material12",
+        "display_name": "Material12",
+        "color": {
+          "red": 0,
+          "green": 0,
+          "blue": 0,
+          "alpha": 255,
+          "hex": "#000000"
+        },
+        "alpha": 0.71,
+        "texture": null
+      },
+      {
+        "persistent_id": 170519,
+        "name": "[Color_A12]",
+        "display_name": "Color_A12",
+        "color": {
+          "red": 153,
+          "green": 30,
+          "blue": 30,
+          "alpha": 255,
+          "hex": "#991E1E"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 170520,
+        "name": "[Color_001]",
+        "display_name": "Color_001",
+        "color": {
+          "red": 226,
+          "green": 226,
+          "blue": 226,
+          "alpha": 255,
+          "hex": "#E2E2E2"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 170521,
+        "name": "[Color_C02]",
+        "display_name": "Color_C02",
+        "color": {
+          "red": 255,
+          "green": 153,
+          "blue": 50,
+          "alpha": 255,
+          "hex": "#FF9932"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 170522,
+        "name": "[Color_A11]",
+        "display_name": "Color_A11",
+        "color": {
+          "red": 153,
+          "green": 0,
+          "blue": 0,
+          "alpha": 255,
+          "hex": "#990000"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 170523,
+        "name": "[Color_E13]",
+        "display_name": "Color_E13",
+        "color": {
+          "red": 153,
+          "green": 153,
+          "blue": 61,
+          "alpha": 255,
+          "hex": "#99993D"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 170524,
+        "name": "[Color_E07]",
+        "display_name": "Color_E07",
+        "color": {
+          "red": 204,
+          "green": 204,
+          "blue": 40,
+          "alpha": 255,
+          "hex": "#CCCC28"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 170525,
+        "name": "Material14",
+        "display_name": "Material14",
+        "color": {
+          "red": 111,
+          "green": 163,
+          "blue": 8,
+          "alpha": 255,
+          "hex": "#6FA308"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 170526,
+        "name": "[0060_GrassGreen]",
+        "display_name": "0060_GrassGreen",
+        "color": {
+          "red": 62,
+          "green": 91,
+          "blue": 5,
+          "alpha": 255,
+          "hex": "#3E5B05"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 170527,
+        "name": "[Translucent_Glass_Blue]",
+        "display_name": "Translucent_Glass_Blue",
+        "color": {
+          "red": 100,
+          "green": 149,
+          "blue": 237,
+          "alpha": 255,
+          "hex": "#6495ED"
+        },
+        "alpha": 0.5,
+        "texture": null
+      },
+      {
+        "persistent_id": 170528,
+        "name": "[Wood_Cherry_Original]1",
+        "display_name": "[Wood_Cherry_Original]1",
+        "color": {
+          "red": 152,
+          "green": 86,
+          "blue": 42,
+          "alpha": 0,
+          "hex": "#98562A"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "Wood_Cherry_Original.jpg",
+          "width_m": 1.8288,
+          "height_m": 1.8288,
+          "image_width": 256,
+          "image_height": 256
+        }
+      },
+      {
+        "persistent_id": 170529,
+        "name": "[Translucent_Glass_Sky_Reflection]6",
+        "display_name": "[Translucent_Glass_Sky_Reflection]6",
+        "color": {
+          "red": 125,
+          "green": 138,
+          "blue": 183,
+          "alpha": 255,
+          "hex": "#7D8AB7"
+        },
+        "alpha": 0.52,
+        "texture": {
+          "filename": "Translucent_Glass_Sky_Reflection_.jpg",
+          "width_m": 1.8288,
+          "height_m": 1.8288,
+          "image_width": 146,
+          "image_height": 150
+        }
+      },
+      {
+        "persistent_id": 170530,
+        "name": "Material17",
+        "display_name": "Material17",
+        "color": {
+          "red": 96,
+          "green": 150,
+          "blue": 57,
+          "alpha": 255,
+          "hex": "#609639"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 170531,
+        "name": "spireaspirea1",
+        "display_name": "spireaspirea1",
+        "color": {
+          "red": 239,
+          "green": 227,
+          "blue": 232,
+          "alpha": 255,
+          "hex": "#EFE3E8"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "\\\\STRIDER\\Documents\\DynaSCAPE\\oDesk\\Andrei\\SprieaFlower-1.png",
+          "width_m": 0.0254,
+          "height_m": 0.0254,
+          "image_width": 256,
+          "image_height": 256
+        }
+      },
+      {
+        "persistent_id": 170532,
+        "name": "Cream",
+        "display_name": "Cream",
+        "color": {
+          "red": 240,
+          "green": 224,
+          "blue": 198,
+          "alpha": 255,
+          "hex": "#F0E0C6"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 170533,
+        "name": "Translucent_Glass_Blue1",
+        "display_name": "Translucent_Glass_Blue1",
+        "color": {
+          "red": 170,
+          "green": 187,
+          "blue": 196,
+          "alpha": 255,
+          "hex": "#AABBC4"
+        },
+        "alpha": 0.30999999999999994,
+        "texture": null
+      }
+    ],
+    "material_count": 31,
+    "scenes": [
+
+    ],
+    "scene_count": 0,
+    "style": {
+      "selected_style": "[Simple Style]",
+      "display_sketch_axes": true,
+      "draw_hidden": false,
+      "draw_hidden_geometry": false,
+      "edge_display_mode": 1,
+      "face_front_color": {
+        "red": 255,
+        "green": 255,
+        "blue": 255,
+        "alpha": 255,
+        "hex": "#FFFFFF"
+      },
+      "face_back_color": {
+        "red": 171,
+        "green": 176,
+        "blue": 204,
+        "alpha": 255,
+        "hex": "#ABB0CC"
+      },
+      "background_color": {
+        "red": 153,
+        "green": 189,
+        "blue": 144,
+        "alpha": 255,
+        "hex": "#99BD90"
+      }
+    },
+    "georeferenced": false,
+    "missing_assets": [
+      {
+        "material": "Groundcover_Sand_Smooth",
+        "source": "Groundcover_Sand_Smooth.jpg"
+      },
+      {
+        "material": "Brick Red",
+        "source": "D:\\Architecture\\image lib\\grass-texture-2.jpg"
+      },
+      {
+        "material": "Blue",
+        "source": "D:\\Architecture\\image lib\\16622.jpg"
+      },
+      {
+        "material": "Translucent_Glass_Sky_Reflection",
+        "source": "Translucent_Glass_Sky_Reflection_.jpg"
+      },
+      {
+        "material": "Material3",
+        "source": "Translucent_Glass_Sky_Reflection_.jpg"
+      },
+      {
+        "material": "Material10",
+        "source": "Fencing_Mesh_Blue.png"
+      },
+      {
+        "material": "[Wood_Cherry_Original]1",
+        "source": "Wood_Cherry_Original.jpg"
+      },
+      {
+        "material": "[Translucent_Glass_Sky_Reflection]6",
+        "source": "Translucent_Glass_Sky_Reflection_.jpg"
+      },
+      {
+        "material": "spireaspirea1",
+        "source": "\\\\STRIDER\\Documents\\DynaSCAPE\\oDesk\\Andrei\\SprieaFlower-1.png"
+      }
+    ],
+    "warnings": [
+      "Model has no scenes",
+      "Texture source paths unavailable on disk; textures may still be embedded"
+    ]
+  },
+  "captures": [
+    {
+      "model_name": "presentation20",
+      "view_name": "isometric",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/presentation20/sketchup/isometric.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 73.329426,
+        "y": -31.282901,
+        "z": 36.712861
+      },
+      "camera_target_m": {
+        "x": 29.846058,
+        "y": 12.200467,
+        "z": 1.926167
+      },
+      "camera_up": {
+        "x": -0.34815531,
+        "y": 0.34815531,
+        "z": 0.87038828
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 27.558032,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Simple Style]",
+      "timestamp": "2026-07-12T21:03:27Z"
+    },
+    {
+      "model_name": "presentation20",
+      "view_name": "front",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/presentation20/sketchup/front.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 30.616525,
+        "y": -46.524129,
+        "z": 6.609933
+      },
+      "camera_target_m": {
+        "x": 30.616525,
+        "y": 11.43,
+        "z": 6.609933
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 18.939721,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Simple Style]",
+      "timestamp": "2026-07-12T21:03:28Z"
+    },
+    {
+      "model_name": "presentation20",
+      "view_name": "back",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/presentation20/sketchup/back.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 30.616525,
+        "y": 67.312342,
+        "z": 6.609933
+      },
+      "camera_target_m": {
+        "x": 30.616525,
+        "y": 11.43,
+        "z": 6.609933
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 18.939721,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Simple Style]",
+      "timestamp": "2026-07-12T21:03:29Z"
+    },
+    {
+      "model_name": "presentation20",
+      "view_name": "left",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/presentation20/sketchup/left.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 83.768649,
+        "y": 11.43,
+        "z": 6.609933
+      },
+      "camera_target_m": {
+        "x": 30.616525,
+        "y": 11.43,
+        "z": 6.609933
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 19.886707,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Simple Style]",
+      "timestamp": "2026-07-12T21:03:30Z"
+    },
+    {
+      "model_name": "presentation20",
+      "view_name": "right",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/presentation20/sketchup/right.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": -21.732575,
+        "y": 11.43,
+        "z": 6.609933
+      },
+      "camera_target_m": {
+        "x": 30.616525,
+        "y": 11.43,
+        "z": 6.609933
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 19.886707,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Simple Style]",
+      "timestamp": "2026-07-12T21:03:30Z"
+    },
+    {
+      "model_name": "presentation20",
+      "view_name": "top",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/presentation20/sketchup/top.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 30.616525,
+        "y": 11.43,
+        "z": 77.671649
+      },
+      "camera_target_m": {
+        "x": 30.616525,
+        "y": 11.43,
+        "z": 6.5659
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 33.688421,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Simple Style]",
+      "timestamp": "2026-07-12T21:03:31Z"
+    }
+  ],
+  "warnings": [
+    "Model has no scenes",
+    "Texture source paths unavailable on disk; textures may still be embedded"
+  ]
+}

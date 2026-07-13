@@ -1,0 +1,51 @@
+{
+  "recorded_at": "2026-07-13T06:09:30+07:00",
+  "status": "PASS",
+  "sketchup": {
+    "requested_executable": "C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp.exe",
+    "requested_executable_exists": false,
+    "actual_executable": "C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe",
+    "version": "26.2.243"
+  },
+  "package": {
+    "path": "bom_engine_plugin_v3.0.0.rbz",
+    "bytes": 44760,
+    "sha256": "A12DFC567338DE8D39497411DFF29AF248DE861A58609461259A36EDFF612887",
+    "files": 23
+  },
+  "installation": {
+    "plugin_root": "C:\\Users\\kaisa\\AppData\\Roaming\\SketchUp\\SketchUp 2026\\SketchUp\\Plugins",
+    "plugin_files": 22,
+    "loader_sha256": "3CF550C54AC88946757E89A4066BB43CCF9B63C8972C7C092250E20EF599AE92",
+    "core_sha256": "41F15C815AEBFE13686118607D86C3D4AEAD7B812D40FB78E822A13F113D3F15",
+    "backup": "artifacts/_workflow/backups/sketchup-2026-bom-engine-20260713-060035",
+    "backup_preserved": true,
+    "plugin_version": "3.0.0",
+    "loaded_from_installation": true,
+    "startup_errors": []
+  },
+  "smoke_export": {
+    "source_model": "skps/test.skp",
+    "source_model_modified": false,
+    "path": "artifacts/test/exported/phase4-installed-smoke_runtime.bome2.gz",
+    "format": "BOME2 2.0.0",
+    "compressed_bytes": 32606,
+    "uncompressed_bytes": 90068,
+    "sha256_uncompressed": "21cfe3a647889d9feeed395ea073b3fbf4edcd528b5bbc547eae29daf13eb84f",
+    "elapsed_seconds": 0.279,
+    "meshes": 2,
+    "definitions": 2,
+    "nodes": 2,
+    "instances": 1,
+    "triangles": 3010,
+    "sections": 7,
+    "quantization_max_error_m": 0.000012862849,
+    "validation": "PASS"
+  },
+  "evidence": {
+    "startup": "artifacts/test/sketchup/phase4-installed-startup.jpg",
+    "ruby_console": "artifacts/test/sketchup/phase4-installed-smoke.jpg",
+    "export_dialog": "artifacts/test/sketchup/phase4-installed-dialog.jpg",
+    "log": "artifacts/_workflow/logs/phase4-installed-verification.log"
+  }
+}

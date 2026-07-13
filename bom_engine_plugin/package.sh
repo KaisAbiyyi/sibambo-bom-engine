@@ -7,7 +7,7 @@ set -e
 
 PLUGIN_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(dirname "$PLUGIN_DIR")"
-VERSION="2.0.0"
+VERSION="3.0.0"
 OUT_NAME="bom_engine_plugin_v${VERSION}.rbz"
 OUT_PATH="${ROOT_DIR}/${OUT_NAME}"
 
@@ -15,15 +15,16 @@ echo "Packaging BOM Engine plugin..."
 echo "  Source : ${PLUGIN_DIR}"
 echo "  Output : ${OUT_PATH}"
 
-cd "${ROOT_DIR}"
+cd "${PLUGIN_DIR}"
 
 # Create ZIP, then rename to .rbz
-zip -r "${OUT_NAME}.zip" "bom_engine_plugin/" \
+zip -r "${OUT_PATH}.zip" "bom_engine_loader.rb" "bom_engine/" \
     --exclude "*.DS_Store" \
     --exclude "*__MACOSX*" \
-    --exclude "*.git*"
+    --exclude "*.git*" \
+    --exclude "bom_engine/tests/*"
 
-mv "${OUT_NAME}.zip" "${OUT_PATH}"
+mv "${OUT_PATH}.zip" "${OUT_PATH}"
 
 echo ""
 echo "Done: ${OUT_PATH}"

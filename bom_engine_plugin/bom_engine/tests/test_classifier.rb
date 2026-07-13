@@ -21,8 +21,10 @@ module BOMEngine
         [-1.0,  0.0,  0.0,  "wall_x_neg"],
         [ 0.0,  1.0,  0.0,  "wall_y_pos"],
         [ 0.0, -1.0,  0.0,  "wall_y_neg"],
-        [ 0.0,  0.0,  0.95, "floor"],          # near-flat floor
-        [ 0.0,  0.0, -0.95, "ceiling"],        # near-flat ceiling
+        [ 0.0,  0.0,  0.99, "floor"],          # near-flat floor
+        [ 0.0,  0.0, -0.99, "ceiling"],        # near-flat ceiling
+        [ 0.0,  0.5,  0.866025, "roof_slope"], # 30-degree roof slope
+        [ 0.5,  0.0,  0.866025, "roof_slope"], # 30-degree roof slope
         [ 0.0,  0.707,  0.707, "roof_slope"],  # 45-degree slope
         [ 0.0, -0.707,  0.707, "roof_slope"],  # 45-degree slope (south)
       ]
@@ -45,7 +47,8 @@ module BOMEngine
         [ 0.0,  0.0,  1.0,  "floor"],
         [ 0.0,  0.0, -1.0,  "ceiling"],
         [ 1.0,  0.0,  0.0,  "wall"],
-        [ 0.0,  0.707, 0.707, "ceiling"],  # roof_slope maps to ceiling
+        [ 0.0,  0.5,   0.866025, "ceiling"],  # roof_slope maps to ceiling
+        [ 0.0,  0.707, 0.707, "ceiling"],     # roof_slope maps to ceiling
       ]
       simplified_tests.each do |nx, ny, nz, expected|
         v      = Geom::Vector3d.new(nx, ny, nz).normalize

@@ -6,7 +6,16 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
+  html {
+    height: 100%;
+    overflow: hidden;
+    background: #1e2229;
+  }
+
   body {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-size: 13px;
     background: #1e2229;
@@ -187,37 +196,58 @@
     margin-left: 5px;
     vertical-align: middle;
   }
+
+  @media (max-width: 430px) {
+    body { padding: 14px; }
+    .level-grid { grid-template-columns: 1fr; }
+    .path-row { flex-wrap: wrap; }
+    .path-row input { flex-basis: 100%; }
+    .btn-browse { width: 100%; }
+    .actions { justify-content: stretch; }
+    .actions .btn { flex: 1; }
+  }
 </style>
 </head>
 <body>
 
-  <h2>&#11041; BOM Engine Export <span class="badge">v2.0</span></h2>
+  <h2>&#11041; BOM Engine Export <span class="badge">v3 / BOME2</span></h2>
 
   <div class="field">
-    <label>Output JSON Path</label>
+    <label>Output Path</label>
     <div class="path-row">
-      <input type="text" id="outputPath" placeholder="/path/to/output_bom.json">
+      <input type="text" id="outputPath" placeholder="/path/to/output_bom.bome2">
       <button class="btn btn-browse" onclick="sketchup.browse()">Browse</button>
     </div>
+    <p class="info">Suffix format ditambahkan otomatis. File sumber SKP tidak diubah.</p>
+  </div>
+
+  <div class="field">
+    <label for="outputFormat">Format Output</label>
+    <select id="outputFormat" onchange="selectFormat(this.value)" style="width:100%;padding:9px 10px;background:#111923;color:#d9e5ee;border:1px solid #324253;border-radius:5px">
+      <option value="bome2" selected>BOME2 Runtime — indexed, instanced, quantized</option>
+      <option value="canonical_v3">Canonical JSON v3 — semantic/readable</option>
+      <option value="legacy">Legacy v2/BOME1 — compatibility</option>
+    </select>
+    <p class="info" id="formatInfo">Runtime Three.js teroptimasi dengan geometry definition-local dan component instancing.</p>
   </div>
 
   <!-- ── Export Level ── -->
-  <div class="section">
-    <h3>Level Export</h3>
+  <div class="section dimmed" id="legacyLevelSection">
+    <h3>Legacy Export Level</h3>
     <div class="level-grid">
 
       <label class="level-card selected" id="card-visual" onclick="selectLevel('visual')">
         <input type="radio" name="exportLevel" value="visual" checked>
         <div class="level-name">&#9679; Visual</div>
-        <div class="level-size">~5–8 MB</div>
-        <div class="level-desc">Geometri polygon lengkap per face. Ringan untuk viewer 3D.</div>
+        <div class="level-size">~1–10 MB gzip</div>
+        <div class="level-desc">Compact mesh untuk viewer 3D. Default paling cepat.</div>
       </label>
 
       <label class="level-card" id="card-standard" onclick="selectLevel('standard')">
         <input type="radio" name="exportLevel" value="standard">
         <div class="level-name">&#9679; Standard</div>
-        <div class="level-size">~15–20 MB</div>
-        <div class="level-desc">+ Warna material, area, hierarki dasar.</div>
+        <div class="level-size">~5–20 MB gzip</div>
+        <div class="level-desc">Compact mesh + metadata dasar.</div>
       </label>
 
       <label class="level-card" id="card-full" onclick="selectLevel('full')">
@@ -234,7 +264,7 @@
   <div class="section">
     <h3>Opsi Tambahan</h3>
     <div class="checkbox-row full-only" id="opt-textures">
-      <input type="checkbox" id="exportTextures" checked>
+      <input type="checkbox" id="exportTextures">
       <label for="exportTextures">Export tekstur ke subfolder /textures</label>
     </div>
     <div class="checkbox-row full-only" id="opt-edges">
@@ -245,11 +275,23 @@
       <input type="checkbox" id="includeMaterials" checked>
       <label for="includeMaterials">Sertakan library material lengkap</label>
     </div>
+    <div class="checkbox-row" id="legacyCompact">
+      <input type="checkbox" id="compactGeometry" checked disabled>
+      <label for="compactGeometry">Compact mesh untuk Visual/Standard (wajib)</label>
+    </div>
+    <div class="checkbox-row" id="legacyBinary">
+      <input type="checkbox" id="binaryGeometry" checked disabled>
+      <label for="binaryGeometry">Simpan geometry sebagai .bome.gz binary (wajib untuk viewer)</label>
+    </div>
     <div class="checkbox-row">
       <input type="checkbox" id="prettyPrint">
-      <label for="prettyPrint">Pretty-print JSON (mudah dibaca manusia)</label>
+      <label for="prettyPrint">Pretty-print Canonical JSON (debug saja)</label>
     </div>
-    <p class="info" style="margin-top:-4px;margin-bottom:6px">&#9888; Pretty-print menambah spasi &amp; baris baru — ukuran file bisa <strong style="color:#ffaa44">2–3× lebih besar</strong>. Nonaktifkan untuk produksi.</p>
+    <div class="checkbox-row">
+      <input type="checkbox" id="compressOutput" checked>
+      <label for="compressOutput">Kompres output sebagai .gz</label>
+    </div>
+    <p class="info" style="margin-top:-4px;margin-bottom:6px">&#9888; Pretty-print hanya untuk Canonical JSON debug dan bisa membuat file jauh lebih besar.</p>
   </div>
 
   <div class="section">
@@ -263,22 +305,52 @@
 
   <div class="actions">
     <button class="btn btn-cancel" onclick="sketchup.cancel()">Batal</button>
-    <button class="btn btn-export" onclick="doExport()">Export JSON</button>
+    <button class="btn btn-export" onclick="doExport()">Export Model</button>
   </div>
 
 <script>
   var currentLevel = 'visual';
+  var currentFormat = 'bome2';
 
   function selectLevel(level) {
     currentLevel = level;
     ['visual','standard','full'].forEach(function(l) {
       var card = document.getElementById('card-' + l);
-      card.classList.toggle('selected', l === level);
+      card.classList.toggle('selected', currentFormat === 'legacy' && l === level);
       card.querySelector('input[type=radio]').checked = (l === level);
     });
-    document.querySelectorAll('.full-only').forEach(function(el) {
-      el.classList.toggle('dimmed', level === 'visual');
-    });
+    updateOptionState();
+    var compact = document.getElementById('compactGeometry');
+    var binary = document.getElementById('binaryGeometry');
+    var viewerFormat = level !== 'full';
+    compact.checked = viewerFormat;
+    binary.checked = viewerFormat;
+    compact.disabled = true;
+    binary.disabled = true;
+  }
+
+  function selectFormat(format) {
+    currentFormat = format;
+    document.getElementById('outputFormat').value = format;
+    var legacy = format === 'legacy';
+    document.getElementById('legacyLevelSection').classList.toggle('dimmed', !legacy);
+    document.querySelectorAll('input[name=exportLevel]').forEach(function(input) { input.disabled = !legacy; });
+    selectLevel(legacy ? currentLevel : 'full');
+    var info = document.getElementById('formatInfo');
+    if (format === 'bome2') info.textContent = 'Runtime Three.js teroptimasi: indexed buffers, instancing, quantization terukur, section directory.';
+    else if (format === 'canonical_v3') info.textContent = 'Sumber analisis lossless: hierarchy, definitions, instances, holes, metadata, rooms, source identity.';
+    else info.textContent = 'Format v2/BOME1 lama untuk consumer yang belum migrasi.';
+    updateOptionState();
+  }
+
+  function updateOptionState() {
+    var fullOptions = currentFormat !== 'legacy' || currentLevel === 'full';
+    document.querySelectorAll('.full-only').forEach(function(el) { el.classList.toggle('dimmed', !fullOptions); });
+    var pretty = document.getElementById('prettyPrint');
+    pretty.disabled = currentFormat !== 'canonical_v3';
+    if (pretty.disabled) pretty.checked = false;
+    document.getElementById('legacyCompact').classList.toggle('dimmed', currentFormat !== 'legacy');
+    document.getElementById('legacyBinary').classList.toggle('dimmed', currentFormat !== 'legacy');
   }
 
   function setDefaultPath(path) {
@@ -321,11 +393,15 @@
     }
     var settings = {
       output_path:       outputPath,
+      output_format:     currentFormat,
       export_level:      currentLevel,
       export_textures:   document.getElementById('exportTextures').checked,
       include_edges:     document.getElementById('includeEdges').checked,
       include_materials: document.getElementById('includeMaterials').checked,
       pretty_print:      document.getElementById('prettyPrint').checked,
+      compress_output:   document.getElementById('compressOutput').checked,
+      compact_geometry:  document.getElementById('compactGeometry').checked,
+      binary_geometry:   document.getElementById('binaryGeometry').checked,
       selection_only:    document.getElementById('selectionOnly').checked
     };
     sketchup.export(JSON.stringify(settings));
@@ -333,7 +409,7 @@
 
   window.onload = function() {
     sketchup.onReady();
-    selectLevel('visual'); // default
+    selectFormat('bome2');
   };
 </script>
 

@@ -1,0 +1,14 @@
+{
+  "workflow_version": "1.0.0",
+  "measured_at": "2026-07-12T20:59:43Z",
+  "source_skp": "D:\\projects\\sibambo-bom-engine\\skps\\test.skp",
+  "level": "full",
+  "compressed": false,
+  "status": "ok",
+  "wall_elapsed_ms_including_dialog": 11449.47,
+  "plugin_elapsed_ms": 270.0,
+  "output_path": "D:/projects/sibambo-bom-engine/artifacts/test/exported/baseline-current_full.json",
+  "output_exists": true,
+  "output_bytes": 1038263,
+  "error": null
+}

@@ -1,0 +1,26 @@
+{
+  "path": "D:/projects/sibambo-bom-engine/artifacts/project-sboost-2/exported/project-sboost-2_canonical.json.gz",
+  "compressed": true,
+  "pretty": false,
+  "bytes": 763417,
+  "uncompressed_bytes": 5749385,
+  "sha256": "34ca66f5d26324e2df41c40e6ce0bda46a9fdcdf355acd80871e45efddb06c2c",
+  "elapsed_seconds": 3.568,
+  "format": "canonical_v3",
+  "statistics": {
+    "definitions": 101,
+    "meshes": 66,
+    "nodes": 117,
+    "component_instances": 49,
+    "group_instances": 67,
+    "faces": 7047,
+    "unique_vertices": 7319,
+    "materials": 48,
+    "tags": 19,
+    "transforms": 98,
+    "identity_transform_id": 0,
+    "skipped": {
+      "hidden_or_invalid_entity": 336
+    }
+  }
+}

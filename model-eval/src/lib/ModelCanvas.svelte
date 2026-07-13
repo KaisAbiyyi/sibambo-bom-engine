@@ -3,6 +3,7 @@
 	import {
 		AmbientLight,
 		ArrowHelper,
+		Box3,
 		BufferGeometry,
 		CanvasTexture,
 		Color,
@@ -12,42 +13,66 @@
 		EdgesGeometry,
 		Float32BufferAttribute,
 		Group,
+		InstancedMesh,
 		LineBasicMaterial,
 		LineSegments,
 		Mesh,
 		MeshStandardMaterial,
 		Object3D,
+		OrthographicCamera,
 		PerspectiveCamera,
 		PlaneGeometry,
+		RepeatWrapping,
 		Scene,
+		ShapeUtils,
 		SphereGeometry,
 		Sprite,
 		SpriteMaterial,
+		Vector2,
 		Vector3,
 		WebGLRenderer
 	} from 'three';
 	import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 	import type { AnalysisKind, AnalysisResult, FaceRecord, OverlayMarker, ParsedBuildingModel, PartKey, SpaceZone } from './model';
 	import { PART_META } from './model';
+	import { buildRuntimeGeometryGroups, runtimePartOverrides } from './render/build-runtime-scene';
+	import type { QACameraSpec } from './render/qa-camera';
 
 	let {
 		model = null,
 		activeAnalysis = 'lighting',
 		result = null,
 		spaces = [],
-		visiblePartKeys = []
+		visiblePartKeys = [],
+		qaMode = false,
+		qaCamera = null,
+		onQaReady = undefined
 	}: {
 		model: ParsedBuildingModel | null;
 		activeAnalysis: AnalysisKind;
 		result: AnalysisResult | null;
 		spaces: SpaceZone[];
 		visiblePartKeys: PartKey[];
+		qaMode?: boolean;
+		qaCamera?: QACameraSpec | null;
+		onQaReady?: (payload: {
+			viewName: string;
+			width: number;
+			height: number;
+			runtimeGroups: number;
+			visibleRuntimeGroups: number;
+			visibleRuntimeInstances: number;
+			renderedBounds: { min: { x: number; y: number; z: number }; max: { x: number; y: number; z: number } } | null;
+		}) => void;
 	} = $props();
 
 	type PartRuntime = {
 		key: PartKey;
+		baseColor?: string;
+		textureName?: string;
 		mesh: Mesh;
-		edges: LineSegments;
+		edges: Object3D;
+		edgeGeometry?: BufferGeometry;
 		material: MeshStandardMaterial;
 		edgeMaterial: LineBasicMaterial;
 		baseY: number;
@@ -60,7 +85,7 @@
 	let canvasHost: HTMLDivElement;
 	let renderer: WebGLRenderer | null = null;
 	let scene: Scene | null = null;
-	let camera: PerspectiveCamera | null = null;
+	let camera: PerspectiveCamera | OrthographicCamera | null = null;
 	let controls: OrbitControls | null = null;
 	let root = new Group();
 	let overlayRoot = new Group();
@@ -71,6 +96,7 @@
 	let currentModel: ParsedBuildingModel | null = null;
 	let runtimes: PartRuntime[] = [];
 	let overlayObjects: Array<Mesh | ArrowHelper | Sprite | Group> = [];
+	const patternTextures = new Map<string, CanvasTexture>();
 
 	function init() {
 		renderer = new WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
@@ -104,10 +130,7 @@
 		scene.add(ground);
 
 		controls = new OrbitControls(camera, renderer.domElement);
-		controls.enableDamping = true;
-		controls.dampingFactor = 0.08;
-		controls.minPolarAngle = Math.PI * 0.12;
-		controls.maxPolarAngle = Math.PI * 0.88;
+		configureControls();
 
 		resizeObserver = new ResizeObserver(resize);
 		resizeObserver.observe(stageEl);
@@ -127,8 +150,84 @@
 		const width = Math.max(stageEl.clientWidth, 1);
 		const height = Math.max(stageEl.clientHeight, 1);
 		renderer.setSize(width, height, false);
-		camera.aspect = width / height;
+		if (camera instanceof PerspectiveCamera) {
+			camera.aspect = width / height;
+		} else {
+			const halfHeight = Math.max(qaCamera?.orthographicHeightM || 1, 0.001) / 2;
+			const halfWidth = halfHeight * (width / height);
+			camera.left = -halfWidth;
+			camera.right = halfWidth;
+			camera.top = halfHeight;
+			camera.bottom = -halfHeight;
+		}
 		camera.updateProjectionMatrix();
+	}
+
+	function configureControls() {
+		if (!controls) return;
+		controls.enableDamping = !qaMode;
+		controls.enabled = !qaMode;
+		controls.dampingFactor = 0.08;
+		controls.minPolarAngle = Math.PI * 0.12;
+		controls.maxPolarAngle = Math.PI * 0.88;
+	}
+
+	function applyQaCamera() {
+		if (!renderer || !scene || !qaMode || !qaCamera) return;
+		const distance = Math.max(
+			Math.hypot(
+				qaCamera.position.x - qaCamera.target.x,
+				qaCamera.position.y - qaCamera.target.y,
+				qaCamera.position.z - qaCamera.target.z
+			),
+			1
+		);
+		const nextCamera = qaCamera.projectionMode === 'orthographic'
+			? new OrthographicCamera(-1, 1, 1, -1, 0.01, Math.max(distance * 20, 2000))
+			: new PerspectiveCamera(qaCamera.fieldOfViewDegrees || 42, qaCamera.aspectRatio, 0.01, Math.max(distance * 20, 2000));
+		nextCamera.position.set(qaCamera.position.x, qaCamera.position.y, qaCamera.position.z);
+		nextCamera.up.set(qaCamera.up.x, qaCamera.up.y, qaCamera.up.z).normalize();
+		nextCamera.lookAt(qaCamera.target.x, qaCamera.target.y, qaCamera.target.z);
+		camera = nextCamera;
+		controls?.dispose();
+		controls = new OrbitControls(camera, renderer.domElement);
+		controls.target.set(qaCamera.target.x, qaCamera.target.y, qaCamera.target.z);
+		configureControls();
+		scene.background = new Color(qaCamera.backgroundColor);
+		if (ground) ground.visible = false;
+		resize();
+		camera.updateMatrixWorld(true);
+		signalQaReady();
+	}
+
+	function signalQaReady() {
+		if (!qaMode || !qaCamera || !model || !onQaReady) return;
+		window.requestAnimationFrame(() => {
+			window.requestAnimationFrame(() => {
+				if (!renderer || !camera || !stageEl) return;
+				renderer.render(scene!, camera);
+				root.updateMatrixWorld(true);
+				const visibleRuntimes = runtimes.filter((runtime) => runtime.mesh.visible);
+				const renderedBounds = visibleRuntimes.reduce((bounds, runtime) => bounds.expandByObject(runtime.mesh), new Box3());
+				onQaReady({
+					viewName: qaCamera.viewName,
+					width: stageEl.clientWidth,
+					height: stageEl.clientHeight,
+					runtimeGroups: runtimes.length,
+					visibleRuntimeGroups: visibleRuntimes.length,
+					visibleRuntimeInstances: visibleRuntimes.reduce(
+						(sum, runtime) => sum + (runtime.mesh instanceof InstancedMesh ? runtime.mesh.count : 1),
+						0
+					),
+					renderedBounds: renderedBounds.isEmpty()
+						? null
+						: {
+								min: { x: renderedBounds.min.x, y: renderedBounds.min.y, z: renderedBounds.min.z },
+								max: { x: renderedBounds.max.x, y: renderedBounds.max.y, z: renderedBounds.max.z }
+							}
+				});
+			});
+		});
 	}
 
 	function clearModel() {
@@ -136,7 +235,7 @@
 			root.remove(runtime.mesh);
 			root.remove(runtime.edges);
 			runtime.mesh.geometry.dispose();
-			runtime.edges.geometry.dispose();
+			runtime.edgeGeometry?.dispose();
 			runtime.material.dispose();
 			runtime.edgeMaterial.dispose();
 		});
@@ -169,19 +268,39 @@
 		currentModel = model;
 
 		const wallGuide = modelWallGuide(model);
-		const grouped = new Map<string, { key: PartKey; movesWithWallTop: boolean; stretchesWithWall: boolean; faces: FaceRecord[] }>();
+		if (model.runtimeScene) {
+			buildIndexedRuntimeModel(model, wallGuide);
+			fitGround();
+			fitCamera();
+			applyEditTransform();
+			refreshSurfaceMaterials();
+			buildOverlays();
+			return;
+		}
+		const grouped = new Map<
+			string,
+			{ key: PartKey; baseColor?: string; textureName?: string; movesWithWallTop: boolean; stretchesWithWall: boolean; faces: FaceRecord[] }
+		>();
 		model.faces.forEach((face) => {
 			const stretchesWithWall = faceStretchesWithWall(face, wallGuide);
 			const movesWithWallTop = !stretchesWithWall && faceMovesWithWallTop(face, wallGuide);
-			const groupKey = `${face.partKey}:${stretchesWithWall ? 'stretch' : movesWithWallTop ? 'top' : 'base'}`;
-			const group = grouped.get(groupKey) || { key: face.partKey, movesWithWallTop, stretchesWithWall, faces: [] };
+			const textureName = texturePatternName(face);
+			const groupKey = `${face.partKey}:${face.color || 'default'}:${textureName || 'flat'}:${stretchesWithWall ? 'stretch' : movesWithWallTop ? 'top' : 'base'}`;
+			const group = grouped.get(groupKey) || {
+				key: face.partKey,
+				baseColor: face.color,
+				textureName,
+				movesWithWallTop,
+				stretchesWithWall,
+				faces: []
+			};
 			group.faces.push(face);
 			grouped.set(groupKey, group);
 		});
 
-		grouped.forEach(({ key, movesWithWallTop, stretchesWithWall, faces }) => {
+		grouped.forEach(({ key, baseColor, textureName, movesWithWallTop, stretchesWithWall, faces }) => {
 			const geometry = geometryFromFaces(faces);
-			const material = makeSurfaceMaterial(key);
+			const material = makeSurfaceMaterial(key, baseColor, textureName);
 			const mesh = new Mesh(geometry, material);
 			mesh.name = key;
 			mesh.frustumCulled = true;
@@ -189,16 +308,20 @@
 			const edgeMaterial = new LineBasicMaterial({
 				color: '#27333a',
 				transparent: true,
-				opacity: key === 'floor' || key === 'ceiling' ? 0.08 : 0.2
+				opacity: defaultEdgeVisible(key) ? 0.2 : 0.08
 			});
 			const edges = new LineSegments(edgeGeometry, edgeMaterial);
 			edges.frustumCulled = true;
+			edges.visible = defaultEdgeVisible(key);
 			root.add(mesh);
 			root.add(edges);
 			runtimes.push({
 				key,
+				baseColor,
+				textureName,
 				mesh,
 				edges,
+				edgeGeometry,
 				material,
 				edgeMaterial,
 				baseY: Math.min(...faces.map((face) => face.bounds.min.y)),
@@ -215,31 +338,246 @@
 		buildOverlays();
 	}
 
+	function buildIndexedRuntimeModel(sourceModel: ParsedBuildingModel, wallGuide: ReturnType<typeof modelWallGuide>) {
+		if (!sourceModel.runtimeScene) return;
+		const groups = buildRuntimeGeometryGroups(sourceModel.runtimeScene, runtimePartOverrides(sourceModel.faces));
+		groups.forEach((group) => {
+			const material = makeSurfaceMaterial(group.key, group.baseColor, group.textureName);
+			const mesh = new InstancedMesh(group.geometry, material, group.matrices.length);
+			group.matrices.forEach((matrix, index) => mesh.setMatrixAt(index, matrix));
+			mesh.instanceMatrix.needsUpdate = true;
+			mesh.computeBoundingBox();
+			mesh.computeBoundingSphere();
+			mesh.name = `${group.key}:bome2:${group.sourceMeshIndex}`;
+			mesh.frustumCulled = true;
+
+			const edges = new Group();
+			edges.name = `${mesh.name}:edges-omitted-for-instancing`;
+			const edgeMaterial = new LineBasicMaterial({
+				color: '#27333a',
+				transparent: true,
+				opacity: 0
+			});
+			root.add(mesh);
+			root.add(edges);
+
+			const relatedFaces = sourceModel.faces.filter((face) => face.partKey === group.key);
+			const stretchesWithWall = relatedFaces.some((face) => faceStretchesWithWall(face, wallGuide));
+			const movesWithWallTop = !stretchesWithWall && relatedFaces.some((face) => faceMovesWithWallTop(face, wallGuide));
+			runtimes.push({
+				key: group.key,
+				baseColor: group.baseColor,
+				textureName: group.textureName,
+				mesh,
+				edges,
+				material,
+				edgeMaterial,
+				baseY: group.baseY,
+				topY: group.topY,
+				movesWithWallTop,
+				stretchesWithWall
+			});
+		});
+	}
+
 	function geometryFromFaces(faces: FaceRecord[]) {
 		const positions: number[] = [];
+		const uvs: number[] = [];
 		faces.forEach((face) => {
 			if (face.vertices.length < 3) return;
-			const first = face.vertices[0];
-			for (let index = 1; index < face.vertices.length - 1; index += 1) {
-				const second = face.vertices[index];
-				const third = face.vertices[index + 1];
-				positions.push(first.x, first.y, first.z);
-				positions.push(second.x, second.y, second.z);
-				positions.push(third.x, third.y, third.z);
+			if (!face.holes.length && face.vertices.length === 3) {
+				face.vertices.forEach((source) => {
+					positions.push(source.x, source.y, source.z);
+					const uv = faceUv(source, face);
+					uvs.push(uv.x, uv.y);
+				});
+				return;
 			}
+			const { contour, holes, points } = projectFaceTo2d(face);
+			const triangles = ShapeUtils.triangulateShape(contour, holes);
+			triangles.forEach((triangle) => {
+				triangle.forEach((index) => {
+					const source = points[index];
+					if (source) {
+						positions.push(source.x, source.y, source.z);
+						const uv = faceUv(source, face);
+						uvs.push(uv.x, uv.y);
+					}
+				});
+			});
 		});
 		const geometry = new BufferGeometry();
 		geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
+		geometry.setAttribute('uv', new Float32BufferAttribute(uvs, 2));
 		geometry.computeVertexNormals();
 		geometry.computeBoundingBox();
 		geometry.computeBoundingSphere();
 		return geometry;
 	}
 
-	function makeSurfaceMaterial(key: PartKey) {
-		const visual = partVisual(key);
+	function faceUv(point: FaceRecord['vertices'][number], face: FaceRecord) {
+		const normal = faceNormal(face.vertices);
+		const x = Math.abs(normal.x);
+		const y = Math.abs(normal.y);
+		const z = Math.abs(normal.z);
+		const scale = textureUvScale(texturePatternName(face));
+		if (y >= x && y >= z) return { x: point.x * scale, y: point.z * scale };
+		if (x >= z) return { x: point.z * scale, y: point.y * scale };
+		return { x: point.x * scale, y: point.y * scale };
+	}
+
+	function faceNormal(vertices: FaceRecord['vertices']) {
+		const normal = new Vector3();
+		for (let index = 0; index < vertices.length; index += 1) {
+			const current = vertices[index];
+			const next = vertices[(index + 1) % vertices.length];
+			normal.x += (current.y - next.y) * (current.z + next.z);
+			normal.y += (current.z - next.z) * (current.x + next.x);
+			normal.z += (current.x - next.x) * (current.y + next.y);
+		}
+		return normal.normalize();
+	}
+
+	function projectFaceTo2d(face: FaceRecord) {
+		const normal = faceNormal(face.vertices);
+		const axis =
+			Math.abs(normal.x) >= Math.abs(normal.y) && Math.abs(normal.x) >= Math.abs(normal.z)
+				? 'x'
+				: Math.abs(normal.y) >= Math.abs(normal.z)
+					? 'y'
+					: 'z';
+		const points: FaceRecord['vertices'] = [];
+		const project = (source: FaceRecord['vertices'][number]) => {
+			const point =
+				axis === 'x' ? new Vector2(source.z, source.y) : axis === 'y' ? new Vector2(source.x, source.z) : new Vector2(source.x, source.y);
+			points.push(source);
+			return point;
+		};
+		const contour = face.vertices.map(project);
+		const holes = face.holes.map((loop) => loop.map(project));
+		return {
+			contour,
+			holes,
+			points
+		};
+	}
+
+	function texturePatternName(face: FaceRecord) {
+		const name = `${face.textureName || ''} ${face.name || ''}`.toLowerCase();
+		if (name.match(/shingle|roofing/) || face.partKey === 'roof') return 'roof-shingles';
+		if (name.match(/siding|cladding|weatherboard|lap/)) return 'wall-siding';
+		if (name.match(/brick|masonry|paver|paving/)) return 'brick';
+		if (name.match(/concrete|cement|plaster/)) return 'concrete';
+		return undefined;
+	}
+
+	function textureUvScale(textureName?: string) {
+		if (textureName === 'roof-shingles') return 1.25;
+		if (textureName === 'wall-siding') return 0.95;
+		if (textureName === 'brick') return 2.1;
+		return 1;
+	}
+
+	function proceduralTexture(textureName: string | undefined, key: PartKey) {
+		if (!textureName) return null;
+		const cacheKey = `${key}:${textureName}`;
+		const cached = patternTextures.get(cacheKey);
+		if (cached) return cached;
+
+		const canvas = document.createElement('canvas');
+		canvas.width = 256;
+		canvas.height = 256;
+		const ctx = canvas.getContext('2d');
+		if (!ctx) return null;
+
+		drawPattern(ctx, textureName, key);
+		const texture = new CanvasTexture(canvas);
+		texture.wrapS = RepeatWrapping;
+		texture.wrapT = RepeatWrapping;
+		texture.anisotropy = 8;
+		patternTextures.set(cacheKey, texture);
+		return texture;
+	}
+
+	function drawPattern(ctx: CanvasRenderingContext2D, textureName: string, key: PartKey) {
+		ctx.clearRect(0, 0, 256, 256);
+		if (textureName === 'roof-shingles') {
+			ctx.fillStyle = '#5a5750';
+			ctx.fillRect(0, 0, 256, 256);
+			for (let y = 0; y < 270; y += 18) {
+				ctx.strokeStyle = y % 36 === 0 ? '#222323' : '#343536';
+				ctx.lineWidth = 1.2;
+				ctx.beginPath();
+				ctx.moveTo(0, y);
+				ctx.lineTo(256, y);
+				ctx.stroke();
+				const offset = (Math.floor(y / 18) % 2) * 11;
+				for (let x = -22; x < 278; x += 22) {
+					ctx.beginPath();
+					ctx.arc(x + offset + 11, y, 11, 0, Math.PI);
+					ctx.stroke();
+				}
+			}
+			return;
+		}
+
+		if (textureName === 'wall-siding') {
+			ctx.fillStyle = '#eff1ee';
+			ctx.fillRect(0, 0, 256, 256);
+			for (let y = 8; y < 256; y += 16) {
+				ctx.strokeStyle = '#b6bdbb';
+				ctx.lineWidth = 2;
+				ctx.beginPath();
+				ctx.moveTo(0, y);
+				ctx.lineTo(256, y);
+				ctx.stroke();
+				ctx.strokeStyle = '#ffffff';
+				ctx.lineWidth = 1;
+				ctx.beginPath();
+				ctx.moveTo(0, y + 2);
+				ctx.lineTo(256, y + 2);
+				ctx.stroke();
+			}
+			return;
+		}
+
+		if (textureName === 'brick') {
+			ctx.fillStyle = key === 'floor' || key === 'foundation' ? '#ad9697' : '#77503c';
+			ctx.fillRect(0, 0, 256, 256);
+			ctx.strokeStyle = key === 'floor' || key === 'foundation' ? '#806e70' : '#33241f';
+			ctx.lineWidth = 2;
+			for (let y = 0; y <= 256; y += 22) {
+				ctx.beginPath();
+				ctx.moveTo(0, y);
+				ctx.lineTo(256, y);
+				ctx.stroke();
+				const offset = (Math.floor(y / 22) % 2) * 22;
+				for (let x = -offset; x <= 256; x += 44) {
+					ctx.beginPath();
+					ctx.moveTo(x, y);
+					ctx.lineTo(x, y + 22);
+					ctx.stroke();
+				}
+			}
+			return;
+		}
+
+		ctx.fillStyle = '#d8d8d4';
+		ctx.fillRect(0, 0, 256, 256);
+		for (let index = 0; index < 900; index += 1) {
+			const x = (index * 47) % 256;
+			const y = (index * 89) % 256;
+			const value = 184 + ((index * 17) % 34);
+			ctx.fillStyle = `rgb(${value}, ${value}, ${value - 2})`;
+			ctx.fillRect(x, y, 1, 1);
+		}
+	}
+
+	function makeSurfaceMaterial(key: PartKey, baseColor?: string, textureName?: string) {
+		const visual = partVisual(key, baseColor);
 		return new MeshStandardMaterial({
-			color: visual.color,
+			color: textureName ? '#ffffff' : visual.color,
+			map: proceduralTexture(textureName, key),
 			roughness: 0.88,
 			metalness: 0.02,
 			transparent: visual.opacity < 1,
@@ -249,11 +587,11 @@
 		});
 	}
 
-	function partVisual(key: PartKey) {
-		const base = PART_META[key]?.color || PART_META.other.color;
+	function partVisual(key: PartKey, baseColor?: string) {
+		const base = baseColor || PART_META[key]?.color || PART_META.other.color;
 		const kind = result?.kind || activeAnalysis;
 		let color = base;
-		let opacity = 0.92;
+		let opacity = 1;
 
 		if (result) {
 			opacity = 0.34;
@@ -282,19 +620,24 @@
 		return { color, opacity };
 	}
 
+	function defaultEdgeVisible(key: PartKey) {
+		return !['walls', 'floor', 'ceiling', 'roof'].includes(key);
+	}
+
 	function refreshSurfaceMaterials() {
 		const visible = new Set(visiblePartKeys.length ? visiblePartKeys : model?.partStats.map((part) => part.key));
 		runtimes.forEach((runtime) => {
-			const visual = partVisual(runtime.key);
+			const visual = partVisual(runtime.key, runtime.baseColor);
 			const isVisible = visible.has(runtime.key);
 			runtime.mesh.visible = isVisible;
-			runtime.edges.visible = isVisible && (runtime.key !== 'floor' || Boolean(result));
-			runtime.material.color.set(visual.color);
+			runtime.edges.visible = isVisible && (Boolean(result) || defaultEdgeVisible(runtime.key));
+			runtime.material.color.set(!result && runtime.textureName ? '#ffffff' : visual.color);
+			runtime.material.map = result ? null : proceduralTexture(runtime.textureName, runtime.key);
 			runtime.material.opacity = visual.opacity;
 			runtime.material.transparent = visual.opacity < 1;
 			runtime.material.depthWrite = visual.opacity > 0.35;
 			runtime.material.needsUpdate = true;
-			runtime.edgeMaterial.opacity = result ? 0.28 : runtime.key === 'floor' || runtime.key === 'ceiling' ? 0.08 : 0.2;
+			runtime.edgeMaterial.opacity = result ? 0.28 : defaultEdgeVisible(runtime.key) ? 0.2 : 0.08;
 		});
 	}
 
@@ -331,7 +674,7 @@
 	}
 
 	function scalesWithArea(key: PartKey) {
-		return key === 'floor' || key === 'walls' || key === 'ceiling' || key === 'openings';
+		return key === 'floor' || key === 'walls' || key === 'ceiling' || key === 'doors' || key === 'windows' || key === 'openings';
 	}
 
 	function setRuntimeTransform(runtime: PartRuntime, scale: [number, number, number], position: [number, number, number]) {
@@ -342,28 +685,10 @@
 	}
 
 	function applyEditTransform() {
-		if (!model) return;
-		const activeSpaces = spaces.length ? spaces : model.spaces;
-		const detectedArea = totalSpaceArea(model.spaces, 'detectedAreaM2') || totalSpaceArea(model.spaces, 'areaM2') || 1;
-		const editedArea = totalSpaceArea(activeSpaces, 'areaM2') || detectedArea;
-		const detectedHeight = averageSpaceHeight(model.spaces, 'detectedHeightM') || averageSpaceHeight(model.spaces, 'heightM') || 1;
-		const editedHeight = averageSpaceHeight(activeSpaces, 'heightM') || detectedHeight;
-		const areaScale = clamp(Math.sqrt(editedArea / detectedArea), 0.35, 2.5);
-		const wallGuide = modelWallGuide(model);
-		const targetWallTopY = wallGuide ? wallGuide.baseY + editedHeight : model.bounds.min.y + editedHeight;
-		const wallTopLift = wallGuide ? targetWallTopY - wallGuide.topY : 0;
-		const center = model.bounds.center;
-
 		root.scale.set(1, 1, 1);
 		root.position.set(0, 0, 0);
 		runtimes.forEach((runtime) => {
-			const xzScale = scalesWithArea(runtime.key) ? areaScale : 1;
-			const shouldStretchY = runtime.key === 'walls' || runtime.stretchesWithWall;
-			const yScale = shouldStretchY ? clamp((targetWallTopY - runtime.baseY) / Math.max(runtime.topY - runtime.baseY, 0.001), 0.35, 2.5) : 1;
-			const x = center.x * (1 - xzScale);
-			const y = shouldStretchY ? runtime.baseY * (1 - yScale) : runtime.movesWithWallTop ? wallTopLift : 0;
-			const z = center.z * (1 - xzScale);
-			setRuntimeTransform(runtime, [xzScale, yScale, xzScale], [x, y, z]);
+			setRuntimeTransform(runtime, [1, 1, 1], [0, 0, 0]);
 		});
 	}
 
@@ -382,6 +707,10 @@
 
 	function fitCamera() {
 		if (!camera || !controls || !model) return;
+		if (qaMode && qaCamera) {
+			applyQaCamera();
+			return;
+		}
 		const size = model.bounds.size;
 		const center = model.bounds.center;
 		const span = Math.max(size.x, size.y, size.z, 6);
@@ -490,6 +819,8 @@
 		resizeObserver?.disconnect();
 		controls?.dispose();
 		clearModel();
+		patternTextures.forEach((texture) => texture.dispose());
+		patternTextures.clear();
 		ground?.geometry.dispose();
 		const groundMaterial = ground?.material;
 		if (groundMaterial && !Array.isArray(groundMaterial)) groundMaterial.dispose();
@@ -515,6 +846,15 @@
 	$effect(() => {
 		spaces;
 		if (mounted) applyEditTransform();
+	});
+
+	$effect(() => {
+		qaMode;
+		qaCamera;
+		if (mounted) {
+			if (ground) ground.visible = !qaMode;
+			if (qaMode && qaCamera) applyQaCamera();
+		}
 	});
 </script>
 

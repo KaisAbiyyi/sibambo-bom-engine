@@ -16,10 +16,12 @@
 		getTotalArea,
 		getTotalVolume,
 		parseBomModelJson,
+		readBomModelData,
 		runAnalysis,
 		type AnalysisKind,
 		type AnalysisResult,
 		type BomModelJson,
+		type FaceRecord,
 		type PartKey,
 		type ParsedBuildingModel,
 		type ProjectInputs,
@@ -30,6 +32,11 @@
 		type TouchedInputs,
 		type WindDirection
 	} from '$lib/model';
+	import {
+		sketchUpCaptureToThreeCamera,
+		type QACameraSpec,
+		type SketchUpCameraCapture
+	} from '$lib/render/qa-camera';
 
 	type NumberInputKey = 'peopleCount' | 'operationHours' | 'setPointC' | 'orientationDeg' | 'glassRatio' | 'roomHeightM';
 	type ModelCanvasProps = {
@@ -38,12 +45,25 @@
 		result: AnalysisResult | null;
 		spaces: SpaceZone[];
 		visiblePartKeys: PartKey[];
+		qaMode?: boolean;
+		qaCamera?: QACameraSpec | null;
+		onQaReady?: (payload: {
+			viewName: string;
+			width: number;
+			height: number;
+			runtimeGroups: number;
+			visibleRuntimeGroups: number;
+			visibleRuntimeInstances: number;
+			renderedBounds: { min: { x: number; y: number; z: number }; max: { x: number; y: number; z: number } } | null;
+		}) => void;
 	};
 
 	const SAMPLE_URL = `${import.meta.env.BASE_URL}Model_SBMBOOST_bom_visual_nonPretty-print.json`;
 	const TEMPLATE_KEY = 'model-eval-analysis-template-v1';
-	const MAX_MODEL_FILE_BYTES = 60 * 1024 * 1024;
+	const MAX_MODEL_FILE_BYTES = 80 * 1024 * 1024;
+	const MAX_DECOMPRESSED_MODEL_BYTES = 120 * 1024 * 1024;
 	const MAX_TEMPLATE_BYTES = 512 * 1024;
+	const QA_VIEWS = ['isometric', 'front', 'back', 'left', 'right', 'top'] as const;
 	const analysisOptions = Object.entries(ANALYSIS_META) as Array<[AnalysisKind, (typeof ANALYSIS_META)[AnalysisKind]]>;
 	const roomOptions = Object.entries(ROOM_FUNCTIONS) as Array<[RoomFunctionKey, (typeof ROOM_FUNCTIONS)[RoomFunctionKey]]>;
 	const wallOptions = Object.entries(WALL_PRESETS) as Array<[ProjectInputs['wallMaterial'], (typeof WALL_PRESETS)[ProjectInputs['wallMaterial']]]>;
@@ -81,32 +101,71 @@
 	let touched = $state<TouchedInputs>({});
 	let selectedAnalysis = $state<AnalysisKind>('lighting');
 	let visiblePartKeys = $state<PartKey[]>([]);
+	let selectedInspectionId = $state('');
 	let result = $state<AnalysisResult | null>(null);
 	let isLoading = $state(false);
 	let loadError = $state('');
 	let templateMessage = $state('');
 	let parseMessage = $state('Belum ada model');
 	let ModelCanvasComponent = $state<Component<ModelCanvasProps> | null>(null);
+	let qaMode = $state(false);
+	let qaCamera = $state<QACameraSpec | null>(null);
+	let qaReady = $state(false);
+	let qaMetricsJson = $state('');
+	let qaSlug = $state('');
+	let qaLoadStartedAt = 0;
+	let qaSourceBytes = 0;
 	let readiness = $derived<ReadinessItem[]>(getReadiness(model, inputs, touched));
 	let selectedReadiness = $derived<ReadinessItem | undefined>(readiness.find((item) => item.kind === selectedAnalysis));
 	let presentParts = $derived(model ? model.partStats.filter((part) => part.count > 0) : []);
+	let inspectionFaces = $derived.by<FaceRecord[]>(() => {
+		if (!model) return [];
+		return [...model.faces]
+			.sort((left, right) => {
+				const leftUnknown = left.category === 'unknown' ? 0 : 1;
+				const rightUnknown = right.category === 'unknown' ? 0 : 1;
+				return leftUnknown - rightUnknown || (left.classification?.confidence || 0) - (right.classification?.confidence || 0);
+			})
+			.slice(0, 250);
+	});
+	let inspectionFace = $derived(
+		inspectionFaces.find((face) => face.id === selectedInspectionId) || inspectionFaces[0] || null
+	);
+	let grossHorizontalArea = $derived(
+		model
+			? model.surfaceStats
+					.filter((surface) => surface.key === 'floor' || surface.key === 'ceiling')
+					.reduce((sum, surface) => sum + surface.areaM2, 0)
+			: 0
+	);
 
 	onMount(() => {
 		const stored = localStorage.getItem(TEMPLATE_KEY);
-		if (!stored) return;
-		if (stored.length > MAX_TEMPLATE_BYTES) {
-			localStorage.removeItem(TEMPLATE_KEY);
-			return;
-		}
-		try {
-			const parsed = JSON.parse(stored) as { inputs?: Partial<ProjectInputs> };
-			const safeInputs = sanitizeInputs(parsed.inputs);
-			if (safeInputs) {
-				inputs = { ...inputs, ...safeInputs };
-				templateMessage = 'Template input ditemukan';
+		if (stored) {
+			if (stored.length > MAX_TEMPLATE_BYTES) {
+				localStorage.removeItem(TEMPLATE_KEY);
+			} else {
+				try {
+					const parsed = JSON.parse(stored) as { inputs?: Partial<ProjectInputs> };
+					const safeInputs = sanitizeInputs(parsed.inputs);
+					if (safeInputs) {
+						inputs = { ...inputs, ...safeInputs };
+						templateMessage = 'Template input ditemukan';
+					}
+				} catch {
+					localStorage.removeItem(TEMPLATE_KEY);
+				}
 			}
-		} catch {
-			localStorage.removeItem(TEMPLATE_KEY);
+		}
+		const params = new URLSearchParams(window.location.search);
+		const corpus = params.get('corpus');
+		const format = params.get('format') || 'bome2';
+		qaMode = params.get('qa') === '1';
+		qaSlug = corpus || '';
+		const view = params.get('view') || 'isometric';
+		if (corpus) {
+			if (qaMode) void Promise.all([loadQaCamera(corpus, view), loadCorpus(corpus, format)]);
+			else void loadCorpus(corpus, format);
 		}
 	});
 
@@ -135,7 +194,85 @@
 		}
 	}
 
-	function handleFileChange(event: Event) {
+	async function loadCorpus(slug: string, format: string) {
+		isLoading = true;
+		qaReady = false;
+		qaLoadStartedAt = performance.now();
+		loadError = '';
+		parseMessage = `Load regression corpus ${slug} (${format})...`;
+		try {
+			const response = await fetch(`/api/corpus/${encodeURIComponent(slug)}/${encodeURIComponent(format)}`);
+			if (!response.ok) throw new Error(`Corpus tidak bisa dibaca: ${response.status}`);
+			const bytes = await response.arrayBuffer();
+			qaSourceBytes = bytes.byteLength;
+			const filename = response.headers.get('x-bom-corpus-file') || `${slug}.${format}.gz`;
+			const file = new File([bytes], filename, { type: response.headers.get('content-type') || 'application/octet-stream' });
+			const data = await readBomModelData(file, MAX_DECOMPRESSED_MODEL_BYTES);
+			acceptModel(data, filename);
+		} catch (error) {
+			loadError = error instanceof Error ? error.message : 'Gagal load regression corpus';
+			if (qaMode) {
+				(window as Window & { __BOM_QA__?: unknown }).__BOM_QA__ = { status: 'error', error: loadError };
+			}
+		} finally {
+			isLoading = false;
+		}
+	}
+
+	async function loadQaCamera(slug: string, view: string) {
+		try {
+			const response = await fetch(`/api/corpus/${encodeURIComponent(slug)}/camera/${encodeURIComponent(view)}`);
+			if (!response.ok) throw new Error(`Camera metadata tidak bisa dibaca: ${response.status}`);
+			const payload = (await response.json()) as { capture: SketchUpCameraCapture; backgroundColor?: string };
+			qaCamera = sketchUpCaptureToThreeCamera(payload.capture, payload.backgroundColor);
+		} catch (error) {
+			loadError = error instanceof Error ? error.message : 'Gagal load camera QA';
+			(window as Window & { __BOM_QA__?: unknown }).__BOM_QA__ = { status: 'error', error: loadError };
+		}
+	}
+
+	function switchQaView(event: Event) {
+		const view = (event.currentTarget as HTMLSelectElement).value;
+		if (!qaSlug || !QA_VIEWS.includes(view as (typeof QA_VIEWS)[number])) return;
+		qaReady = false;
+		qaMetricsJson = '';
+		qaLoadStartedAt = performance.now();
+		void loadQaCamera(qaSlug, view);
+	}
+
+	function handleQaReady(payload: {
+		viewName: string;
+		width: number;
+		height: number;
+		runtimeGroups: number;
+		visibleRuntimeGroups: number;
+		visibleRuntimeInstances: number;
+		renderedBounds: { min: { x: number; y: number; z: number }; max: { x: number; y: number; z: number } } | null;
+	}) {
+		qaReady = true;
+		const memory = (performance as Performance & { memory?: { usedJSHeapSize?: number } }).memory;
+		const metrics = {
+			status: 'ready',
+			slug: qaSlug,
+			view: payload.viewName,
+			viewport: { width: payload.width, height: payload.height },
+			expectedViewport: qaCamera?.viewport,
+			camera: qaCamera,
+			sourceBytes: qaSourceBytes,
+			faceCount: model?.faceCount || 0,
+			runtimeGroups: payload.runtimeGroups,
+			visibleRuntimeGroups: payload.visibleRuntimeGroups,
+			visibleRuntimeInstances: payload.visibleRuntimeInstances,
+			renderedBounds: payload.renderedBounds,
+			loadToRenderMs: Number((performance.now() - qaLoadStartedAt).toFixed(2)),
+			usedJSHeapBytes: memory?.usedJSHeapSize || null,
+			warnings: model?.warnings || []
+		};
+		qaMetricsJson = JSON.stringify(metrics);
+		(window as Window & { __BOM_QA__?: unknown }).__BOM_QA__ = metrics;
+	}
+
+	async function handleFileChange(event: Event) {
 		const file = (event.currentTarget as HTMLInputElement).files?.[0];
 		if (!file) return;
 		if (file.size > MAX_MODEL_FILE_BYTES) {
@@ -146,27 +283,24 @@
 		isLoading = true;
 		loadError = '';
 		parseMessage = `Membaca ${file.name}...`;
-		const reader = new FileReader();
-		reader.onload = () => {
-			try {
-				const data = JSON.parse(String(reader.result)) as BomModelJson;
-				acceptModel(data, file.name);
-			} catch (error) {
-				loadError = error instanceof Error ? error.message : 'JSON tidak valid';
-			} finally {
-				isLoading = false;
-				if (fileInput) fileInput.value = '';
-			}
-		};
-		reader.onerror = () => {
-			loadError = 'File tidak bisa dibaca';
+		try {
+			const data = await readBomModelData(file, MAX_DECOMPRESSED_MODEL_BYTES);
+			acceptModel(data, file.name);
+		} catch (error) {
+			loadError = error instanceof Error ? error.message : 'JSON tidak valid';
+		} finally {
 			isLoading = false;
-		};
-		reader.readAsText(file);
+			if (fileInput) fileInput.value = '';
+		}
 	}
 
 	function acceptModel(data: BomModelJson, name: string) {
 		model = parseBomModelJson(data, name, inputs.roomHeightM);
+		selectedInspectionId = [...model.faces].sort((left, right) => {
+			const leftUnknown = left.category === 'unknown' ? 0 : 1;
+			const rightUnknown = right.category === 'unknown' ? 0 : 1;
+			return leftUnknown - rightUnknown || (left.classification?.confidence || 0) - (right.classification?.confidence || 0);
+		})[0]?.id || '';
 		void ensureModelCanvas();
 		spaces = model.spaces.map((space) => ({ ...space }));
 		visiblePartKeys = model.partStats.map((part) => part.key);
@@ -175,6 +309,10 @@
 		else inputs = { ...inputs, roomHeightM: detectedHeight };
 		result = null;
 		parseMessage = `${format(model.faceCount)} face terbaca dari ${name}`;
+	}
+
+	function selectInspection(event: Event) {
+		selectedInspectionId = (event.currentTarget as HTMLSelectElement).value;
 	}
 
 	function averageRoomHeight(rows: SpaceZone[]) {
@@ -273,7 +411,8 @@
 		if (key === 'roof_slope') return 'roof';
 		if (key === 'floor') return 'floor';
 		if (key === 'ceiling') return 'ceiling';
-		if (key === 'door' || key === 'window') return 'openings';
+		if (key === 'door') return 'doors';
+		if (key === 'window') return 'windows';
 		if (key === 'structure') return 'structure';
 		if (key === 'furniture') return 'furniture';
 		return 'other';
@@ -433,7 +572,18 @@
 	<title>Model Evaluation</title>
 </svelte:head>
 
-<main class="app-shell">
+<main
+	class="app-shell"
+	class:qa-mode={qaMode}
+	data-qa-status={qaReady ? 'ready' : qaMode ? 'loading' : 'interactive'}
+	data-qa-metrics={qaMetricsJson || undefined}
+	style={qaMode && qaCamera ? `--qa-width:${qaCamera.viewport.width}px;--qa-height:${qaCamera.viewport.height}px` : undefined}
+>
+	{#if qaMode}
+		<select class="qa-view-selector" aria-label="QA matched view" value={qaCamera?.viewName || ''} onchange={switchQaView}>
+			{#each QA_VIEWS as view}<option value={view}>{view}</option>{/each}
+		</select>
+	{/if}
 	<aside class="left-panel">
 		<section class="panel-block upload-block">
 			<div>
@@ -445,7 +595,7 @@
 				<button class="primary-button" type="button" onclick={() => fileInput.click()}>Upload JSON</button>
 				<button class="ghost-button" type="button" onclick={loadSample} disabled={isLoading}>Load sample</button>
 			</div>
-			<input bind:this={fileInput} accept=".json,application/json" hidden type="file" onchange={handleFileChange} />
+			<input bind:this={fileInput} accept=".json,.json.gz,.bome,.bome.gz,.bome2,.bome2.gz,application/json,application/gzip,application/octet-stream" hidden type="file" onchange={handleFileChange} />
 			{#if isLoading}
 				<p class="status-line">Parsing model...</p>
 			{/if}
@@ -462,7 +612,8 @@
 				</div>
 				<div class="metric-grid">
 					<div><strong>{spaces.length}</strong><span>ruang/zona</span></div>
-					<div><strong>{format(getTotalArea(spaces), 1)}</strong><span>m2 area</span></div>
+					<div><strong>{format(getTotalArea(spaces), 1)}</strong><span>m2 ruang terdeteksi</span></div>
+					<div><strong>{format(grossHorizontalArea, 1)}</strong><span>m2 horizontal gross</span></div>
 					<div><strong>{format(getTotalVolume(spaces), 1)}</strong><span>m3 volume</span></div>
 					<div><strong>{format(model.faceCount)}</strong><span>face</span></div>
 					<div><strong>{model.components.doors}</strong><span>pintu</span></div>
@@ -507,6 +658,79 @@
 				{/if}
 			</section>
 
+			<section class="panel-block classifier-inspector">
+				<div class="section-heading">
+					<h2>Classifier Debug</h2>
+					<span>{inspectionFace?.classification?.ruleBankVersion || 'no trace'}</span>
+				</div>
+				<div class="category-grid">
+					{#each model.categoryStats as category}
+						<div class:unknown-category={category.key === 'unknown'} class="category-chip">
+							<strong>{format(category.count)}</strong>
+							<span>{category.label}</span>
+						</div>
+					{/each}
+				</div>
+				<label class="field inspector-select">
+					<span>Face trace — unknown dan confidence rendah lebih dulu</span>
+					<select value={inspectionFace?.id || ''} onchange={selectInspection}>
+						{#each inspectionFaces as face}
+							<option value={face.id}>
+								{face.category || 'unknown'} · {Math.round((face.classification?.confidence || 0) * 100)}% · {face.name || face.id}
+							</option>
+						{/each}
+					</select>
+					<small>Maksimum 250 face untuk menjaga DOM tetap ringan.</small>
+				</label>
+				{#if inspectionFace?.classification}
+					{@const trace = inspectionFace.classification}
+					<div class="trace-final">
+						<div><span>Kategori akhir</span><strong>{trace.category}</strong></div>
+						<div><span>Confidence</span><strong>{Math.round(trace.confidence * 100)}%</strong></div>
+					</div>
+					<p class="trace-explanation">{trace.explanation}</p>
+					<div class="trace-block">
+						<strong>Seluruh kandidat</strong>
+						{#if trace.candidates.length}
+							{#each trace.candidates as candidate}
+								<div class="candidate-row">
+									<span>{candidate.category}</span>
+									<code>{candidate.score.toFixed(3)} / {candidate.threshold.toFixed(3)}</code>
+								</div>
+							{/each}
+						{:else}
+							<span class="muted small">Tidak ada kandidat.</span>
+						{/if}
+					</div>
+					<details open class="trace-block">
+						<summary>Rule aktif ({trace.activatedRules.length})</summary>
+						<ul class="trace-list">
+							{#each trace.activatedRules as rule}<li><code>{rule}</code></li>{/each}
+						</ul>
+					</details>
+					<details class="trace-block">
+						<summary>Evidence mendukung ({trace.supportingEvidence.length})</summary>
+						<ul class="trace-list">
+							{#each trace.supportingEvidence as evidence}
+								<li><code>{evidence.key}</code> — {evidence.detail}</li>
+							{/each}
+						</ul>
+					</details>
+					<details class="trace-block">
+						<summary>Evidence menolak ({trace.rejectingEvidence.length})</summary>
+						<ul class="trace-list">
+							{#each trace.rejectingEvidence as evidence}
+								<li><code>{evidence.key}</code> — {evidence.detail}</li>
+							{/each}
+						</ul>
+					</details>
+					<p class="conflict-box"><strong>Conflict resolution:</strong> {trace.conflictResolution}</p>
+					{#if trace.unknownReason}
+						<p class="unknown-box"><strong>Unknown:</strong> {trace.unknownReason}</p>
+					{/if}
+				{/if}
+			</section>
+
 			<section class="panel-block">
 				<div class="section-heading">
 					<h2>Kesiapan</h2>
@@ -537,7 +761,7 @@
 
 	<section class="stage-panel">
 		{#if ModelCanvasComponent}
-			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} activeAnalysis={selectedAnalysis} {result} />
+			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} activeAnalysis={selectedAnalysis} {result} {qaMode} {qaCamera} onQaReady={handleQaReady} />
 		{:else}
 			<div class="model-stage-placeholder">
 				<strong>JSON belum dimuat</strong>
@@ -993,6 +1217,157 @@
 		display: grid;
 		gap: 7px;
 		margin-top: 12px;
+	}
+
+	.app-shell.qa-mode {
+		display: block;
+		width: var(--qa-width, 100vw);
+		height: var(--qa-height, 100vh);
+		min-height: var(--qa-height, 100vh);
+		overflow: hidden;
+	}
+
+	.app-shell.qa-mode > .left-panel,
+	.app-shell.qa-mode > .right-panel,
+	.app-shell.qa-mode .stage-hud {
+		display: none;
+	}
+
+	.app-shell.qa-mode > .stage-panel {
+		width: var(--qa-width, 100vw);
+		height: var(--qa-height, 100vh);
+		min-height: var(--qa-height, 100vh);
+	}
+
+	.qa-view-selector {
+		position: absolute;
+		top: 0;
+		left: 0;
+		z-index: 20;
+		width: 1px;
+		height: 1px;
+		opacity: 0;
+	}
+
+	.classifier-inspector {
+		display: grid;
+		gap: 12px;
+	}
+
+	.classifier-inspector .section-heading,
+	.classifier-inspector .field {
+		margin-bottom: 0;
+	}
+
+	.classifier-inspector .section-heading span {
+		max-width: 150px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.category-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 5px;
+		max-height: 156px;
+		overflow-y: auto;
+	}
+
+	.category-chip {
+		display: flex;
+		justify-content: space-between;
+		gap: 6px;
+		padding: 5px 7px;
+		border: 1px solid #e1e9e6;
+		border-radius: 5px;
+		background: #f8fbfa;
+		font-size: 0.7rem;
+	}
+
+	.category-chip span {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.category-chip.unknown-category {
+		border-color: #f3c5bf;
+		background: #fff4f2;
+		color: #9a2c20;
+	}
+
+	.inspector-select select {
+		font-size: 0.75rem;
+	}
+
+	.trace-final {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 7px;
+	}
+
+	.trace-final div {
+		display: grid;
+		gap: 2px;
+		padding: 8px;
+		border-radius: 6px;
+		background: #edf7f4;
+	}
+
+	.trace-final span,
+	.trace-final strong {
+		font-size: 0.75rem;
+	}
+
+	.trace-explanation,
+	.conflict-box,
+	.unknown-box {
+		font-size: 0.75rem;
+		line-height: 1.4;
+	}
+
+	.trace-block {
+		display: grid;
+		gap: 5px;
+		padding-top: 8px;
+		border-top: 1px solid #e4ebe8;
+		font-size: 0.75rem;
+	}
+
+	.trace-block summary {
+		cursor: pointer;
+		font-weight: 800;
+	}
+
+	.trace-list {
+		display: grid;
+		gap: 4px;
+		margin: 2px 0 0;
+		padding-left: 18px;
+		line-height: 1.35;
+	}
+
+	.candidate-row {
+		display: flex;
+		justify-content: space-between;
+		gap: 8px;
+		padding: 4px 6px;
+		border-radius: 4px;
+		background: #f7faf9;
+	}
+
+	.conflict-box,
+	.unknown-box {
+		padding: 8px;
+		border-radius: 5px;
+		background: #f4f7f6;
+	}
+
+	.unknown-box {
+		border: 1px solid #f3c5bf;
+		background: #fff4f2;
+		color: #8f2b20;
 	}
 
 	.result-row,

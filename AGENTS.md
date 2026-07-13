@@ -304,3 +304,95 @@ Use memoization here. Expensive calculation runs every render.
 ## Stop Condition
 
 If user says stop caveman or normal mode, stop applying this style immediately and return to normal professional communication.
+
+## BOM Engine Plugin Index
+
+Folder `bom_engine_plugin/` berisi extension SketchUp Ruby yang mengekspor model atau selection ke JSON BOM Engine. Runtime utama hanya tersedia di SketchUp desktop karena bergantung pada SketchUp Ruby API (`Sketchup`, `UI`, `Geom`).
+
+### Entry dan Alur Utama
+
+1. `bom_engine_plugin/bom_engine_loader.rb`
+   Mendaftarkan `SketchupExtension` bernama BOM Engine Exporter dan memuat `bom_engine/core.rb`.
+2. `bom_engine_plugin/bom_engine/core.rb`
+   Composition root. Mendaftarkan menu/toolbar, membuka dialog, memvalidasi model/selection, menjalankan export, menyimpan last settings, dan mengelola observer.
+3. `bom_engine_plugin/bom_engine/ui_dialog.rb`
+   Membuat `UI::HtmlDialog`, mengirim default path/status selection ke JavaScript, menerima settings JSON, lalu meneruskannya ke `Core.run_export`.
+4. `bom_engine_plugin/bom_engine/ui/export_dialog.html`
+   Seluruh UI dialog dalam satu file HTML/CSS/JS. Settings yang dikirim: `output_path`, `export_level`, `export_textures`, `include_edges`, `include_materials`, `pretty_print`, dan `selection_only`.
+5. `Core.run_export`
+   Membuat `TextureWriter` bila perlu, mengekstrak material, traversal entity tree, menjalankan spatial analysis, membangun payload, menulis tekstur, lalu menulis JSON.
+
+### Modul
+
+| Path | Tanggung jawab |
+| --- | --- |
+| `bom_engine/constants.rb` | Konversi inch ke SI, threshold klasifikasi/opening, batas recursion, feature flags. |
+| `bom_engine/traversal.rb` | Recursive walk untuk Face, Group, ComponentInstance, Edge, Image; compose transform ke world space; ekstrak vertex, UV, material, attribute dictionary, dan dynamic attributes. |
+| `bom_engine/classifier.rb` | Klasifikasi normal menjadi floor, ceiling, roof slope, arah wall, bentuk simplified, dan orientasi facade. |
+| `bom_engine/opening_detector.rb` | Deteksi opening dari inner loop face; estimasi area, width, height, jenis door/window/skylight, dan orientasi facade. |
+| `bom_engine/material_extractor.rb` | Library material model, warna, alpha, type, metadata texture, serta load texture ke `TextureWriter`. |
+| `bom_engine/spatial_analyzer.rb` | Kumpulkan face world-space, bounding box, dimensi bangunan, ringkasan area, opening, facade, room stub, volume, dan geolocation. |
+| `bom_engine/json_builder.rb` | Susun schema JSON v2.0, metadata, units, stats, tags, scenes, definitions, materials, spatial analysis, dan entities sesuai level export. |
+| `bom_engine/texture_exporter.rb` | Tulis texture dari `TextureWriter` ke folder output. |
+| `bom_engine/observer.rb` | `Sketchup::ModelObserver` dengan debounce 1.5 detik untuk live export ke temp JSON. |
+| `bom_engine/logger.rb` | Logging level-based ke SketchUp Ruby Console. |
+| `bom_engine/ui/toolbar_icon.png` | Icon toolbar. |
+| `bom_engine/tests/` | Test classifier, helper traversal, dan integration export; dijalankan dari SketchUp Ruby Console. |
+| `bom_engine_plugin/package.sh` | Package seluruh folder plugin menjadi `.rbz`; membutuhkan shell dengan `zip`. |
+
+### Level Export
+
+| Level | Isi utama |
+| --- | --- |
+| `visual` | Geometry face untuk viewer; payload paling kecil. Opsi full-only di UI diredupkan. |
+| `standard` | Geometry ditambah data material/area/hierarchy dasar. |
+| `full` | UV, material library, texture handling, spatial analysis, tags, scenes, definitions, dan metadata lengkap. |
+
+Output filename selalu diberi suffix level oleh `Core.run_export`, contoh `house_bom.json` menjadi `house_bom_visual.json`.
+
+### Kontrak dan Batas Penting
+
+* SketchUp menyimpan panjang dalam inch. Output geometry dikonversi ke meter.
+* Transform parent dan instance dikomposisikan agar koordinat output berada di world space.
+* Area face harus dihitung dengan `Traversal.world_area_m2(face, transform)`, bukan `face.area` tanpa transform. Non-uniform scale mengubah luas.
+* Normal world-space harus dihitung dari vertex world-space melalui `Traversal.world_normal`; transform vector biasa salah untuk non-uniform scale.
+* Selection export memakai `active_context_transform` supaya entity dalam nested editing context tetap benar.
+* `TextureWriter`, material extraction, dan spatial analysis penuh hanya aktif pada level `full`.
+* `include_materials` mengontrol material array pada payload; `include_edges` diteruskan ke traversal.
+* Export baru default memakai gzip (`compress_output`) dan menghasilkan `*_visual.json.gz`, `*_standard.json.gz`, atau `*_full.json.gz`. Raw JSON masih dapat dipilih dari dialog.
+* Jangan aktifkan pretty-print untuk production. Sample full repo: 49.2 MB pretty, 16.2 MB minified, sekitar 0.66 MB gzip.
+* Face export harus membawa `holes`; renderer yang hanya memakai outer loop akan menutup void/pintu/opening.
+* Face export membawa `mat_color` agar consumer dapat merender warna material tanpa memuat texture bitmap.
+* TextureWriter dibuat melalui `Sketchup.create_texture_writer`, bukan `Sketchup::TextureWriter.new`. Bitmap material ditulis dengan `Texture#write`.
+* Dialog harus tetap `scrollable: true` dan `resizable: true`. HTML memakai viewport `body` dengan `overflow-y: auto`; jangan kembali ke fixed non-scrollable dialog karena menu bawah terpotong pada DPI/skala layar berbeda.
+* Dokumentasi panjang `SKETCHUP_PLUGIN_DEV.md` adalah guide historis. Untuk nama path, signature, dan behavior terkini, source di `bom_engine_plugin/` adalah sumber utama.
+
+### Verifikasi
+
+* Syntax Ruby di luar SketchUp: `ruby -c <file.rb>`.
+* Test runtime harus dijalankan melalui SketchUp Ruby Console karena memakai `Sketchup`, `UI`, dan `Geom`.
+* Setelah perubahan dialog, cek resize horizontal/vertikal, scrollbar saat tinggi diperkecil, layout satu kolom pada lebar sempit, Browse, Cancel, Export, dan selection state.
+
+## Model Eval Index
+
+Folder `model-eval/` adalah SvelteKit + Three.js app untuk upload JSON plugin, inspeksi bagian bangunan, deteksi ruang heuristik, analisis, dan preview 3D.
+
+| Path | Tanggung jawab |
+| --- | --- |
+| `model-eval/src/lib/model.ts` | Schema input, parser recursive entity, konversi axis SketchUp ke Three.js, klasifikasi part, room heuristics, metrik, analisis, dan pembaca `.json`/`.json.gz`. |
+| `model-eval/src/lib/ModelCanvas.svelte` | Three.js scene, triangulasi face, material, camera, controls, visibility, transform hasil edit ruang, dan overlay analisis. |
+| `model-eval/src/routes/+page.svelte` | Upload/sample flow, UI panel, state input, pemilihan part, edit ruang, dan report. |
+| `model-eval/src/lib/model.test.ts` | Regression test parser, room detection, transformed render data, holes, material color, dan gzip input. |
+| `model-eval/static/Model_SBMBOOST_bom_visual_nonPretty-print.json` | Sample historis. Tidak otomatis mencerminkan schema/export terbaru sampai diregenerasi dari SketchUp. |
+
+### Boundary Diagnosis
+
+* Koordinat, transform, `area_m2`, normal, holes, material color, dan hierarchy mentah adalah tanggung jawab plugin.
+* Axis mapping, triangulasi polygon, part classification, room candidate filtering, dan label metrik adalah tanggung jawab `model-eval`.
+* `model-eval` mengubah axis `{x, y, z}` SketchUp menjadi `{x, z, -y}` Three.js.
+* Jangan gunakan triangle fan untuk face SketchUp. Face dapat concave dan punya holes. Gunakan `ShapeUtils.triangulateShape` dengan proyeksi plane dominan.
+* `spaces` adalah ruang hasil heuristik dari polygon lantai yang lolos filter. Total `getTotalArea(spaces)` bukan otomatis total seluruh surface floor SketchUp.
+* `surfaceStats.floor` juga bukan luas bangunan bersih; classifier normal memasukkan semua face horizontal menghadap atas, termasuk slab bertumpuk dan detail komponen.
+* Untuk membandingkan dengan Entity Info SketchUp yang menjumlah sisi atas dan bawah terpilih, gunakan gross horizontal = area `floor` + `ceiling`. Plugin Full menulis `gross_horizontal_area_m2`.
+* Default render memakai `mat_color` atau `material_front.color.hex` jika tersedia; fallback memakai warna kategori part.
+* Verifikasi `model-eval`: `bun test`, `bun run check`, dan `bun run build`.

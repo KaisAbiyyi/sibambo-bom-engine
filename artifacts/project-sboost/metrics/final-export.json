@@ -1,0 +1,96 @@
+{
+  "workflow_version": "1.0.0",
+  "measured_at": "2026-07-12T23:23:31Z",
+  "status": "ok",
+  "plugin_version": "3.0.0",
+  "sketchup_version": "26.2.243",
+  "source_skp": "D:\\projects\\sibambo-bom-engine\\skps\\PROJECT SBOOST !.skp",
+  "source_bytes": 3548875,
+  "source_sha256": "a659761236552b4fa2f7d70882c83d7b1edb9d67e3bc84ae29ff556685684f8c",
+  "source_modified_before": false,
+  "source_modified_after": false,
+  "formats": [
+    {
+      "format": "canonical_v3",
+      "status": "ok",
+      "output_path": "D:/projects/sibambo-bom-engine/artifacts/project-sboost/exported/project-sboost_canonical.json.gz",
+      "output_bytes": 805228,
+      "output_sha256": "fddd6d0cf1f4f33fb2ed6063176124d02a7c6c164ffcc3297c0f4877f99dd2c8",
+      "wall_elapsed_ms": 3062.56,
+      "plugin_elapsed_ms": 2883.0,
+      "heap_live_slots_delta": 349024,
+      "result": {
+        "path": "D:/projects/sibambo-bom-engine/artifacts/project-sboost/exported/project-sboost_canonical.json.gz",
+        "compressed": true,
+        "pretty": false,
+        "bytes": 805228,
+        "uncompressed_bytes": 5860481,
+        "sha256": "fddd6d0cf1f4f33fb2ed6063176124d02a7c6c164ffcc3297c0f4877f99dd2c8",
+        "elapsed_seconds": 2.883,
+        "format": "canonical_v3",
+        "statistics": {
+          "definitions": 115,
+          "meshes": 70,
+          "nodes": 134,
+          "component_instances": 56,
+          "group_instances": 77,
+          "faces": 7092,
+          "unique_vertices": 7296,
+          "materials": 50,
+          "tags": 22,
+          "transforms": 100,
+          "identity_transform_id": 0,
+          "skipped": {
+            "hidden_or_invalid_entity": 340
+          }
+        }
+      },
+      "validation": {
+        "format": "3.0.0",
+        "uncompressed_bytes": 5860481,
+        "meshes": 70,
+        "definitions": 115,
+        "nodes": 134,
+        "materials": 50,
+        "transforms": 100
+      }
+    },
+    {
+      "format": "bome2",
+      "status": "ok",
+      "output_path": "D:/projects/sibambo-bom-engine/artifacts/project-sboost/exported/project-sboost_runtime.bome2.gz",
+      "output_bytes": 308707,
+      "output_sha256": "111d428d95bfdfa9f0fe433e15002a4b5d8ad84ebfbd121fb59a0933fa474f1e",
+      "wall_elapsed_ms": 2628.3,
+      "plugin_elapsed_ms": 2507.0,
+      "heap_live_slots_delta": 258127,
+      "result": {
+        "path": "D:/projects/sibambo-bom-engine/artifacts/project-sboost/exported/project-sboost_runtime.bome2.gz",
+        "compressed": true,
+        "bytes": 308707,
+        "uncompressed_bytes": 2044156,
+        "sha256": "111d428d95bfdfa9f0fe433e15002a4b5d8ad84ebfbd121fb59a0933fa474f1e",
+        "format": "bome2",
+        "meshes": 70,
+        "definitions": 115,
+        "nodes": 134,
+        "instances": 56,
+        "triangles": 13868,
+        "sections": 211,
+        "quantization_max_error_m": 0.000125845768,
+        "elapsed_seconds": 2.507
+      },
+      "validation": {
+        "format": "2.0.0",
+        "meshes": 70,
+        "definitions": 115,
+        "nodes": 134,
+        "instances": 56,
+        "triangles": 13868,
+        "sections": 211,
+        "quantization_max_error_m": 0.000125845768,
+        "uncompressed_bytes": 2044156
+      }
+    }
+  ]
+}

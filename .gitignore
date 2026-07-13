@@ -7,3 +7,18 @@ node_modules/
 dist/
 *.log
 .*-dev.*.log
+
+# End-to-end workflow outputs stay local. Metrics and Markdown reports remain trackable.
+artifacts/**/*.png
+artifacts/**/*.jpg
+artifacts/**/*.jpeg
+artifacts/**/*.bome
+artifacts/**/*.bome.gz
+artifacts/**/*.bome2
+artifacts/**/*.bome2.gz
+artifacts/**/*.glb
+artifacts/**/exported/*.json
+artifacts/**/exported/*.json.gz
+artifacts/_workflow/logs/
+artifacts/_workflow/backups/
+artifacts/_workflow/staging/

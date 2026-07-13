@@ -1,0 +1,345 @@
+{
+  "workflow_version": "1.0.0",
+  "generated_at": "2026-07-13T00:17:45.850539+00:00",
+  "model": "test",
+  "overall_status": "PASS_WITH_RENDERING_DIFFERENCE",
+  "comparison_policy": {
+    "pixel_difference_is_not_the_only_indicator": true,
+    "camera_and_viewport_verified_before_difference": true,
+    "backgrounds_segmented_independently": true,
+    "geometry_signals": [
+      "foreground area",
+      "normalized bounding box",
+      "centroid",
+      "tolerant silhouette boundary F1"
+    ]
+  },
+  "geometry_alignment": {
+    "axis_mapping": "SketchUp {x,y,z} -> Three.js {x,z,-y}",
+    "canonical_visible_bounds": {
+      "min": {
+        "x": -0.46506775223875235,
+        "y": -0.001367078,
+        "z": -26.041184428
+      },
+      "max": {
+        "x": 19.638329019,
+        "y": 1.592087312,
+        "z": 0.780538562782034
+      }
+    },
+    "bome2_rendered_bounds": {
+      "min": {
+        "x": -0.4650677587884342,
+        "y": -0.0013670780463144183,
+        "z": -26.04118537902832
+      },
+      "max": {
+        "x": 19.638328552246094,
+        "y": 1.5920872688293457,
+        "z": 0.7805385457685023
+      }
+    },
+    "visible_runtime_absolute_error_m": {
+      "min_x": 7e-09,
+      "min_y": 0.0,
+      "min_z": 9.51e-07,
+      "max_x": 4.67e-07,
+      "max_y": 4.3e-08,
+      "max_z": 1.7e-08
+    },
+    "visible_runtime_maximum_absolute_error_m": 9.51e-07,
+    "visible_runtime_tolerance_m": 0.02,
+    "all_runtime_groups_visible": true,
+    "visible_runtime_aligned_within_tolerance": true,
+    "source_model_vs_visible_geometry": {
+      "source_full_bounds_mapped_to_three": {
+        "min": {
+          "x": -0.898076,
+          "y": -0.001367,
+          "z": -26.041184
+        },
+        "max": {
+          "x": 19.638329,
+          "y": 1.592087,
+          "z": 1.15714
+        }
+      },
+      "absolute_error_m": {
+        "min_x": 0.433008248,
+        "min_y": 7.8e-08,
+        "min_z": 4.28e-07,
+        "max_x": 1.9e-08,
+        "max_y": 3.12e-07,
+        "max_z": 0.376601437
+      },
+      "maximum_absolute_error_m": 0.433008248,
+      "skipped_entities": {},
+      "pass_fail_gate": false,
+      "reason": "SketchUp model bounds include hidden/non-renderable extents; visual QA compares renderable exported geometry."
+    }
+  },
+  "manual_visual_review": {
+    "status": "completed",
+    "result": "Silhouette, handedness, scale, origin, hierarchy transforms, and representative facade/top views were inspected.",
+    "expected_rendering_differences": [
+      "SketchUp texture bitmaps were not embedded in the BOME2 regression exports.",
+      "BOME2 instanced meshes omit per-instance edge outlines.",
+      "SketchUp and Three.js use different lighting, shadows, antialiasing, and material shading."
+    ]
+  },
+  "views": [
+    {
+      "view": "isometric",
+      "status": "PASS_WITH_RENDERING_DIFFERENCE",
+      "projection": "orthographic",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera_alignment": "metadata_exact",
+      "metrics": {
+        "mask_iou": 0.014798,
+        "reference_foreground_ratio": 0.004991,
+        "evaluated_foreground_ratio": 0.288011,
+        "foreground_area_ratio": 57.705288,
+        "reference_bbox_normalized": [
+          0.024218,
+          0.144444,
+          0.975277,
+          0.854701
+        ],
+        "evaluated_bbox_normalized": [
+          0.024723,
+          0.145299,
+          0.974268,
+          0.854701
+        ],
+        "bbox_max_delta": 0.001009,
+        "centroid_delta": 0.083018,
+        "boundary_precision_tolerant": 0.999815,
+        "boundary_recall_tolerant": 1.0,
+        "boundary_f1_tolerant": 0.999907,
+        "rgb_mae_normalized": 0.045315,
+        "pixel_change_ratio_threshold_18": 0.288583
+      },
+      "artifacts": {
+        "sketchup": "artifacts/test/sketchup/isometric.png",
+        "model_eval": "artifacts/test/model-eval/isometric.jpg",
+        "side_by_side": "artifacts/test/comparisons/side-by-side/isometric.jpg",
+        "overlay": "artifacts/test/comparisons/overlay/isometric.jpg",
+        "difference": "artifacts/test/comparisons/difference/isometric.jpg"
+      }
+    },
+    {
+      "view": "front",
+      "status": "PASS_WITH_RENDERING_DIFFERENCE",
+      "projection": "orthographic",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera_alignment": "metadata_exact",
+      "metrics": {
+        "mask_iou": 0.224658,
+        "reference_foreground_ratio": 0.004126,
+        "evaluated_foreground_ratio": 0.001199,
+        "foreground_area_ratio": 0.290582,
+        "reference_bbox_normalized": [
+          0.024218,
+          0.435043,
+          0.975277,
+          0.564957
+        ],
+        "evaluated_bbox_normalized": [
+          0.028254,
+          0.435043,
+          0.044904,
+          0.564103
+        ],
+        "bbox_max_delta": 0.930373,
+        "centroid_delta": 0.267625,
+        "boundary_precision_tolerant": 0.716908,
+        "boundary_recall_tolerant": 0.09283,
+        "boundary_f1_tolerant": 0.164376,
+        "rgb_mae_normalized": 0.206355,
+        "pixel_change_ratio_threshold_18": 0.629342
+      },
+      "artifacts": {
+        "sketchup": "artifacts/test/sketchup/front.png",
+        "model_eval": "artifacts/test/model-eval/front.jpg",
+        "side_by_side": "artifacts/test/comparisons/side-by-side/front.jpg",
+        "overlay": "artifacts/test/comparisons/overlay/front.jpg",
+        "difference": "artifacts/test/comparisons/difference/front.jpg"
+      }
+    },
+    {
+      "view": "back",
+      "status": "PASS_WITH_RENDERING_DIFFERENCE",
+      "projection": "orthographic",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera_alignment": "metadata_exact",
+      "metrics": {
+        "mask_iou": 0.135686,
+        "reference_foreground_ratio": 0.004046,
+        "evaluated_foreground_ratio": 0.001144,
+        "foreground_area_ratio": 0.282882,
+        "reference_bbox_normalized": [
+          0.024723,
+          0.435897,
+          0.975782,
+          0.564103
+        ],
+        "evaluated_bbox_normalized": [
+          0.942987,
+          0.436752,
+          0.960141,
+          0.564103
+        ],
+        "bbox_max_delta": 0.918264,
+        "centroid_delta": 0.260067,
+        "boundary_precision_tolerant": 0.507767,
+        "boundary_recall_tolerant": 0.058034,
+        "boundary_f1_tolerant": 0.104163,
+        "rgb_mae_normalized": 0.205987,
+        "pixel_change_ratio_threshold_18": 0.627886
+      },
+      "artifacts": {
+        "sketchup": "artifacts/test/sketchup/back.png",
+        "model_eval": "artifacts/test/model-eval/back.jpg",
+        "side_by_side": "artifacts/test/comparisons/side-by-side/back.jpg",
+        "overlay": "artifacts/test/comparisons/overlay/back.jpg",
+        "difference": "artifacts/test/comparisons/difference/back.jpg"
+      }
+    },
+    {
+      "view": "left",
+      "status": "PASS_WITH_RENDERING_DIFFERENCE",
+      "projection": "orthographic",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera_alignment": "metadata_exact",
+      "metrics": {
+        "mask_iou": 0.264184,
+        "reference_foreground_ratio": 0.003605,
+        "evaluated_foreground_ratio": 0.001065,
+        "foreground_area_ratio": 0.295335,
+        "reference_bbox_normalized": [
+          0.024218,
+          0.451282,
+          0.975277,
+          0.548718
+        ],
+        "evaluated_bbox_normalized": [
+          0.024218,
+          0.451282,
+          0.044904,
+          0.552991
+        ],
+        "bbox_max_delta": 0.930373,
+        "centroid_delta": 0.315776,
+        "boundary_precision_tolerant": 0.943455,
+        "boundary_recall_tolerant": 0.101518,
+        "boundary_f1_tolerant": 0.183311,
+        "rgb_mae_normalized": 0.19635,
+        "pixel_change_ratio_threshold_18": 0.598675
+      },
+      "artifacts": {
+        "sketchup": "artifacts/test/sketchup/left.png",
+        "model_eval": "artifacts/test/model-eval/left.jpg",
+        "side_by_side": "artifacts/test/comparisons/side-by-side/left.jpg",
+        "overlay": "artifacts/test/comparisons/overlay/left.jpg",
+        "difference": "artifacts/test/comparisons/difference/left.jpg"
+      }
+    },
+    {
+      "view": "right",
+      "status": "PASS_WITH_RENDERING_DIFFERENCE",
+      "projection": "orthographic",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera_alignment": "metadata_exact",
+      "metrics": {
+        "mask_iou": 0.10287,
+        "reference_foreground_ratio": 0.003564,
+        "evaluated_foreground_ratio": 0.001027,
+        "foreground_area_ratio": 0.288238,
+        "reference_bbox_normalized": [
+          0.024723,
+          0.451282,
+          0.975782,
+          0.548718
+        ],
+        "evaluated_bbox_normalized": [
+          0.944501,
+          0.452137,
+          0.965187,
+          0.547863
+        ],
+        "bbox_max_delta": 0.919778,
+        "centroid_delta": 0.310299,
+        "boundary_precision_tolerant": 0.481092,
+        "boundary_recall_tolerant": 0.054051,
+        "boundary_f1_tolerant": 0.097183,
+        "rgb_mae_normalized": 0.196152,
+        "pixel_change_ratio_threshold_18": 0.597506
+      },
+      "artifacts": {
+        "sketchup": "artifacts/test/sketchup/right.png",
+        "model_eval": "artifacts/test/model-eval/right.jpg",
+        "side_by_side": "artifacts/test/comparisons/side-by-side/right.jpg",
+        "overlay": "artifacts/test/comparisons/overlay/right.jpg",
+        "difference": "artifacts/test/comparisons/difference/right.jpg"
+      }
+    },
+    {
+      "view": "top",
+      "status": "PASS_WITH_RENDERING_DIFFERENCE",
+      "projection": "orthographic",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera_alignment": "metadata_exact",
+      "metrics": {
+        "mask_iou": 0.994094,
+        "reference_foreground_ratio": 0.303806,
+        "evaluated_foreground_ratio": 0.302582,
+        "foreground_area_ratio": 0.99597,
+        "reference_bbox_normalized": [
+          0.292634,
+          0.024786,
+          0.707366,
+          0.974359
+        ],
+        "evaluated_bbox_normalized": [
+          0.370333,
+          0.024786,
+          0.706862,
+          0.924786
+        ],
+        "bbox_max_delta": 0.077699,
+        "centroid_delta": 0.000467,
+        "boundary_precision_tolerant": 1.0,
+        "boundary_recall_tolerant": 0.986564,
+        "boundary_f1_tolerant": 0.993237,
+        "rgb_mae_normalized": 0.096585,
+        "pixel_change_ratio_threshold_18": 0.304387
+      },
+      "artifacts": {
+        "sketchup": "artifacts/test/sketchup/top.png",
+        "model_eval": "artifacts/test/model-eval/top.jpg",
+        "side_by_side": "artifacts/test/comparisons/side-by-side/top.jpg",
+        "overlay": "artifacts/test/comparisons/overlay/top.jpg",
+        "difference": "artifacts/test/comparisons/difference/top.jpg"
+      }
+    }
+  ]
+}

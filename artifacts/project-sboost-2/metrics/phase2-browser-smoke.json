@@ -1,0 +1,9 @@
+{
+  "measured_at": "2026-07-12T22:25:48.444Z",
+  "url": "http://127.0.0.1:5300/?corpus=project-sboost-2&format=bome2",
+  "source": "project-sboost-2_runtime.bome2.gz",
+  "ui_face_count": 25786,
+  "rendered": true,
+  "screenshot": "artifacts/project-sboost-2/model-eval/phase2-bome2-smoke.png",
+  "console_issues": []
+}

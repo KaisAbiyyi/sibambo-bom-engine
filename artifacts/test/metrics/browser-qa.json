@@ -1,0 +1,390 @@
+{
+  "capturedAt": "2026-07-13T00:11:30.285Z",
+  "format": "BOME2",
+  "views": [
+    {
+      "status": "ready",
+      "slug": "test",
+      "view": "isometric",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "isometric",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 41.885212,
+          "y": 25.302088,
+          "z": 19.67136
+        },
+        "target": {
+          "x": 10.257601,
+          "y": 0,
+          "z": -11.956251
+        },
+        "up": {
+          "x": -0.34815531,
+          "y": 0.87038828,
+          "z": -0.34815531
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 20.620843,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#BFBFC6"
+      },
+      "sourceBytes": 32607,
+      "faceCount": 111,
+      "runtimeGroups": 22,
+      "visibleRuntimeGroups": 22,
+      "visibleRuntimeInstances": 22,
+      "renderedBounds": {
+        "min": {
+          "x": -0.4650677587884342,
+          "y": -0.0013670780463144183,
+          "z": -26.04118537902832
+        },
+        "max": {
+          "x": 19.638328552246094,
+          "y": 1.5920872688293457,
+          "z": 0.7805385457685023
+        }
+      },
+      "loadToRenderMs": 428.9,
+      "usedJSHeapBytes": 42573860,
+      "warnings": [
+        "Jendela tidak terdeteksi eksplisit. OTTV memakai rasio kaca input.",
+        "Pintu tidak terdeteksi eksplisit. Flow manusia memakai estimasi zona.",
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "test",
+      "view": "front",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "front",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 9.544101,
+          "y": 0.79536,
+          "z": 37.206515
+        },
+        "target": {
+          "x": 9.544101,
+          "y": 0.79536,
+          "z": -12.70776
+        },
+        "up": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 12.544741,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#BFBFC6"
+      },
+      "sourceBytes": 32607,
+      "faceCount": 111,
+      "runtimeGroups": 22,
+      "visibleRuntimeGroups": 22,
+      "visibleRuntimeInstances": 22,
+      "renderedBounds": {
+        "min": {
+          "x": -0.4650677587884342,
+          "y": -0.0013670780463144183,
+          "z": -26.04118537902832
+        },
+        "max": {
+          "x": 19.638328552246094,
+          "y": 1.5920872688293457,
+          "z": 0.7805385457685023
+        }
+      },
+      "loadToRenderMs": 35.8,
+      "usedJSHeapBytes": 34915505,
+      "warnings": [
+        "Jendela tidak terdeteksi eksplisit. OTTV memakai rasio kaca input.",
+        "Pintu tidak terdeteksi eksplisit. Flow manusia memakai estimasi zona.",
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "test",
+      "view": "back",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "back",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 9.412259,
+          "y": 0.79536,
+          "z": -60.695473
+        },
+        "target": {
+          "x": 9.412259,
+          "y": 0.79536,
+          "z": -12.70776
+        },
+        "up": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 12.70859,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#BFBFC6"
+      },
+      "sourceBytes": 32607,
+      "faceCount": 111,
+      "runtimeGroups": 22,
+      "visibleRuntimeGroups": 22,
+      "visibleRuntimeInstances": 22,
+      "renderedBounds": {
+        "min": {
+          "x": -0.4650677587884342,
+          "y": -0.0013670780463144183,
+          "z": -26.04118537902832
+        },
+        "max": {
+          "x": 19.638328552246094,
+          "y": 1.5920872688293457,
+          "z": 0.7805385457685023
+        }
+      },
+      "loadToRenderMs": 37.8,
+      "usedJSHeapBytes": 35225394,
+      "warnings": [
+        "Jendela tidak terdeteksi eksplisit. OTTV memakai rasio kaca input.",
+        "Pintu tidak terdeteksi eksplisit. Flow manusia memakai estimasi zona.",
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "test",
+      "view": "left",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "left",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 52.585648,
+          "y": 0.79536,
+          "z": -12.615997
+        },
+        "target": {
+          "x": 9.635864,
+          "y": 0.79536,
+          "z": -12.615997
+        },
+        "up": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 16.684337,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#BFBFC6"
+      },
+      "sourceBytes": 32607,
+      "faceCount": 111,
+      "runtimeGroups": 22,
+      "visibleRuntimeGroups": 22,
+      "visibleRuntimeInstances": 22,
+      "renderedBounds": {
+        "min": {
+          "x": -0.4650677587884342,
+          "y": -0.0013670780463144183,
+          "z": -26.04118537902832
+        },
+        "max": {
+          "x": 19.638328552246094,
+          "y": 1.5920872688293457,
+          "z": 0.7805385457685023
+        }
+      },
+      "loadToRenderMs": 36.6,
+      "usedJSHeapBytes": 35528964,
+      "warnings": [
+        "Jendela tidak terdeteksi eksplisit. OTTV memakai rasio kaca input.",
+        "Pintu tidak terdeteksi eksplisit. Flow manusia memakai estimasi zona.",
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "test",
+      "view": "right",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "right",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": -31.805744,
+          "y": 0.79536,
+          "z": -12.484154
+        },
+        "target": {
+          "x": 9.635864,
+          "y": 0.79536,
+          "z": -12.484154
+        },
+        "up": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 16.848187,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#BFBFC6"
+      },
+      "sourceBytes": 32607,
+      "faceCount": 111,
+      "runtimeGroups": 22,
+      "visibleRuntimeGroups": 22,
+      "visibleRuntimeInstances": 22,
+      "renderedBounds": {
+        "min": {
+          "x": -0.4650677587884342,
+          "y": -0.0013670780463144183,
+          "z": -26.04118537902832
+        },
+        "max": {
+          "x": 19.638328552246094,
+          "y": 1.5920872688293457,
+          "z": 0.7805385457685023
+        }
+      },
+      "loadToRenderMs": 20.9,
+      "usedJSHeapBytes": 35109901,
+      "warnings": [
+        "Jendela tidak terdeteksi eksplisit. OTTV memakai rasio kaca input.",
+        "Pintu tidak terdeteksi eksplisit. Flow manusia memakai estimasi zona.",
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "test",
+      "view": "top",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "top",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 9.635864,
+          "y": 54.850535,
+          "z": -12.484154
+        },
+        "target": {
+          "x": 9.635864,
+          "y": 0.79536,
+          "z": -12.484154
+        },
+        "up": {
+          "x": 0,
+          "y": 0,
+          "z": -1
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 28.541116,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#BFBFC6"
+      },
+      "sourceBytes": 32607,
+      "faceCount": 111,
+      "runtimeGroups": 22,
+      "visibleRuntimeGroups": 22,
+      "visibleRuntimeInstances": 22,
+      "renderedBounds": {
+        "min": {
+          "x": -0.4650677587884342,
+          "y": -0.0013670780463144183,
+          "z": -26.04118537902832
+        },
+        "max": {
+          "x": 19.638328552246094,
+          "y": 1.5920872688293457,
+          "z": 0.7805385457685023
+        }
+      },
+      "loadToRenderMs": 27.7,
+      "usedJSHeapBytes": 35382539,
+      "warnings": [
+        "Jendela tidak terdeteksi eksplisit. OTTV memakai rasio kaca input.",
+        "Pintu tidak terdeteksi eksplisit. Flow manusia memakai estimasi zona.",
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    }
+  ]
+}

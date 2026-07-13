@@ -1,0 +1,1949 @@
+{
+  "workflow_version": "1.0.0",
+  "captured_at": "2026-07-12T21:02:33Z",
+  "capture_elapsed_ms": 5954.45,
+  "model": {
+    "source_path": "D:\\projects\\sibambo-bom-engine\\skps\\house2.skp",
+    "source_bytes": 440016,
+    "name": "",
+    "title": "house2",
+    "description": "",
+    "guid": "0e6e6cf6-b5fc-4d8a-aa43-f1d8d1868a58",
+    "sketchup_version": "26.2.243",
+    "sketchup_locale": "en-US",
+    "modified": false,
+    "units": {
+      "length_unit_id": 0,
+      "length_unit_name": "Inches",
+      "length_precision": 4,
+      "length_format": 1,
+      "suppress_units_display": false
+    },
+    "bounds": {
+      "min_m": {
+        "x": -0.4699,
+        "y": -5.740288,
+        "z": 0.0
+      },
+      "max_m": {
+        "x": 6.87705,
+        "y": 9.840502,
+        "z": 6.5659
+      },
+      "size_m": {
+        "x": 7.34695,
+        "y": 15.58079,
+        "z": 6.5659
+      },
+      "width_m": 7.34695,
+      "depth_m": 15.58079,
+      "height_m": 6.5659,
+      "diagonal_m": 18.435014
+    },
+    "axes": {
+      "origin_m": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "x_axis": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      }
+    },
+    "entity_counts_expanded": {
+      "face": 3661,
+      "edge": 8768,
+      "group": 4,
+      "component_instance": 97,
+      "image": 0,
+      "construction_line": 0,
+      "text": 0,
+      "dimension": 0,
+      "other": 0
+    },
+    "top_level_entity_count": 788,
+    "definitions": [
+      {
+        "persistent_id": 6736,
+        "name": "Component#10",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 96,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.9652,
+            "y": 2.1336,
+            "z": 0.0254
+          },
+          "size_m": {
+            "x": 0.9652,
+            "y": 2.1336,
+            "z": 0.0254
+          },
+          "width_m": 0.9652,
+          "depth_m": 2.1336,
+          "height_m": 0.0254,
+          "diagonal_m": 2.341902
+        }
+      },
+      {
+        "persistent_id": 6669,
+        "name": "Component#9",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 4,
+        "entity_count": 46,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8382,
+            "y": 0.0762,
+            "z": 0.0254
+          },
+          "size_m": {
+            "x": 0.8382,
+            "y": 0.0762,
+            "z": 0.0254
+          },
+          "width_m": 0.8382,
+          "depth_m": 0.0762,
+          "height_m": 0.0254,
+          "diagonal_m": 0.84204
+        }
+      },
+      {
+        "persistent_id": 5373,
+        "name": "Component#6",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 47,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.4572,
+            "y": 0.46355,
+            "z": 0.0127
+          },
+          "size_m": {
+            "x": 0.4572,
+            "y": 0.46355,
+            "z": 0.0127
+          },
+          "width_m": 0.4572,
+          "depth_m": 0.46355,
+          "height_m": 0.0127,
+          "diagonal_m": 0.651208
+        }
+      },
+      {
+        "persistent_id": 3633,
+        "name": "DoorKnob",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 58,
+        "bounds": {
+          "min_m": {
+            "x": -0.030701,
+            "y": -0.02905,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.031173,
+            "y": 0.031732,
+            "z": 0.04318
+          },
+          "size_m": {
+            "x": 0.061873,
+            "y": 0.060782,
+            "z": 0.04318
+          },
+          "width_m": 0.061873,
+          "depth_m": 0.060782,
+          "height_m": 0.04318,
+          "diagonal_m": 0.096888
+        }
+      },
+      {
+        "persistent_id": 1784,
+        "name": "Component#3",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 4,
+        "entity_count": 162,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.11099,
+            "y": 0.110988,
+            "z": 0.951984
+          },
+          "size_m": {
+            "x": 0.11099,
+            "y": 0.110988,
+            "z": 0.951984
+          },
+          "width_m": 0.11099,
+          "depth_m": 0.110988,
+          "height_m": 0.951984,
+          "diagonal_m": 0.964837
+        }
+      },
+      {
+        "persistent_id": 2516,
+        "name": "Component#4",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 449,
+        "bounds": {
+          "min_m": {
+            "x": 5.0e-06,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.226531,
+            "y": 0.562526,
+            "z": 1.171133
+          },
+          "size_m": {
+            "x": 0.226525,
+            "y": 0.562526,
+            "z": 1.171133
+          },
+          "width_m": 0.226525,
+          "depth_m": 0.562526,
+          "height_m": 1.171133,
+          "diagonal_m": 1.318826
+        }
+      },
+      {
+        "persistent_id": 7747,
+        "name": "Rim Ring",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 3,
+        "entity_count": 49,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.085725,
+            "y": 0.085725,
+            "z": 0.014305
+          },
+          "size_m": {
+            "x": 0.085725,
+            "y": 0.085725,
+            "z": 0.014305
+          },
+          "width_m": 0.085725,
+          "depth_m": 0.085725,
+          "height_m": 0.014305,
+          "diagonal_m": 0.122074
+        }
+      },
+      {
+        "persistent_id": 6668,
+        "name": "Group#6",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 3,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.9652,
+            "y": 2.1336,
+            "z": 0.0762
+          },
+          "size_m": {
+            "x": 0.9652,
+            "y": 2.1336,
+            "z": 0.0762
+          },
+          "width_m": 0.9652,
+          "depth_m": 2.1336,
+          "height_m": 0.0762,
+          "diagonal_m": 2.343004
+        }
+      },
+      {
+        "persistent_id": 6457,
+        "name": "Group#5",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 3,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.9652,
+            "y": 2.1336,
+            "z": 0.0762
+          },
+          "size_m": {
+            "x": 0.9652,
+            "y": 2.1336,
+            "z": 0.0762
+          },
+          "width_m": 0.9652,
+          "depth_m": 2.1336,
+          "height_m": 0.0762,
+          "diagonal_m": 2.343004
+        }
+      },
+      {
+        "persistent_id": 5372,
+        "name": "Component#8",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 36,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.508,
+            "y": 0.94615,
+            "z": 0.03175
+          },
+          "size_m": {
+            "x": 0.508,
+            "y": 0.94615,
+            "z": 0.03175
+          },
+          "width_m": 0.508,
+          "depth_m": 0.94615,
+          "height_m": 0.03175,
+          "diagonal_m": 1.07437
+        }
+      },
+      {
+        "persistent_id": 5493,
+        "name": "Component#7",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 47,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.016,
+            "y": 0.94615,
+            "z": 0.03175
+          },
+          "size_m": {
+            "x": 1.016,
+            "y": 0.94615,
+            "z": 0.03175
+          },
+          "width_m": 1.016,
+          "depth_m": 0.94615,
+          "height_m": 0.03175,
+          "diagonal_m": 1.388691
+        }
+      },
+      {
+        "persistent_id": 4827,
+        "name": "Lower_sash",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 35,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8128,
+            "y": 0.78105,
+            "z": 0.03175
+          },
+          "size_m": {
+            "x": 0.8128,
+            "y": 0.78105,
+            "z": 0.03175
+          },
+          "width_m": 0.8128,
+          "depth_m": 0.78105,
+          "height_m": 0.03175,
+          "diagonal_m": 1.127693
+        }
+      },
+      {
+        "persistent_id": 4879,
+        "name": "Upper_sash",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 129,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.8128,
+            "y": 0.76835,
+            "z": 0.03175
+          },
+          "size_m": {
+            "x": 0.8128,
+            "y": 0.76835,
+            "z": 0.03175
+          },
+          "width_m": 0.8128,
+          "depth_m": 0.76835,
+          "height_m": 0.03175,
+          "diagonal_m": 1.118934
+        }
+      },
+      {
+        "persistent_id": 4095,
+        "name": "Group#3",
+        "description": "",
+        "internal": true,
+        "group": true,
+        "instance_count": 1,
+        "entity_count": 132,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.5715,
+            "y": 0.4318,
+            "z": 0.0254
+          },
+          "size_m": {
+            "x": 0.5715,
+            "y": 0.4318,
+            "z": 0.0254
+          },
+          "width_m": 0.5715,
+          "depth_m": 0.4318,
+          "height_m": 0.0254,
+          "diagonal_m": 0.716735
+        }
+      },
+      {
+        "persistent_id": 3632,
+        "name": "FlushDoor36",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 20,
+        "bounds": {
+          "min_m": {
+            "x": -0.08763,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.04318,
+            "y": 0.9144,
+            "z": 2.032
+          },
+          "size_m": {
+            "x": 0.13081,
+            "y": 0.9144,
+            "z": 2.032
+          },
+          "width_m": 0.13081,
+          "depth_m": 0.9144,
+          "height_m": 2.032,
+          "diagonal_m": 2.232098
+        }
+      },
+      {
+        "persistent_id": 88,
+        "name": "board",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 4,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": -0.29845,
+            "y": 0.0,
+            "z": -0.0254
+          },
+          "max_m": {
+            "x": 1.51765,
+            "y": 0.09525,
+            "z": 0.01905
+          },
+          "size_m": {
+            "x": 1.8161,
+            "y": 0.09525,
+            "z": 0.04445
+          },
+          "width_m": 1.8161,
+          "depth_m": 0.09525,
+          "height_m": 0.04445,
+          "diagonal_m": 1.819139
+        }
+      },
+      {
+        "persistent_id": 142,
+        "name": "board#1",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 21,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -0.01905
+          },
+          "max_m": {
+            "x": 0.3302,
+            "y": 0.04445,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 0.3302,
+            "y": 0.04445,
+            "z": 0.01905
+          },
+          "width_m": 0.3302,
+          "depth_m": 0.04445,
+          "height_m": 0.01905,
+          "diagonal_m": 0.333723
+        }
+      },
+      {
+        "persistent_id": 169,
+        "name": "board#2",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 38,
+        "bounds": {
+          "min_m": {
+            "x": -0.015847,
+            "y": 0.001844,
+            "z": -0.00354
+          },
+          "max_m": {
+            "x": 0.979155,
+            "y": 0.088981,
+            "z": 0.116484
+          },
+          "size_m": {
+            "x": 0.995003,
+            "y": 0.087137,
+            "z": 0.120024
+          },
+          "width_m": 0.995003,
+          "depth_m": 0.087137,
+          "height_m": 0.120024,
+          "diagonal_m": 1.005996
+        }
+      },
+      {
+        "persistent_id": 115,
+        "name": "board#3",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 5,
+        "entity_count": 18,
+        "bounds": {
+          "min_m": {
+            "x": -0.2159,
+            "y": 0.0,
+            "z": -0.0254
+          },
+          "max_m": {
+            "x": 1.4351,
+            "y": 0.09525,
+            "z": 0.01905
+          },
+          "size_m": {
+            "x": 1.651,
+            "y": 0.09525,
+            "z": 0.04445
+          },
+          "width_m": 1.651,
+          "depth_m": 0.09525,
+          "height_m": 0.04445,
+          "diagonal_m": 1.654343
+        }
+      },
+      {
+        "persistent_id": 228,
+        "name": "arm",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 65,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0254,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.08255,
+            "y": 0.68373,
+            "z": 0.658254
+          },
+          "size_m": {
+            "x": 0.08255,
+            "y": 0.65833,
+            "z": 0.658254
+          },
+          "width_m": 0.08255,
+          "depth_m": 0.65833,
+          "height_m": 0.658254,
+          "diagonal_m": 0.934618
+        }
+      },
+      {
+        "persistent_id": 326,
+        "name": "board#6",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 17,
+        "bounds": {
+          "min_m": {
+            "x": 0.987963,
+            "y": 0.0,
+            "z": -0.0254
+          },
+          "max_m": {
+            "x": 1.434343,
+            "y": 0.09525,
+            "z": 0.01905
+          },
+          "size_m": {
+            "x": 0.446379,
+            "y": 0.09525,
+            "z": 0.04445
+          },
+          "width_m": 0.446379,
+          "depth_m": 0.09525,
+          "height_m": 0.04445,
+          "diagonal_m": 0.458588
+        }
+      },
+      {
+        "persistent_id": 1783,
+        "name": "Component#1",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 325,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.863612,
+            "y": 0.863612,
+            "z": 0.983734
+          },
+          "size_m": {
+            "x": 0.863612,
+            "y": 0.863612,
+            "z": 0.983734
+          },
+          "width_m": 0.863612,
+          "depth_m": 0.863612,
+          "height_m": 0.983734,
+          "diagonal_m": 1.568242
+        }
+      },
+      {
+        "persistent_id": 2515,
+        "name": "Component#5",
+        "description": "",
+        "internal": true,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 209,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": -0.03434,
+            "z": -0.020456
+          },
+          "max_m": {
+            "x": 0.449958,
+            "y": 0.580128,
+            "z": 1.173512
+          },
+          "size_m": {
+            "x": 0.449958,
+            "y": 0.614468,
+            "z": 1.193968
+          },
+          "width_m": 0.449958,
+          "depth_m": 0.614468,
+          "height_m": 1.193968,
+          "diagonal_m": 1.416189
+        }
+      },
+      {
+        "persistent_id": 7746,
+        "name": "Light_Path_Low",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 3,
+        "entity_count": 213,
+        "bounds": {
+          "min_m": {
+            "x": -0.076917,
+            "y": -0.076917,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.076917,
+            "y": 0.076917,
+            "z": 0.301969
+          },
+          "size_m": {
+            "x": 0.153834,
+            "y": 0.153834,
+            "z": 0.301969
+          },
+          "width_m": 0.153834,
+          "depth_m": 0.153834,
+          "height_m": 0.301969,
+          "diagonal_m": 0.372176
+        }
+      },
+      {
+        "persistent_id": 7317,
+        "name": "Light_Spot_Halogen_Garden",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 285,
+        "bounds": {
+          "min_m": {
+            "x": -0.045294,
+            "y": -0.169137,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.045294,
+            "y": 0.0,
+            "z": 0.140435
+          },
+          "size_m": {
+            "x": 0.090588,
+            "y": 0.169137,
+            "z": 0.140435
+          },
+          "width_m": 0.090588,
+          "depth_m": 0.169137,
+          "height_m": 0.140435,
+          "diagonal_m": 0.237772
+        }
+      },
+      {
+        "persistent_id": 7034,
+        "name": "Window_Doublehung_ 34x60",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 194,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -0.1524
+          },
+          "max_m": {
+            "x": 1.02235,
+            "y": 1.831975,
+            "z": 0.0508
+          },
+          "size_m": {
+            "x": 1.02235,
+            "y": 1.831975,
+            "z": 0.2032
+          },
+          "width_m": 1.02235,
+          "depth_m": 1.831975,
+          "height_m": 0.2032,
+          "diagonal_m": 2.107753
+        }
+      },
+      {
+        "persistent_id": 6456,
+        "name": "Door_Glass_3-2x7-0_Framed_Double",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 109,
+        "bounds": {
+          "min_m": {
+            "x": -0.04445,
+            "y": 0.0,
+            "z": -0.0508
+          },
+          "max_m": {
+            "x": 2.02565,
+            "y": 2.17805,
+            "z": 0.0508
+          },
+          "size_m": {
+            "x": 2.0701,
+            "y": 2.17805,
+            "z": 0.1016
+          },
+          "width_m": 2.0701,
+          "depth_m": 2.17805,
+          "height_m": 0.1016,
+          "diagonal_m": 3.006583
+        }
+      },
+      {
+        "persistent_id": 5891,
+        "name": "Window_Doublehung_Triple_ 102x64",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 388,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -0.1524
+          },
+          "max_m": {
+            "x": 2.763838,
+            "y": 1.933575,
+            "z": 0.0508
+          },
+          "size_m": {
+            "x": 2.763838,
+            "y": 1.933575,
+            "z": 0.2032
+          },
+          "width_m": 2.763838,
+          "depth_m": 1.933575,
+          "height_m": 0.2032,
+          "diagonal_m": 3.379172
+        }
+      },
+      {
+        "persistent_id": 5726,
+        "name": "Window_Slider_48x48",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 116,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 1.2192,
+            "y": 1.2192,
+            "z": 0.0762
+          },
+          "size_m": {
+            "x": 1.2192,
+            "y": 1.2192,
+            "z": 0.0762
+          },
+          "width_m": 1.2192,
+          "depth_m": 1.2192,
+          "height_m": 0.0762,
+          "diagonal_m": 1.725892
+        }
+      },
+      {
+        "persistent_id": 5371,
+        "name": "Window_Specialty_Bay_30Degree_79.5x39.25",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 114,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -4.0e-06
+          },
+          "max_m": {
+            "x": 1.995888,
+            "y": 0.99695,
+            "z": 0.300128
+          },
+          "size_m": {
+            "x": 1.995888,
+            "y": 0.99695,
+            "z": 0.300132
+          },
+          "width_m": 1.995888,
+          "depth_m": 0.99695,
+          "height_m": 0.300132,
+          "diagonal_m": 2.251123
+        }
+      },
+      {
+        "persistent_id": 5271,
+        "name": "Window_Specialty_Octagon",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 67,
+        "bounds": {
+          "min_m": {
+            "x": -0.107763,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.260163,
+            "y": 0.367926,
+            "z": 0.0254
+          },
+          "size_m": {
+            "x": 0.367926,
+            "y": 0.367926,
+            "z": 0.0254
+          },
+          "width_m": 0.367926,
+          "depth_m": 0.367926,
+          "height_m": 0.0254,
+          "diagonal_m": 0.520946
+        }
+      },
+      {
+        "persistent_id": 4826,
+        "name": "Window_Doublehung_Mullions_35x63",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 137,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -0.2032
+          },
+          "max_m": {
+            "x": 0.889,
+            "y": 1.6129,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 0.889,
+            "y": 1.6129,
+            "z": 0.2032
+          },
+          "width_m": 0.889,
+          "depth_m": 1.6129,
+          "height_m": 0.2032,
+          "diagonal_m": 1.852851
+        }
+      },
+      {
+        "persistent_id": 4411,
+        "name": "Window_Doublehung_Double_67x64",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 282,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -0.1524
+          },
+          "max_m": {
+            "x": 1.87325,
+            "y": 1.933575,
+            "z": 0.0508
+          },
+          "size_m": {
+            "x": 1.87325,
+            "y": 1.933575,
+            "z": 0.2032
+          },
+          "width_m": 1.87325,
+          "depth_m": 1.933575,
+          "height_m": 0.2032,
+          "diagonal_m": 2.699827
+        }
+      },
+      {
+        "persistent_id": 4094,
+        "name": "Window_Awning_Mullions_27.5x22",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 2,
+        "entity_count": 87,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -0.0254
+          },
+          "max_m": {
+            "x": 0.6985,
+            "y": 0.5588,
+            "z": 0.0254
+          },
+          "size_m": {
+            "x": 0.6985,
+            "y": 0.5588,
+            "z": 0.0508
+          },
+          "width_m": 0.6985,
+          "depth_m": 0.5588,
+          "height_m": 0.0508,
+          "diagonal_m": 0.895958
+        }
+      },
+      {
+        "persistent_id": 3822,
+        "name": "Door_Glass_Header_Panels_3-0x6-8",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 188,
+        "bounds": {
+          "min_m": {
+            "x": -0.0254,
+            "y": 0.0,
+            "z": -0.1524
+          },
+          "max_m": {
+            "x": 1.1938,
+            "y": 2.1971,
+            "z": 0.0508
+          },
+          "size_m": {
+            "x": 1.2192,
+            "y": 2.1971,
+            "z": 0.2032
+          },
+          "width_m": 1.2192,
+          "depth_m": 2.1971,
+          "height_m": 0.2032,
+          "diagonal_m": 2.52091
+        }
+      },
+      {
+        "persistent_id": 3631,
+        "name": "Door_3-0x6-8",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 52,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -0.14478
+          },
+          "max_m": {
+            "x": 1.016,
+            "y": 2.0828,
+            "z": 0.01905
+          },
+          "size_m": {
+            "x": 1.016,
+            "y": 2.0828,
+            "z": 0.16383
+          },
+          "width_m": 1.016,
+          "depth_m": 2.0828,
+          "height_m": 0.16383,
+          "diagonal_m": 2.323177
+        }
+      },
+      {
+        "persistent_id": 3464,
+        "name": "Door_Glass_3-0x7-0",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 118,
+        "bounds": {
+          "min_m": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -0.127
+          },
+          "max_m": {
+            "x": 1.016,
+            "y": 2.1844,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 1.016,
+            "y": 2.1844,
+            "z": 0.127
+          },
+          "width_m": 1.016,
+          "depth_m": 2.1844,
+          "height_m": 0.127,
+          "diagonal_m": 2.412465
+        }
+      },
+      {
+        "persistent_id": 87,
+        "name": "F_Bench_Wood_HighBack",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 36,
+        "bounds": {
+          "min_m": {
+            "x": -0.004649,
+            "y": -0.095376,
+            "z": -0.01688
+          },
+          "max_m": {
+            "x": 1.820749,
+            "y": 0.733239,
+            "z": 0.983839
+          },
+          "size_m": {
+            "x": 1.825397,
+            "y": 0.828615,
+            "z": 1.000719
+          },
+          "width_m": 1.825397,
+          "depth_m": 0.828615,
+          "height_m": 1.000719,
+          "diagonal_m": 2.240561
+        }
+      },
+      {
+        "persistent_id": 388,
+        "name": "Light-Classic Outdoor Wall",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 3,
+        "entity_count": 1021,
+        "bounds": {
+          "min_m": {
+            "x": -0.1397,
+            "y": -0.128401,
+            "z": 0.0
+          },
+          "max_m": {
+            "x": 0.2667,
+            "y": 0.193917,
+            "z": 0.500291
+          },
+          "size_m": {
+            "x": 0.4064,
+            "y": 0.322318,
+            "z": 0.500291
+          },
+          "width_m": 0.4064,
+          "depth_m": 0.322318,
+          "height_m": 0.500291,
+          "diagonal_m": 0.720654
+        }
+      },
+      {
+        "persistent_id": 1782,
+        "name": "F_Barstool-High Table",
+        "description": "",
+        "internal": false,
+        "group": false,
+        "instance_count": 1,
+        "entity_count": 3,
+        "bounds": {
+          "min_m": {
+            "x": -0.732901,
+            "y": -0.238327,
+            "z": -0.020456
+          },
+          "max_m": {
+            "x": 1.528963,
+            "y": 0.665605,
+            "z": 1.173512
+          },
+          "size_m": {
+            "x": 2.261864,
+            "y": 0.903932,
+            "z": 1.193968
+          },
+          "width_m": 2.261864,
+          "depth_m": 0.903932,
+          "height_m": 1.193968,
+          "diagonal_m": 2.712689
+        }
+      }
+    ],
+    "definition_count": 40,
+    "component_instance_count": 90,
+    "tags": [
+      {
+        "persistent_id": 9281,
+        "name": "Layer0",
+        "visible": true,
+        "color": {
+          "red": 255,
+          "green": 84,
+          "blue": 84,
+          "alpha": 255,
+          "hex": "#FF5454"
+        }
+      },
+      {
+        "persistent_id": 9283,
+        "name": "legs",
+        "visible": true,
+        "color": {
+          "red": 102,
+          "green": 68,
+          "blue": 0,
+          "alpha": 255,
+          "hex": "#664400"
+        }
+      },
+      {
+        "persistent_id": 9285,
+        "name": "seat",
+        "visible": true,
+        "color": {
+          "red": 0,
+          "green": 153,
+          "blue": 135,
+          "alpha": 255,
+          "hex": "#009987"
+        }
+      },
+      {
+        "persistent_id": 9287,
+        "name": "GLASS",
+        "visible": true,
+        "color": {
+          "red": 0,
+          "green": 0,
+          "blue": 255,
+          "alpha": 255,
+          "hex": "#0000FF"
+        }
+      },
+      {
+        "persistent_id": 9289,
+        "name": "ELV-DOOR",
+        "visible": true,
+        "color": {
+          "red": 255,
+          "green": 0,
+          "blue": 0,
+          "alpha": 255,
+          "hex": "#FF0000"
+        }
+      }
+    ],
+    "tag_count": 5,
+    "materials": [
+      {
+        "persistent_id": 9291,
+        "name": "Material1",
+        "display_name": "Material1",
+        "color": {
+          "red": 255,
+          "green": 255,
+          "blue": 255,
+          "alpha": 255,
+          "hex": "#FFFFFF"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 9292,
+        "name": "[Cladding_Siding_White]",
+        "display_name": "Cladding_Siding_White",
+        "color": {
+          "red": 207,
+          "green": 207,
+          "blue": 207,
+          "alpha": 255,
+          "hex": "#CFCFCF"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "Cladding_Siding_White.jpg",
+          "width_m": 0.9652,
+          "height_m": 0.9652,
+          "image_width": 128,
+          "image_height": 128
+        }
+      },
+      {
+        "persistent_id": 9293,
+        "name": "[Roofing_Shingles_GAF_Estates]",
+        "display_name": "Roofing_Shingles_GAF_Estates",
+        "color": {
+          "red": 81,
+          "green": 78,
+          "blue": 74,
+          "alpha": 255,
+          "hex": "#514E4A"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "Roofing_Shingles_GAF_Estates.jpg",
+          "width_m": 0.5588,
+          "height_m": 0.415925,
+          "image_width": 172,
+          "image_height": 128
+        }
+      },
+      {
+        "persistent_id": 9294,
+        "name": "Material2",
+        "display_name": "Material2",
+        "color": {
+          "red": 205,
+          "green": 200,
+          "blue": 205,
+          "alpha": 255,
+          "hex": "#CDC8CD"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 9295,
+        "name": "[Stone_Masonry_Multi]",
+        "display_name": "Stone_Masonry_Multi",
+        "color": {
+          "red": 182,
+          "green": 175,
+          "blue": 164,
+          "alpha": 255,
+          "hex": "#B6AFA4"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "Stone_Masonry_Multi.jpg",
+          "width_m": 1.1938,
+          "height_m": 0.8128,
+          "image_width": 366,
+          "image_height": 256
+        }
+      },
+      {
+        "persistent_id": 9296,
+        "name": "[Brick_Rough_Dark]",
+        "display_name": "Brick_Rough_Dark",
+        "color": {
+          "red": 94,
+          "green": 77,
+          "blue": 52,
+          "alpha": 255,
+          "hex": "#5E4D34"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "Brick_Rough_Dark.jpg",
+          "width_m": 0.9144,
+          "height_m": 0.5588,
+          "image_width": 205,
+          "image_height": 128
+        }
+      },
+      {
+        "persistent_id": 9297,
+        "name": "[Metal_Rusted]",
+        "display_name": "Metal_Rusted",
+        "color": {
+          "red": 184,
+          "green": 117,
+          "blue": 91,
+          "alpha": 255,
+          "hex": "#B8755B"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "Metal_Rusted.jpg",
+          "width_m": 0.4572,
+          "height_m": 0.4572,
+          "image_width": 256,
+          "image_height": 256
+        }
+      },
+      {
+        "persistent_id": 9298,
+        "name": "Material3",
+        "display_name": "Material3",
+        "color": {
+          "red": 29,
+          "green": 29,
+          "blue": 29,
+          "alpha": 255,
+          "hex": "#1D1D1D"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 9299,
+        "name": "<Tan>1",
+        "display_name": "<Tan>1",
+        "color": {
+          "red": 210,
+          "green": 180,
+          "blue": 140,
+          "alpha": 255,
+          "hex": "#D2B48C"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 9300,
+        "name": "Material4",
+        "display_name": "Material4",
+        "color": {
+          "red": 245,
+          "green": 255,
+          "blue": 218,
+          "alpha": 255,
+          "hex": "#F5FFDA"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 9301,
+        "name": "[Fencing_Railing_Metal2]",
+        "display_name": "Fencing_Railing_Metal2",
+        "color": {
+          "red": 22,
+          "green": 16,
+          "blue": 17,
+          "alpha": 255,
+          "hex": "#161011"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "Fencing_Railing_Metal2.png",
+          "width_m": 0.9144,
+          "height_m": 0.9144,
+          "image_width": 256,
+          "image_height": 232
+        }
+      },
+      {
+        "persistent_id": 9302,
+        "name": "<DarkGray>",
+        "display_name": "<DarkGray>",
+        "color": {
+          "red": 81,
+          "green": 81,
+          "blue": 81,
+          "alpha": 255,
+          "hex": "#515151"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 9303,
+        "name": "Material18",
+        "display_name": "Material18",
+        "color": {
+          "red": 203,
+          "green": 218,
+          "blue": 255,
+          "alpha": 255,
+          "hex": "#CBDAFF"
+        },
+        "alpha": 0.7099999785423279,
+        "texture": null
+      },
+      {
+        "persistent_id": 9304,
+        "name": "Concrete_Aggregate_Gray",
+        "display_name": "Concrete_Aggregate_Gray",
+        "color": {
+          "red": 167,
+          "green": 165,
+          "blue": 163,
+          "alpha": 255,
+          "hex": "#A7A5A3"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "Concrete_Aggregate_Gray.jpg",
+          "width_m": 0.3048,
+          "height_m": 0.3048,
+          "image_width": 256,
+          "image_height": 256
+        }
+      },
+      {
+        "persistent_id": 9305,
+        "name": "<Gray Glass>1",
+        "display_name": "<Gray Glass>1",
+        "color": {
+          "red": 40,
+          "green": 40,
+          "blue": 40,
+          "alpha": 255,
+          "hex": "#282828"
+        },
+        "alpha": 0.79,
+        "texture": null
+      },
+      {
+        "persistent_id": 9306,
+        "name": "<Ivory>",
+        "display_name": "<Ivory>",
+        "color": {
+          "red": 245,
+          "green": 245,
+          "blue": 245,
+          "alpha": 255,
+          "hex": "#F5F5F5"
+        },
+        "alpha": 0.09999999999999998,
+        "texture": null
+      },
+      {
+        "persistent_id": 9307,
+        "name": "[Asphalt_Stamped_Brick]",
+        "display_name": "Asphalt_Stamped_Brick",
+        "color": {
+          "red": 149,
+          "green": 133,
+          "blue": 134,
+          "alpha": 255,
+          "hex": "#958586"
+        },
+        "alpha": 1.0,
+        "texture": {
+          "filename": "Asphalt_Stamped_Brick.jpg",
+          "width_m": 0.2032,
+          "height_m": 0.4064,
+          "image_width": 128,
+          "image_height": 256
+        }
+      },
+      {
+        "persistent_id": 9308,
+        "name": "<Glass Gold Tint>1",
+        "display_name": "<Glass Gold Tint>1",
+        "color": {
+          "red": 255,
+          "green": 244,
+          "blue": 140,
+          "alpha": 255,
+          "hex": "#FFF48C"
+        },
+        "alpha": 1.0,
+        "texture": null
+      },
+      {
+        "persistent_id": 9309,
+        "name": "<Gold>",
+        "display_name": "<Gold>",
+        "color": {
+          "red": 150,
+          "green": 126,
+          "blue": 0,
+          "alpha": 255,
+          "hex": "#967E00"
+        },
+        "alpha": 1.0,
+        "texture": null
+      }
+    ],
+    "material_count": 19,
+    "scenes": [
+
+    ],
+    "scene_count": 0,
+    "style": {
+      "selected_style": "[Google Earth]",
+      "display_sketch_axes": true,
+      "draw_hidden": false,
+      "draw_hidden_geometry": false,
+      "edge_display_mode": 1,
+      "face_front_color": {
+        "red": 221,
+        "green": 221,
+        "blue": 197,
+        "alpha": 255,
+        "hex": "#DDDDC5"
+      },
+      "face_back_color": {
+        "red": 51,
+        "green": 0,
+        "blue": 0,
+        "alpha": 255,
+        "hex": "#330000"
+      },
+      "background_color": {
+        "red": 210,
+        "green": 208,
+        "blue": 185,
+        "alpha": 255,
+        "hex": "#D2D0B9"
+      }
+    },
+    "georeferenced": false,
+    "missing_assets": [
+      {
+        "material": "Cladding_Siding_White",
+        "source": "Cladding_Siding_White.jpg"
+      },
+      {
+        "material": "Roofing_Shingles_GAF_Estates",
+        "source": "Roofing_Shingles_GAF_Estates.jpg"
+      },
+      {
+        "material": "Stone_Masonry_Multi",
+        "source": "Stone_Masonry_Multi.jpg"
+      },
+      {
+        "material": "Brick_Rough_Dark",
+        "source": "Brick_Rough_Dark.jpg"
+      },
+      {
+        "material": "Metal_Rusted",
+        "source": "Metal_Rusted.jpg"
+      },
+      {
+        "material": "Fencing_Railing_Metal2",
+        "source": "Fencing_Railing_Metal2.png"
+      },
+      {
+        "material": "Concrete_Aggregate_Gray",
+        "source": "Concrete_Aggregate_Gray.jpg"
+      },
+      {
+        "material": "Asphalt_Stamped_Brick",
+        "source": "Asphalt_Stamped_Brick.jpg"
+      }
+    ],
+    "warnings": [
+      "Model has no scenes",
+      "Texture source paths unavailable on disk; textures may still be embedded"
+    ]
+  },
+  "captures": [
+    {
+      "model_name": "house2",
+      "view_name": "isometric",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/house2/sketchup/isometric.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 18.508809,
+        "y": -12.775092,
+        "z": 14.900338
+      },
+      "camera_target_m": {
+        "x": 2.254615,
+        "y": 3.479102,
+        "z": 1.896982
+      },
+      "camera_up": {
+        "x": -0.34815531,
+        "y": 0.34815531,
+        "z": 0.87038828
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 11.016002,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Google Earth]",
+      "timestamp": "2026-07-12T21:02:28Z"
+    },
+    {
+      "model_name": "house2",
+      "view_name": "front",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/house2/sketchup/front.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 3.203575,
+        "y": -20.57831,
+        "z": 3.28295
+      },
+      "camera_target_m": {
+        "x": 3.203575,
+        "y": 2.050107,
+        "z": 3.28295
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 6.911474,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Google Earth]",
+      "timestamp": "2026-07-12T21:02:29Z"
+    },
+    {
+      "model_name": "house2",
+      "view_name": "back",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/house2/sketchup/back.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 3.203575,
+        "y": 23.962171,
+        "z": 3.28295
+      },
+      "camera_target_m": {
+        "x": 3.203575,
+        "y": 2.050107,
+        "z": 3.28295
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 6.911474,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Google Earth]",
+      "timestamp": "2026-07-12T21:02:31Z"
+    },
+    {
+      "model_name": "house2",
+      "view_name": "left",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/house2/sketchup/left.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 24.943201,
+        "y": 2.050107,
+        "z": 3.28295
+      },
+      "camera_target_m": {
+        "x": 3.203575,
+        "y": 2.050107,
+        "z": 3.28295
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 9.681621,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Google Earth]",
+      "timestamp": "2026-07-12T21:02:32Z"
+    },
+    {
+      "model_name": "house2",
+      "view_name": "right",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/house2/sketchup/right.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": -18.536051,
+        "y": 2.050107,
+        "z": 3.28295
+      },
+      "camera_target_m": {
+        "x": 3.203575,
+        "y": 2.050107,
+        "z": 3.28295
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 9.681621,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Google Earth]",
+      "timestamp": "2026-07-12T21:02:32Z"
+    },
+    {
+      "model_name": "house2",
+      "view_name": "top",
+      "source": "standard",
+      "scene_name": null,
+      "image_path": "D:/projects/sibambo-bom-engine/artifacts/house2/sketchup/top.png",
+      "projection_mode": "orthographic",
+      "camera_position_m": {
+        "x": 3.203575,
+        "y": 2.050107,
+        "z": 37.170269
+      },
+      "camera_target_m": {
+        "x": 3.203575,
+        "y": 2.050107,
+        "z": 3.28295
+      },
+      "camera_up": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "field_of_view_degrees": null,
+      "orthographic_height_m": 16.400832,
+      "aspect_ratio": 1.694017094017094,
+      "viewport": {
+        "width": 1982.0,
+        "height": 1170.0
+      },
+      "hidden_geometry": false,
+      "hidden_objects": false,
+      "edge_display_mode": 1,
+      "style_name": "[Google Earth]",
+      "timestamp": "2026-07-12T21:02:33Z"
+    }
+  ],
+  "warnings": [
+    "Model has no scenes",
+    "Texture source paths unavailable on disk; textures may still be embedded"
+  ]
+}

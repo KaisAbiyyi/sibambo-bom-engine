@@ -18,25 +18,29 @@ module BOMEngine
       end
 
       out_path = File.join(Dir.tmpdir, "bom_engine_test_#{Time.now.to_i}.json")
-      puts "  Output: #{out_path}"
+      expected_path = out_path.sub(/\.json\z/i, "_full.json")
+      puts "  Output: #{expected_path}"
 
       Core.run_export(
         output_path:      out_path,
         export_textures:  false,
         include_edges:    false,
         include_materials: true,
-        pretty_print:     true
+        pretty_print:     true,
+        compress_output:  false,
+        export_level:     "full",
+        silent:           true
       )
 
-      unless File.exist?(out_path)
+      unless File.exist?(expected_path)
         puts "  FAIL Output file was not created."
         return
       end
 
-      data = JSON.parse(File.read(out_path))
+      data = JSON.parse(File.read(expected_path))
 
       checks = {
-        "schema_version present"             => data["schema_version"] == "2.0",
+        "schema_version present"             => data["schema_version"] == JSONBuilder::SCHEMA_VERSION,
         "exported_at is ISO8601"             => data["exported_at"].to_s =~ /\d{4}-\d{2}-\d{2}T/,
         "entities is an Array"               => data["entities"].is_a?(Array),
         "spatial_analysis present"           => data["spatial_analysis"].is_a?(Hash),
@@ -63,8 +67,9 @@ module BOMEngine
       end
 
       puts "\nIntegration Test: #{pass}/#{pass + fail_count} passed"
-      puts "Output: #{out_path}"
+      puts "Output: #{expected_path}"
       puts fail_count > 0 ? "SOME TESTS FAILED" : "ALL TESTS PASSED"
+      File.delete(expected_path) if File.exist?(expected_path)
     end
 
   end

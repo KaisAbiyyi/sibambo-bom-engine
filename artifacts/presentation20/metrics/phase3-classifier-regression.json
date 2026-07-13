@@ -1,0 +1,462 @@
+{
+  "workflow_version": "3.0.0",
+  "measured_at": "2026-07-12T23:57:01.490Z",
+  "model": "presentation20",
+  "source": "D:\\projects\\sibambo-bom-engine\\artifacts\\presentation20\\exported\\presentation20_canonical.json.gz",
+  "ground_truth": {
+    "kind": "silver_explicit_metadata_not_human_verified",
+    "description": "Only unambiguous explicit multilingual category tokens in face name/path/layer are scored. Geometry-only and contextual predictions are excluded from precision/recall ground truth.",
+    "labelled_faces": 1919,
+    "total_faces": 452937,
+    "coverage": 0.004237
+  },
+  "performance": {
+    "compressed_bytes": 2476929,
+    "decompressed_bytes": 19090346,
+    "json_parse_ms": 131.6952,
+    "model_parse_and_classify_ms": 23463.0916
+  },
+  "geometry": {
+    "bounds": {
+      "min": {
+        "x": 15.376525,
+        "y": -1.7661343979987312,
+        "z": -27.432
+      },
+      "max": {
+        "x": 45.856525,
+        "y": 14.985999999999999,
+        "z": 4.572
+      },
+      "size": {
+        "x": 30.479999999999997,
+        "y": 16.75213439799873,
+        "z": 32.004
+      },
+      "center": {
+        "x": 30.616525,
+        "y": 6.609932801000634,
+        "z": -11.43
+      }
+    },
+    "face_count": 452937,
+    "runtime_scene_present": false
+  },
+  "whole_model": {
+    "category_distribution": {
+      "roof": 335,
+      "floor": 71,
+      "ceiling": 495,
+      "exterior_wall": 0,
+      "interior_wall": 431,
+      "door": 0,
+      "window": 1881,
+      "column": 0,
+      "beam": 0,
+      "stair": 0,
+      "railing": 0,
+      "furniture": 403884,
+      "fixture": 0,
+      "opening": 0,
+      "room_boundary": 1,
+      "unknown": 45839
+    },
+    "unknown_rate": 0.101204,
+    "ambiguous_rate": 0.101045
+  },
+  "silver_metrics": {
+    "sampleCount": 1919,
+    "accuracy": 0.980198,
+    "macroF1": 0.99,
+    "unknownRate": 0.019802,
+    "ambiguousRate": 0.019802,
+    "perCategory": {
+      "roof": {
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "support": 0
+      },
+      "floor": {
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "support": 0
+      },
+      "ceiling": {
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "support": 0
+      },
+      "exterior_wall": {
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "support": 0
+      },
+      "interior_wall": {
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "support": 0
+      },
+      "door": {
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "support": 0
+      },
+      "window": {
+        "precision": 1,
+        "recall": 0.980198,
+        "f1": 0.99,
+        "support": 1919
+      },
+      "column": {
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "support": 0
+      },
+      "beam": {
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "support": 0
+      },
+      "stair": {
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "support": 0
+      },
+      "railing": {
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "support": 0
+      },
+      "furniture": {
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "support": 0
+      },
+      "fixture": {
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "support": 0
+      },
+      "opening": {
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "support": 0
+      },
+      "room_boundary": {
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "support": 0
+      },
+      "unknown": {
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "support": 0
+      }
+    },
+    "confusionMatrix": {
+      "roof": {
+        "roof": 0,
+        "floor": 0,
+        "ceiling": 0,
+        "exterior_wall": 0,
+        "interior_wall": 0,
+        "door": 0,
+        "window": 0,
+        "column": 0,
+        "beam": 0,
+        "stair": 0,
+        "railing": 0,
+        "furniture": 0,
+        "fixture": 0,
+        "opening": 0,
+        "room_boundary": 0,
+        "unknown": 0
+      },
+      "floor": {
+        "roof": 0,
+        "floor": 0,
+        "ceiling": 0,
+        "exterior_wall": 0,
+        "interior_wall": 0,
+        "door": 0,
+        "window": 0,
+        "column": 0,
+        "beam": 0,
+        "stair": 0,
+        "railing": 0,
+        "furniture": 0,
+        "fixture": 0,
+        "opening": 0,
+        "room_boundary": 0,
+        "unknown": 0
+      },
+      "ceiling": {
+        "roof": 0,
+        "floor": 0,
+        "ceiling": 0,
+        "exterior_wall": 0,
+        "interior_wall": 0,
+        "door": 0,
+        "window": 0,
+        "column": 0,
+        "beam": 0,
+        "stair": 0,
+        "railing": 0,
+        "furniture": 0,
+        "fixture": 0,
+        "opening": 0,
+        "room_boundary": 0,
+        "unknown": 0
+      },
+      "exterior_wall": {
+        "roof": 0,
+        "floor": 0,
+        "ceiling": 0,
+        "exterior_wall": 0,
+        "interior_wall": 0,
+        "door": 0,
+        "window": 0,
+        "column": 0,
+        "beam": 0,
+        "stair": 0,
+        "railing": 0,
+        "furniture": 0,
+        "fixture": 0,
+        "opening": 0,
+        "room_boundary": 0,
+        "unknown": 0
+      },
+      "interior_wall": {
+        "roof": 0,
+        "floor": 0,
+        "ceiling": 0,
+        "exterior_wall": 0,
+        "interior_wall": 0,
+        "door": 0,
+        "window": 0,
+        "column": 0,
+        "beam": 0,
+        "stair": 0,
+        "railing": 0,
+        "furniture": 0,
+        "fixture": 0,
+        "opening": 0,
+        "room_boundary": 0,
+        "unknown": 0
+      },
+      "door": {
+        "roof": 0,
+        "floor": 0,
+        "ceiling": 0,
+        "exterior_wall": 0,
+        "interior_wall": 0,
+        "door": 0,
+        "window": 0,
+        "column": 0,
+        "beam": 0,
+        "stair": 0,
+        "railing": 0,
+        "furniture": 0,
+        "fixture": 0,
+        "opening": 0,
+        "room_boundary": 0,
+        "unknown": 0
+      },
+      "window": {
+        "roof": 0,
+        "floor": 0,
+        "ceiling": 0,
+        "exterior_wall": 0,
+        "interior_wall": 0,
+        "door": 0,
+        "window": 1881,
+        "column": 0,
+        "beam": 0,
+        "stair": 0,
+        "railing": 0,
+        "furniture": 0,
+        "fixture": 0,
+        "opening": 0,
+        "room_boundary": 0,
+        "unknown": 38
+      },
+      "column": {
+        "roof": 0,
+        "floor": 0,
+        "ceiling": 0,
+        "exterior_wall": 0,
+        "interior_wall": 0,
+        "door": 0,
+        "window": 0,
+        "column": 0,
+        "beam": 0,
+        "stair": 0,
+        "railing": 0,
+        "furniture": 0,
+        "fixture": 0,
+        "opening": 0,
+        "room_boundary": 0,
+        "unknown": 0
+      },
+      "beam": {
+        "roof": 0,
+        "floor": 0,
+        "ceiling": 0,
+        "exterior_wall": 0,
+        "interior_wall": 0,
+        "door": 0,
+        "window": 0,
+        "column": 0,
+        "beam": 0,
+        "stair": 0,
+        "railing": 0,
+        "furniture": 0,
+        "fixture": 0,
+        "opening": 0,
+        "room_boundary": 0,
+        "unknown": 0
+      },
+      "stair": {
+        "roof": 0,
+        "floor": 0,
+        "ceiling": 0,
+        "exterior_wall": 0,
+        "interior_wall": 0,
+        "door": 0,
+        "window": 0,
+        "column": 0,
+        "beam": 0,
+        "stair": 0,
+        "railing": 0,
+        "furniture": 0,
+        "fixture": 0,
+        "opening": 0,
+        "room_boundary": 0,
+        "unknown": 0
+      },
+      "railing": {
+        "roof": 0,
+        "floor": 0,
+        "ceiling": 0,
+        "exterior_wall": 0,
+        "interior_wall": 0,
+        "door": 0,
+        "window": 0,
+        "column": 0,
+        "beam": 0,
+        "stair": 0,
+        "railing": 0,
+        "furniture": 0,
+        "fixture": 0,
+        "opening": 0,
+        "room_boundary": 0,
+        "unknown": 0
+      },
+      "furniture": {
+        "roof": 0,
+        "floor": 0,
+        "ceiling": 0,
+        "exterior_wall": 0,
+        "interior_wall": 0,
+        "door": 0,
+        "window": 0,
+        "column": 0,
+        "beam": 0,
+        "stair": 0,
+        "railing": 0,
+        "furniture": 0,
+        "fixture": 0,
+        "opening": 0,
+        "room_boundary": 0,
+        "unknown": 0
+      },
+      "fixture": {
+        "roof": 0,
+        "floor": 0,
+        "ceiling": 0,
+        "exterior_wall": 0,
+        "interior_wall": 0,
+        "door": 0,
+        "window": 0,
+        "column": 0,
+        "beam": 0,
+        "stair": 0,
+        "railing": 0,
+        "furniture": 0,
+        "fixture": 0,
+        "opening": 0,
+        "room_boundary": 0,
+        "unknown": 0
+      },
+      "opening": {
+        "roof": 0,
+        "floor": 0,
+        "ceiling": 0,
+        "exterior_wall": 0,
+        "interior_wall": 0,
+        "door": 0,
+        "window": 0,
+        "column": 0,
+        "beam": 0,
+        "stair": 0,
+        "railing": 0,
+        "furniture": 0,
+        "fixture": 0,
+        "opening": 0,
+        "room_boundary": 0,
+        "unknown": 0
+      },
+      "room_boundary": {
+        "roof": 0,
+        "floor": 0,
+        "ceiling": 0,
+        "exterior_wall": 0,
+        "interior_wall": 0,
+        "door": 0,
+        "window": 0,
+        "column": 0,
+        "beam": 0,
+        "stair": 0,
+        "railing": 0,
+        "furniture": 0,
+        "fixture": 0,
+        "opening": 0,
+        "room_boundary": 0,
+        "unknown": 0
+      },
+      "unknown": {
+        "roof": 0,
+        "floor": 0,
+        "ceiling": 0,
+        "exterior_wall": 0,
+        "interior_wall": 0,
+        "door": 0,
+        "window": 0,
+        "column": 0,
+        "beam": 0,
+        "stair": 0,
+        "railing": 0,
+        "furniture": 0,
+        "fixture": 0,
+        "opening": 0,
+        "room_boundary": 0,
+        "unknown": 0
+      }
+    }
+  }
+}

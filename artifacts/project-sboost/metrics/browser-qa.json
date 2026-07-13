@@ -1,0 +1,378 @@
+{
+  "capturedAt": "2026-07-13T00:11:02.440Z",
+  "format": "BOME2",
+  "views": [
+    {
+      "status": "ready",
+      "slug": "project-sboost",
+      "view": "isometric",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "isometric",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 27.761306,
+          "y": 20.231779,
+          "z": 12.614179
+        },
+        "target": {
+          "x": 6.154249,
+          "y": 2.946133,
+          "z": -8.992878
+        },
+        "up": {
+          "x": -0.34815531,
+          "y": 0.87038828,
+          "z": -0.34815531
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 14.491085,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#CCCCC9"
+      },
+      "sourceBytes": 308707,
+      "faceCount": 14371,
+      "runtimeGroups": 117,
+      "visibleRuntimeGroups": 117,
+      "visibleRuntimeInstances": 176,
+      "renderedBounds": {
+        "min": {
+          "x": -0.6064629968071626,
+          "y": -0.10000000149011612,
+          "z": -18.57322783095715
+        },
+        "max": {
+          "x": 13.134861831175854,
+          "y": 8.509401131421328,
+          "z": 0.6866889402723169
+        }
+      },
+      "loadToRenderMs": 3574.6,
+      "usedJSHeapBytes": 196189657,
+      "warnings": [
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "project-sboost",
+      "view": "front",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "front",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 6.25572,
+          "y": 4.204701,
+          "z": 23.899022
+        },
+        "target": {
+          "x": 6.25572,
+          "y": 4.204701,
+          "z": -8.963559
+        },
+        "up": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 9.062527,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#CCCCC9"
+      },
+      "sourceBytes": 308707,
+      "faceCount": 14371,
+      "runtimeGroups": 117,
+      "visibleRuntimeGroups": 117,
+      "visibleRuntimeInstances": 176,
+      "renderedBounds": {
+        "min": {
+          "x": -0.6064629968071626,
+          "y": -0.10000000149011612,
+          "z": -18.57322783095715
+        },
+        "max": {
+          "x": 13.134861831175854,
+          "y": 8.509401131421328,
+          "z": 0.6866889402723169
+        }
+      },
+      "loadToRenderMs": 34,
+      "usedJSHeapBytes": 151816552,
+      "warnings": [
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "project-sboost",
+      "view": "back",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "back",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 6.192097,
+          "y": 4.204701,
+          "z": -40.533186
+        },
+        "target": {
+          "x": 6.192097,
+          "y": 4.204701,
+          "z": -8.963559
+        },
+        "up": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 9.062527,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#CCCCC9"
+      },
+      "sourceBytes": 308707,
+      "faceCount": 14371,
+      "runtimeGroups": 117,
+      "visibleRuntimeGroups": 117,
+      "visibleRuntimeInstances": 176,
+      "renderedBounds": {
+        "min": {
+          "x": -0.6064629968071626,
+          "y": -0.10000000149011612,
+          "z": -18.57322783095715
+        },
+        "max": {
+          "x": 13.134861831175854,
+          "y": 8.509401131421328,
+          "z": 0.6866889402723169
+        }
+      },
+      "loadToRenderMs": 39.8,
+      "usedJSHeapBytes": 150752341,
+      "warnings": [
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "project-sboost",
+      "view": "left",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "left",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 35.651298,
+          "y": 4.204701,
+          "z": -8.847903
+        },
+        "target": {
+          "x": 6.371376,
+          "y": 4.204701,
+          "z": -8.847903
+        },
+        "up": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 12.072475,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#CCCCC9"
+      },
+      "sourceBytes": 308707,
+      "faceCount": 14371,
+      "runtimeGroups": 117,
+      "visibleRuntimeGroups": 117,
+      "visibleRuntimeInstances": 176,
+      "renderedBounds": {
+        "min": {
+          "x": -0.6064629968071626,
+          "y": -0.10000000149011612,
+          "z": -18.57322783095715
+        },
+        "max": {
+          "x": 13.134861831175854,
+          "y": 8.509401131421328,
+          "z": 0.6866889402723169
+        }
+      },
+      "loadToRenderMs": 29.1,
+      "usedJSHeapBytes": 151240594,
+      "warnings": [
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "project-sboost",
+      "view": "right",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "right",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": -23.05609,
+          "y": 4.204701,
+          "z": -8.78428
+        },
+        "target": {
+          "x": 6.371376,
+          "y": 4.204701,
+          "z": -8.78428
+        },
+        "up": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 12.151544,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#CCCCC9"
+      },
+      "sourceBytes": 308707,
+      "faceCount": 14371,
+      "runtimeGroups": 117,
+      "visibleRuntimeGroups": 117,
+      "visibleRuntimeInstances": 176,
+      "renderedBounds": {
+        "min": {
+          "x": -0.6064629968071626,
+          "y": -0.10000000149011612,
+          "z": -18.57322783095715
+        },
+        "max": {
+          "x": 13.134861831175854,
+          "y": 8.509401131421328,
+          "z": 0.6866889402723169
+        }
+      },
+      "loadToRenderMs": 34.4,
+      "usedJSHeapBytes": 151010261,
+      "warnings": [
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "project-sboost",
+      "view": "top",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "top",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 6.371376,
+          "y": 46.917682,
+          "z": -8.78428
+        },
+        "target": {
+          "x": 6.371376,
+          "y": 4.252846,
+          "z": -8.78428
+        },
+        "up": {
+          "x": 0,
+          "y": 0,
+          "z": -1
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 20.584924,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#CCCCC9"
+      },
+      "sourceBytes": 308707,
+      "faceCount": 14371,
+      "runtimeGroups": 117,
+      "visibleRuntimeGroups": 117,
+      "visibleRuntimeInstances": 176,
+      "renderedBounds": {
+        "min": {
+          "x": -0.6064629968071626,
+          "y": -0.10000000149011612,
+          "z": -18.57322783095715
+        },
+        "max": {
+          "x": 13.134861831175854,
+          "y": 8.509401131421328,
+          "z": 0.6866889402723169
+        }
+      },
+      "loadToRenderMs": 35.8,
+      "usedJSHeapBytes": 150728050,
+      "warnings": [
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    }
+  ]
+}

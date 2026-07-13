@@ -1,0 +1,389 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sibambo.dev/schemas/bom-engine/3.0.0/schema.json",
+  "title": "BOM Engine Canonical JSON",
+  "description": "Canonical semantic and geometric interchange produced by BOM Engine SketchUp Exporter.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "source",
+    "units",
+    "coordinate_system",
+    "metadata",
+    "tags",
+    "materials",
+    "transforms",
+    "meshes",
+    "definitions",
+    "nodes",
+    "scenes",
+    "spaces",
+    "relationships",
+    "analysis",
+    "statistics"
+  ],
+  "properties": {
+    "format": {
+      "description": "Format identity and generator version.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "schema", "generator"],
+      "properties": {
+        "name": { "const": "BOM Engine Canonical", "description": "Stable format family name." },
+        "version": { "type": "string", "pattern": "^3\\.[0-9]+\\.[0-9]+$", "description": "Semantic format version." },
+        "schema": { "type": "string", "minLength": 1, "description": "URI of the normative JSON Schema." },
+        "generator": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "version"],
+          "properties": {
+            "name": { "type": "string", "minLength": 1, "description": "Exporter name." },
+            "version": { "type": "string", "minLength": 1, "description": "Exporter version." }
+          }
+        }
+      }
+    },
+    "source": {
+      "description": "Identity and state of the source SketchUp model.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "identity", "exported_at", "scope"],
+      "properties": {
+        "kind": { "const": "SketchUp", "description": "Authoring application family." },
+        "identity": { "$ref": "#/$defs/sourceIdentity" },
+        "file_path": { "type": "string", "description": "Source path as observed by SketchUp; may be empty for unsaved models." },
+        "file_name": { "type": "string", "description": "Source filename without directories." },
+        "model_name": { "type": "string", "description": "SketchUp model name." },
+        "model_description": { "type": "string", "description": "SketchUp model description." },
+        "sketchup_version": { "type": "string", "description": "SketchUp version used for export." },
+        "sketchup_locale": { "type": ["string", "null"], "description": "SketchUp UI locale." },
+        "exported_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T", "description": "UTC ISO-8601 export timestamp." },
+        "scope": { "enum": ["model", "selection"], "description": "Whether root represents full model or current selection." },
+        "source_modified": { "type": "boolean", "description": "Whether source had unsaved changes during export." }
+      }
+    },
+    "units": {
+      "description": "Source display units and normalized storage units.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_length_unit", "geometry_length_unit", "area_unit", "angle_unit"],
+      "properties": {
+        "source_length_unit": { "type": "string", "description": "SketchUp display length unit." },
+        "geometry_length_unit": { "const": "meter", "description": "All stored positions and translations use meters." },
+        "area_unit": { "const": "square_meter", "description": "All stored areas use square meters." },
+        "angle_unit": { "enum": ["degree", "radian"], "description": "Source display angle unit." }
+      }
+    },
+    "coordinate_system": {
+      "description": "Normative axis and handedness contract.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["handedness", "up_axis", "forward_axis", "x_axis", "storage", "threejs_mapping"],
+      "properties": {
+        "handedness": { "const": "right", "description": "Coordinate-system handedness." },
+        "up_axis": { "const": "+Z", "description": "SketchUp up axis." },
+        "forward_axis": { "const": "-Y", "description": "Declared forward direction for runtime conversion." },
+        "x_axis": { "const": "+X", "description": "SketchUp red axis." },
+        "storage": { "type": "string", "description": "Coordinate space used by geometry and transforms." },
+        "threejs_mapping": { "const": "{x,y,z}->{x,z,-y}", "description": "Required SketchUp-to-Three.js axis mapping." }
+      }
+    },
+    "metadata": {
+      "description": "Model-wide bounds, attributes, geolocation state, and export settings.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "model_bounds_m": { "$ref": "#/$defs/bounds" },
+        "georeferenced": { "type": "boolean" },
+        "attributes": { "$ref": "#/$defs/attributes" },
+        "export_settings": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "tags": {
+      "description": "SketchUp tag/layer library.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/tag" }
+    },
+    "materials": {
+      "description": "SketchUp material library referenced by faces and instance overrides.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/material" }
+    },
+    "transforms": {
+      "description": "Deduplicated column-major 4x4 local transforms; translation values are meters.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/transform" }
+    },
+    "meshes": {
+      "description": "Definition-local indexed polygon meshes.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/mesh" }
+    },
+    "definitions": {
+      "description": "Root, group, and reusable component definitions.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/definition" }
+    },
+    "nodes": {
+      "description": "Root and definition-owned instance hierarchy templates.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/node" }
+    },
+    "scenes": {
+      "description": "SketchUp scenes with full camera projection metadata.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/scene" }
+    },
+    "spaces": {
+      "description": "Explicit or detected room/space records; source and confidence must be retained by producers.",
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true }
+    },
+    "relationships": {
+      "description": "Opening-host, room-boundary, and adjacency relationships.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["openings", "room_boundaries", "adjacency"],
+      "properties": {
+        "openings": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "room_boundaries": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "adjacency": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+      }
+    },
+    "analysis": {
+      "description": "Source-derived spatial, surface, facade, opening, and geolocation analysis.",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "statistics": {
+      "description": "Export counts and reason-coded skipped geometry.",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "extensions": {
+      "description": "Namespaced optional payloads. Extension keys should be stable URIs or reverse-domain names.",
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable export identifier unique within its section."
+    },
+    "attributes": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "String-safe SketchUp attribute dictionaries."
+    },
+    "sourceIdentity": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Identity copied from SketchUp persistent IDs, GUIDs, and names.",
+      "properties": {
+        "persistent_id": { "type": "string" },
+        "guid": { "type": "string" },
+        "entity_type": { "type": "string" },
+        "name": { "type": "string" }
+      }
+    },
+    "color": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["r", "g", "b", "a", "hex"],
+      "properties": {
+        "r": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "g": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "b": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "a": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "hex": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+      }
+    },
+    "bounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max", "size"],
+      "properties": {
+        "min": { "$ref": "#/$defs/vector3" },
+        "max": { "$ref": "#/$defs/vector3" },
+        "size": { "$ref": "#/$defs/vector3" }
+      }
+    },
+    "vector3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "type": "number" }
+    },
+    "transform": {
+      "type": "array",
+      "minItems": 16,
+      "maxItems": 16,
+      "items": { "type": "number" }
+    },
+    "tag": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "visible"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "source_identity": { "$ref": "#/$defs/sourceIdentity" },
+        "name": { "type": "string" },
+        "visible": { "type": "boolean" },
+        "color": { "oneOf": [{ "$ref": "#/$defs/color" }, { "type": "null" }] }
+      }
+    },
+    "material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "display_name", "color", "opacity"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "source_identity": { "$ref": "#/$defs/sourceIdentity" },
+        "name": { "type": "string" },
+        "display_name": { "type": "string" },
+        "color": { "$ref": "#/$defs/color" },
+        "opacity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "material_type": { "type": ["integer", "string"] },
+        "attributes": { "$ref": "#/$defs/attributes" },
+        "texture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["filename", "width_m", "height_m", "image_width_px", "image_height_px"],
+          "properties": {
+            "filename": { "type": "string" },
+            "source_path": { "type": "string" },
+            "width_m": { "type": "number", "minimum": 0 },
+            "height_m": { "type": "number", "minimum": 0 },
+            "image_width_px": { "type": "integer", "minimum": 0 },
+            "image_height_px": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "indexLoop": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "type": "integer", "minimum": 0 }
+    },
+    "face": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source_identity", "outer", "holes", "triangles", "front_material_id", "back_material_id", "tag_id", "normal", "area_m2", "area_space", "surface_hint"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "source_identity": { "$ref": "#/$defs/sourceIdentity" },
+        "outer": { "$ref": "#/$defs/indexLoop" },
+        "holes": { "type": "array", "items": { "$ref": "#/$defs/indexLoop" } },
+        "triangles": {
+          "type": "array",
+          "description": "SketchUp-derived indexed triangle list; polygon loops remain authoritative.",
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "front_material_id": { "type": ["string", "null"] },
+        "back_material_id": { "type": ["string", "null"] },
+        "tag_id": { "type": ["string", "null"] },
+        "normal": { "$ref": "#/$defs/vector3" },
+        "area_m2": { "type": "number", "minimum": 0 },
+        "area_space": { "const": "definition_local" },
+        "surface_hint": { "type": "string" },
+        "hidden": { "type": "boolean" },
+        "attributes": { "$ref": "#/$defs/attributes" },
+        "uv": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "vertices"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "vertices": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "mesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "definition_id", "coordinate_space", "positions_m", "faces", "edges", "bounds_m"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "definition_id": { "$ref": "#/$defs/id" },
+        "coordinate_space": { "const": "definition_local" },
+        "positions_m": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "type": "number" },
+          "description": "Flat XYZ triples in meters. Length must be divisible by three; runtime validation enforces this."
+        },
+        "faces": { "type": "array", "items": { "$ref": "#/$defs/face" } },
+        "edges": { "type": "array", "items": { "$ref": "#/$defs/edge" } },
+        "bounds_m": { "$ref": "#/$defs/bounds" }
+      }
+    },
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "name", "description", "source_identity", "mesh_id", "node_ids", "bounds_m", "attributes"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "kind": { "enum": ["root", "group_definition", "component_definition"] },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "source_identity": { "$ref": "#/$defs/sourceIdentity" },
+        "mesh_id": { "type": ["string", "null"] },
+        "node_ids": { "type": "array", "items": { "$ref": "#/$defs/id" } },
+        "bounds_m": { "$ref": "#/$defs/bounds" },
+        "attributes": { "$ref": "#/$defs/attributes" }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "kind", "name", "owner_definition_id", "definition_id", "transform_id", "material_override_id", "tag_id", "source_identity", "attributes"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "kind": { "enum": ["root", "group_instance", "component_instance", "image", "text"] },
+        "name": { "type": "string" },
+        "owner_definition_id": { "type": ["string", "null"] },
+        "definition_id": { "type": ["string", "null"] },
+        "transform_id": { "type": "integer", "minimum": 0 },
+        "material_override_id": { "type": ["string", "null"] },
+        "tag_id": { "type": ["string", "null"] },
+        "source_identity": { "$ref": "#/$defs/sourceIdentity" },
+        "attributes": { "$ref": "#/$defs/attributes" },
+        "visible": { "type": "boolean" }
+      }
+    },
+    "scene": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "name", "camera"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "camera": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["projection", "eye_m", "target_m", "up"],
+          "properties": {
+            "projection": { "enum": ["perspective", "orthographic"] },
+            "eye_m": { "$ref": "#/$defs/vector3" },
+            "target_m": { "$ref": "#/$defs/vector3" },
+            "up": { "$ref": "#/$defs/vector3" }
+          }
+        }
+      }
+    }
+  }
+}

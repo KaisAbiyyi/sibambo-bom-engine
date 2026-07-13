@@ -1,0 +1,384 @@
+{
+  "capturedAt": "2026-07-13T00:16:38.845Z",
+  "format": "BOME2",
+  "views": [
+    {
+      "status": "ready",
+      "slug": "presentation20",
+      "view": "isometric",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "isometric",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 73.329426,
+          "y": 36.712861,
+          "z": 31.282901
+        },
+        "target": {
+          "x": 29.846058,
+          "y": 1.926167,
+          "z": -12.200467
+        },
+        "up": {
+          "x": -0.34815531,
+          "y": 0.87038828,
+          "z": -0.34815531
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 27.558032,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#99BD90"
+      },
+      "sourceBytes": 380049,
+      "faceCount": 452937,
+      "runtimeGroups": 294,
+      "visibleRuntimeGroups": 294,
+      "visibleRuntimeInstances": 18414,
+      "renderedBounds": {
+        "min": {
+          "x": 15.376524925231934,
+          "y": -1.7826628437112453,
+          "z": -27.43199920654297
+        },
+        "max": {
+          "x": 45.85652542114258,
+          "y": 14.985999882221222,
+          "z": 4.572000026702881
+        }
+      },
+      "loadToRenderMs": 137931.5,
+      "usedJSHeapBytes": 2687922343,
+      "warnings": [
+        "Pintu tidak terdeteksi eksplisit. Flow manusia memakai estimasi zona.",
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "presentation20",
+      "view": "front",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "front",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 30.616525,
+          "y": 6.609933,
+          "z": 46.524129
+        },
+        "target": {
+          "x": 30.616525,
+          "y": 6.609933,
+          "z": -11.43
+        },
+        "up": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 18.939721,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#99BD90"
+      },
+      "sourceBytes": 380049,
+      "faceCount": 452937,
+      "runtimeGroups": 294,
+      "visibleRuntimeGroups": 294,
+      "visibleRuntimeInstances": 18414,
+      "renderedBounds": {
+        "min": {
+          "x": 15.376524925231934,
+          "y": -1.7826628437112453,
+          "z": -27.43199920654297
+        },
+        "max": {
+          "x": 45.85652542114258,
+          "y": 14.985999882221222,
+          "z": 4.572000026702881
+        }
+      },
+      "loadToRenderMs": 36.4,
+      "usedJSHeapBytes": 2155964420,
+      "warnings": [
+        "Pintu tidak terdeteksi eksplisit. Flow manusia memakai estimasi zona.",
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "presentation20",
+      "view": "back",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "back",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 30.616525,
+          "y": 6.609933,
+          "z": -67.312342
+        },
+        "target": {
+          "x": 30.616525,
+          "y": 6.609933,
+          "z": -11.43
+        },
+        "up": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 18.939721,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#99BD90"
+      },
+      "sourceBytes": 380049,
+      "faceCount": 452937,
+      "runtimeGroups": 294,
+      "visibleRuntimeGroups": 294,
+      "visibleRuntimeInstances": 18414,
+      "renderedBounds": {
+        "min": {
+          "x": 15.376524925231934,
+          "y": -1.7826628437112453,
+          "z": -27.43199920654297
+        },
+        "max": {
+          "x": 45.85652542114258,
+          "y": 14.985999882221222,
+          "z": 4.572000026702881
+        }
+      },
+      "loadToRenderMs": 44.7,
+      "usedJSHeapBytes": 2155236618,
+      "warnings": [
+        "Pintu tidak terdeteksi eksplisit. Flow manusia memakai estimasi zona.",
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "presentation20",
+      "view": "left",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "left",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 83.768649,
+          "y": 6.609933,
+          "z": -11.43
+        },
+        "target": {
+          "x": 30.616525,
+          "y": 6.609933,
+          "z": -11.43
+        },
+        "up": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 19.886707,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#99BD90"
+      },
+      "sourceBytes": 380049,
+      "faceCount": 452937,
+      "runtimeGroups": 294,
+      "visibleRuntimeGroups": 294,
+      "visibleRuntimeInstances": 18414,
+      "renderedBounds": {
+        "min": {
+          "x": 15.376524925231934,
+          "y": -1.7826628437112453,
+          "z": -27.43199920654297
+        },
+        "max": {
+          "x": 45.85652542114258,
+          "y": 14.985999882221222,
+          "z": 4.572000026702881
+        }
+      },
+      "loadToRenderMs": 26.3,
+      "usedJSHeapBytes": 2156068887,
+      "warnings": [
+        "Pintu tidak terdeteksi eksplisit. Flow manusia memakai estimasi zona.",
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "presentation20",
+      "view": "right",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "right",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": -21.732575,
+          "y": 6.609933,
+          "z": -11.43
+        },
+        "target": {
+          "x": 30.616525,
+          "y": 6.609933,
+          "z": -11.43
+        },
+        "up": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 19.886707,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#99BD90"
+      },
+      "sourceBytes": 380049,
+      "faceCount": 452937,
+      "runtimeGroups": 294,
+      "visibleRuntimeGroups": 294,
+      "visibleRuntimeInstances": 18414,
+      "renderedBounds": {
+        "min": {
+          "x": 15.376524925231934,
+          "y": -1.7826628437112453,
+          "z": -27.43199920654297
+        },
+        "max": {
+          "x": 45.85652542114258,
+          "y": 14.985999882221222,
+          "z": 4.572000026702881
+        }
+      },
+      "loadToRenderMs": 31.1,
+      "usedJSHeapBytes": 2155465191,
+      "warnings": [
+        "Pintu tidak terdeteksi eksplisit. Flow manusia memakai estimasi zona.",
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "presentation20",
+      "view": "top",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "top",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 30.616525,
+          "y": 77.671649,
+          "z": -11.43
+        },
+        "target": {
+          "x": 30.616525,
+          "y": 6.5659,
+          "z": -11.43
+        },
+        "up": {
+          "x": 0,
+          "y": 0,
+          "z": -1
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 33.688421,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#99BD90"
+      },
+      "sourceBytes": 380049,
+      "faceCount": 452937,
+      "runtimeGroups": 294,
+      "visibleRuntimeGroups": 294,
+      "visibleRuntimeInstances": 18414,
+      "renderedBounds": {
+        "min": {
+          "x": 15.376524925231934,
+          "y": -1.7826628437112453,
+          "z": -27.43199920654297
+        },
+        "max": {
+          "x": 45.85652542114258,
+          "y": 14.985999882221222,
+          "z": 4.572000026702881
+        }
+      },
+      "loadToRenderMs": 44.3,
+      "usedJSHeapBytes": 2156371852,
+      "warnings": [
+        "Pintu tidak terdeteksi eksplisit. Flow manusia memakai estimasi zona.",
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    }
+  ]
+}

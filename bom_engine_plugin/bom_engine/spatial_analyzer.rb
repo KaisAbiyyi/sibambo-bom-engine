@@ -70,6 +70,7 @@ module BOMEngine
           roof_slope_faces:        slopes.length,
           total_floor_area_m2:     floor_area.round(3),
           total_ceiling_area_m2:   ceiling_area.round(3),
+          gross_horizontal_area_m2: (floor_area + ceiling_area).round(3),
           total_wall_area_m2:      wall_area.round(3),
           gross_wall_area_m2:      wall_area.round(3),
           net_wall_area_m2:        net_wall_area.round(3),
@@ -89,7 +90,9 @@ module BOMEngine
     # Compute a synthetic BoundingBox from a flat list of face hashes.
     def self.bounding_box_for(all_faces)
       return nil if all_faces.empty?
-      all_pts = all_faces.flat_map { |f| f[:holes].flatten + (f[:centroid] ? [f[:centroid]] : []) }
+      all_pts = all_faces.flat_map do |face|
+        face[:outer_vertices] + face[:holes].flatten
+      end
       return nil if all_pts.empty?
       xs = all_pts.map { |p| p[:x] }
       ys = all_pts.map { |p| p[:y] }
@@ -108,14 +111,19 @@ module BOMEngine
 
     def self.collect_all_faces(entities, tf, result = [])
       entities.each do |e|
+        next unless Traversal.exportable_entity?(e)
+
         case e
         when Sketchup::Face
-          n = e.normal.transform(tf).normalize
+          n = Traversal.world_normal(e, tf)
           result << {
             id:           e.persistent_id.to_s,
             normal:       Traversal.vec_hash(n),
-            area_m2:      (e.area * Constants::IN2_TO_M2).round(4),
+            area_m2:      Traversal.world_area_m2(e, tf),
             surface_type: Classifier.classify(n),
+            outer_vertices: e.outer_loop.vertices.map { |v|
+                              Traversal.pt_to_m(tf * v.position)
+                            },
             holes:        e.loops.reject(&:outer?).map { |l|
                             l.vertices.map { |v| Traversal.pt_to_m(tf * v.position) }
                           },

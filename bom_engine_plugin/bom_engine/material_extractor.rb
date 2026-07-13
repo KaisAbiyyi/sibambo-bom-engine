@@ -10,6 +10,9 @@ module BOMEngine
     # @param texture_dir [String, nil] output directory; nil means skip texture export
     # @return            [Array<Hash>] material descriptors
     def self.extract(model, tw, texture_dir)
+      Dir.mkdir(texture_dir) if texture_dir && !Dir.exist?(texture_dir)
+      written = 0
+
       model.materials.map do |mat|
         c = mat.color
         entry = {
@@ -39,13 +42,16 @@ module BOMEngine
 
           # Register texture for writing — actual write happens in TextureExporter
           begin
-            tw.load(mat, true)
+            out_path = File.join(texture_dir, tex_filename)
+            written += 1 if tex.write(out_path, true)
           rescue => e
-            Logger.warn("Could not load texture for '#{mat.name}': #{e.message}")
+            Logger.warn("Could not write texture for '#{mat.name}': #{e.message}")
           end
         end
 
         entry
+      end.tap do
+        Logger.info("Wrote #{written} texture(s) to #{texture_dir}") if texture_dir
       end
     end
 

@@ -1,0 +1,378 @@
+{
+  "capturedAt": "2026-07-13T00:10:30.663Z",
+  "format": "BOME2",
+  "views": [
+    {
+      "status": "ready",
+      "slug": "house2",
+      "view": "isometric",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "isometric",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 18.508809,
+          "y": 14.900338,
+          "z": 12.775092
+        },
+        "target": {
+          "x": 2.254615,
+          "y": 1.896982,
+          "z": -3.479102
+        },
+        "up": {
+          "x": -0.34815531,
+          "y": 0.87038828,
+          "z": -0.34815531
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 11.016002,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#D2D0B9"
+      },
+      "sourceBytes": 98366,
+      "faceCount": 3657,
+      "runtimeGroups": 88,
+      "visibleRuntimeGroups": 88,
+      "visibleRuntimeInstances": 202,
+      "renderedBounds": {
+        "min": {
+          "x": -0.4699000120162964,
+          "y": -5.079999794935006e-11,
+          "z": -9.84050178527832
+        },
+        "max": {
+          "x": 6.877049922943115,
+          "y": 6.565899848937988,
+          "z": 5.740288257598877
+        }
+      },
+      "loadToRenderMs": 1045.1,
+      "usedJSHeapBytes": 65366711,
+      "warnings": [
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "house2",
+      "view": "front",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "front",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 3.203575,
+          "y": 3.28295,
+          "z": 20.57831
+        },
+        "target": {
+          "x": 3.203575,
+          "y": 3.28295,
+          "z": -2.050107
+        },
+        "up": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 6.911474,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#D2D0B9"
+      },
+      "sourceBytes": 98366,
+      "faceCount": 3657,
+      "runtimeGroups": 88,
+      "visibleRuntimeGroups": 88,
+      "visibleRuntimeInstances": 202,
+      "renderedBounds": {
+        "min": {
+          "x": -0.4699000120162964,
+          "y": -5.079999794935006e-11,
+          "z": -9.84050178527832
+        },
+        "max": {
+          "x": 6.877049922943115,
+          "y": 6.565899848937988,
+          "z": 5.740288257598877
+        }
+      },
+      "loadToRenderMs": 29.8,
+      "usedJSHeapBytes": 76333586,
+      "warnings": [
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "house2",
+      "view": "back",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "back",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 3.203575,
+          "y": 3.28295,
+          "z": -23.962171
+        },
+        "target": {
+          "x": 3.203575,
+          "y": 3.28295,
+          "z": -2.050107
+        },
+        "up": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 6.911474,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#D2D0B9"
+      },
+      "sourceBytes": 98366,
+      "faceCount": 3657,
+      "runtimeGroups": 88,
+      "visibleRuntimeGroups": 88,
+      "visibleRuntimeInstances": 202,
+      "renderedBounds": {
+        "min": {
+          "x": -0.4699000120162964,
+          "y": -5.079999794935006e-11,
+          "z": -9.84050178527832
+        },
+        "max": {
+          "x": 6.877049922943115,
+          "y": 6.565899848937988,
+          "z": 5.740288257598877
+        }
+      },
+      "loadToRenderMs": 32.2,
+      "usedJSHeapBytes": 76806092,
+      "warnings": [
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "house2",
+      "view": "left",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "left",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 24.943201,
+          "y": 3.28295,
+          "z": -2.050107
+        },
+        "target": {
+          "x": 3.203575,
+          "y": 3.28295,
+          "z": -2.050107
+        },
+        "up": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 9.681621,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#D2D0B9"
+      },
+      "sourceBytes": 98366,
+      "faceCount": 3657,
+      "runtimeGroups": 88,
+      "visibleRuntimeGroups": 88,
+      "visibleRuntimeInstances": 202,
+      "renderedBounds": {
+        "min": {
+          "x": -0.4699000120162964,
+          "y": -5.079999794935006e-11,
+          "z": -9.84050178527832
+        },
+        "max": {
+          "x": 6.877049922943115,
+          "y": 6.565899848937988,
+          "z": 5.740288257598877
+        }
+      },
+      "loadToRenderMs": 26.7,
+      "usedJSHeapBytes": 77328594,
+      "warnings": [
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "house2",
+      "view": "right",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "right",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": -18.536051,
+          "y": 3.28295,
+          "z": -2.050107
+        },
+        "target": {
+          "x": 3.203575,
+          "y": 3.28295,
+          "z": -2.050107
+        },
+        "up": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 9.681621,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#D2D0B9"
+      },
+      "sourceBytes": 98366,
+      "faceCount": 3657,
+      "runtimeGroups": 88,
+      "visibleRuntimeGroups": 88,
+      "visibleRuntimeInstances": 202,
+      "renderedBounds": {
+        "min": {
+          "x": -0.4699000120162964,
+          "y": -5.079999794935006e-11,
+          "z": -9.84050178527832
+        },
+        "max": {
+          "x": 6.877049922943115,
+          "y": 6.565899848937988,
+          "z": 5.740288257598877
+        }
+      },
+      "loadToRenderMs": 33.8,
+      "usedJSHeapBytes": 77867251,
+      "warnings": [
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    },
+    {
+      "status": "ready",
+      "slug": "house2",
+      "view": "top",
+      "viewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "expectedViewport": {
+        "width": 1982,
+        "height": 1170
+      },
+      "camera": {
+        "viewName": "top",
+        "projectionMode": "orthographic",
+        "position": {
+          "x": 3.203575,
+          "y": 37.170269,
+          "z": -2.050107
+        },
+        "target": {
+          "x": 3.203575,
+          "y": 3.28295,
+          "z": -2.050107
+        },
+        "up": {
+          "x": 0,
+          "y": 0,
+          "z": -1
+        },
+        "fieldOfViewDegrees": null,
+        "orthographicHeightM": 16.400832,
+        "aspectRatio": 1.694017094017094,
+        "viewport": {
+          "width": 1982,
+          "height": 1170
+        },
+        "backgroundColor": "#D2D0B9"
+      },
+      "sourceBytes": 98366,
+      "faceCount": 3657,
+      "runtimeGroups": 88,
+      "visibleRuntimeGroups": 88,
+      "visibleRuntimeInstances": 202,
+      "renderedBounds": {
+        "min": {
+          "x": -0.4699000120162964,
+          "y": -5.079999794935006e-11,
+          "z": -9.84050178527832
+        },
+        "max": {
+          "x": 6.877049922943115,
+          "y": 6.565899848937988,
+          "z": 5.740288257598877
+        }
+      },
+      "loadToRenderMs": 31.3,
+      "usedJSHeapBytes": 78395844,
+      "warnings": [
+        "Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp."
+      ]
+    }
+  ]
+}
