@@ -11,6 +11,8 @@
 		"prepare": "svelte-kit sync || echo ''",
 		"test": "bun test",
 		"validate:v3": "bun scripts/validate-canonical-v3.ts",
+		"inspect:geometry": "bun run scripts/inspect-geometry.ts",
+		"benchmark:geometry": "bun run scripts/benchmark-geometry.ts",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
