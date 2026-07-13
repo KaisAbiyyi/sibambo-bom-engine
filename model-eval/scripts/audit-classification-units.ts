@@ -36,7 +36,7 @@ for (const path of paths) {
 		logicalObjectsWithMultipleArchitecturalOrientations: mixedRoleObjects,
 		fragmentedUnitsUnder0_01M2: units.filter((unit) => unit.areaM2 < 0.01).length,
 		unitsWithMultipleClusters: units.filter((unit) => unit.surfaceClusterIds.length > 1).length
- 	});
+	});
 }
 console.log(JSON.stringify(reports, null, 2));
 
