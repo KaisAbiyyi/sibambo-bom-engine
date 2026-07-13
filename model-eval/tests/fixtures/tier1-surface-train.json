@@ -1,0 +1,11 @@
+{
+  "format": "tier1_surface_ground_truth/1.0.0",
+  "modelId": "unannotated-train",
+  "sourceExportHash": "pending-human-verification",
+  "split": "train",
+  "metadata": {
+    "rationale": "Empty initial split. No automated or silver labels are promoted to verified ground truth.",
+    "generatedAt": "2026-07-13T00:00:00.000Z"
+  },
+  "annotations": []
+}

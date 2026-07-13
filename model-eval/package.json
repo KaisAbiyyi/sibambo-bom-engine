@@ -13,6 +13,8 @@
 		"validate:v3": "bun scripts/validate-canonical-v3.ts",
 		"inspect:geometry": "bun run scripts/inspect-geometry.ts",
 		"benchmark:geometry": "bun run scripts/benchmark-geometry.ts",
+		"audit:classification-units": "bun run scripts/audit-classification-units.ts",
+		"benchmark:annotation": "bun run scripts/benchmark-annotation.ts",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},

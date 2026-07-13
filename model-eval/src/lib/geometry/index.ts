@@ -248,13 +248,12 @@ export class GeometryFoundation {
 		const parent = metrics.map((_, index) => index);
 		const find = (index: number): number => parent[index] === index ? index : (parent[index] = find(parent[index]));
 		const union = (a: number, b: number) => { a = find(a); b = find(b); if (a !== b) parent[b] = a; };
-		for (let left = 0; left < metrics.length; left += 1) for (let right = left + 1; right < metrics.length; right += 1) {
-			if (!shareEdge(metrics[left], metrics[right])) continue;
-			if (GEOMETRY_TOLERANCES.splitMaterialBoundaries && metrics[left].materialId !== metrics[right].materialId) continue;
-			if (dot(metrics[left].normal, metrics[right].normal) < COS_CLUSTER) continue;
-			if (coplanarity(metrics[left], metrics[right]) > GEOMETRY_TOLERANCES.coplanarityM) continue;
+		forEachSharedEdgePair(metrics, (left, right) => {
+			if (GEOMETRY_TOLERANCES.splitMaterialBoundaries && metrics[left].materialId !== metrics[right].materialId) return;
+			if (dot(metrics[left].normal, metrics[right].normal) < COS_CLUSTER) return;
+			if (coplanarity(metrics[left], metrics[right]) > GEOMETRY_TOLERANCES.coplanarityM) return;
 			union(left, right);
-		}
+		});
 		const groups = new Map<number, FaceMetric[]>();
 		metrics.forEach((metric, index) => groups.set(find(index), [...(groups.get(find(index)) || []), metric]));
 		const clusters = [...groups.values()].sort((a, b) => a[0].id.localeCompare(b[0].id)).map((faces, index) => this.clusterRecord(object, faces, index));
@@ -300,8 +299,8 @@ export class GeometryFoundation {
 	}
 
 	private addLogicalObject(node: InstanceGraphNode, faceIndexes: number[], componentIndex: number | null) {
-		const metric = this.measure(node, faceIndexes);
 		const mesh = this.scene.manifest.meshes[node.meshId!];
+		const metric = faceIndexes.length === mesh.faces.length ? this.getWorldGeometry(node.nodeId) : this.measure(node, faceIndexes);
 		const id = componentIndex === null ? `logical:${node.nodeId}` : `logical:${node.nodeId}:component:${componentIndex}`;
 		const stringAt = (index: number) => this.scene.manifest.strings[index] || '';
 		const object: LogicalObjectRecord = {
@@ -316,14 +315,12 @@ export class GeometryFoundation {
 
 	private connectedFaceComponents(node: InstanceGraphNode, indexes: number[]) {
 		const metrics = indexes.map((index) => this.faceMetric(node, index));
-		const seen = new Set<number>(); const output: number[][] = [];
-		for (let index = 0; index < metrics.length; index += 1) {
-			if (seen.has(index)) continue;
-			const queue = [index]; seen.add(index); const component: number[] = [];
-			while (queue.length) { const current = queue.shift()!; component.push(indexes[current]); for (let next = 0; next < metrics.length; next += 1) if (!seen.has(next) && shareEdge(metrics[current], metrics[next])) { seen.add(next); queue.push(next); } }
-			output.push(component.sort((a, b) => a - b));
-		}
-		return output.sort((a, b) => a[0] - b[0]);
+		const parent = metrics.map((_, index) => index);
+		const find = (index: number): number => parent[index] === index ? index : parent[index] = find(parent[index]);
+		forEachSharedEdgePair(metrics, (left, right) => { const leftRoot = find(left); const rightRoot = find(right); if (leftRoot !== rightRoot) parent[rightRoot] = leftRoot; });
+		const components = new Map<number, number[]>();
+		indexes.forEach((faceIndex, index) => components.set(find(index), [...(components.get(find(index)) || []), faceIndex]));
+		return [...components.values()].map((component) => component.sort((left, right) => left - right)).sort((left, right) => left[0] - right[0]);
 	}
 
 	private clusterRecord(object: LogicalObjectRecord, faces: FaceMetric[], connectedComponentIndex: number): SurfaceClusterRecord {
@@ -432,6 +429,27 @@ function shareEdge(left: FaceMetric, right: FaceMetric) {
 		if ((near(left.points[leftIndex], right.points[rightIndex]) && near(leftNext, rightNext)) || (near(left.points[leftIndex], rightNext) && near(leftNext, right.points[rightIndex]))) return true;
 	}
 	return false;
+}
+function forEachSharedEdgePair(metrics: FaceMetric[], visit: (left: number, right: number) => void) {
+	type IndexedEdge = { faceIndex: number; a: Vec3; b: Vec3 };
+	const byEdgeCell = new Map<string, IndexedEdge[]>();
+	const seenPairs = new Set<string>();
+	metrics.forEach((metric, right) => {
+		for (let index = 0; index < metric.points.length; index += 1) {
+			const edge = { faceIndex: right, a: metric.points[index], b: metric.points[(index + 1) % metric.points.length] };
+			for (const previous of byEdgeCell.get(edgeCell(edge.a, edge.b)) || []) {
+				const pair = `${previous.faceIndex}:${right}`;
+				if (!seenPairs.has(pair) && edgesNear(previous, edge)) { seenPairs.add(pair); visit(previous.faceIndex, right); }
+			}
+			const key = edgeCell(edge.a, edge.b);
+			byEdgeCell.set(key, [...(byEdgeCell.get(key) || []), edge]);
+		}
+	});
+}
+function pointCell(point: Vec3) { const size = GEOMETRY_TOLERANCES.positionM * 2; return `${Math.round(point.x / size)},${Math.round(point.y / size)},${Math.round(point.z / size)}`; }
+function edgeCell(a: Vec3, b: Vec3) { const left = pointCell(a); const right = pointCell(b); return left < right ? `${left}|${right}` : `${right}|${left}`; }
+function edgesNear(left: { a: Vec3; b: Vec3 }, right: { a: Vec3; b: Vec3 }) {
+	return (near(left.a, right.a) && near(left.b, right.b)) || (near(left.a, right.b) && near(left.b, right.a));
 }
 function near(left: Vec3, right: Vec3) { return Math.hypot(left.x - right.x, left.y - right.y, left.z - right.z) <= GEOMETRY_TOLERANCES.positionM; }
 function coplanarity(left: FaceMetric, right: FaceMetric) { const normal = left.normal; return Math.max(...right.points.map((point) => Math.abs(dot(normal, subtract(point, left.points[0]))))); }

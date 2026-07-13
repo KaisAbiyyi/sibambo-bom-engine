@@ -37,6 +37,18 @@
 		type QACameraSpec,
 		type SketchUpCameraCapture
 	} from '$lib/render/qa-camera';
+	import {
+		buildClassificationUnits,
+		createGroundTruthDocument,
+		validateGroundTruthDocument,
+		type AnnotationConfidence,
+		type AnnotationStatus,
+		type ClassificationUnitRecord,
+		type SourceLabelReliability,
+		type SurfaceRole,
+		type Tier1AnnotationRecord
+	} from '$lib/annotation';
+	import { createGeometryFoundation } from '$lib/geometry';
 
 	type NumberInputKey = 'peopleCount' | 'operationHours' | 'setPointC' | 'orientationDeg' | 'glassRatio' | 'roomHeightM';
 	type ModelCanvasProps = {
@@ -47,6 +59,7 @@
 		visiblePartKeys: PartKey[];
 		qaMode?: boolean;
 		qaCamera?: QACameraSpec | null;
+		annotationUnit?: Pick<ClassificationUnitRecord, 'sourceNodeIds' | 'sourcePrimitiveIds'> | null;
 		onQaReady?: (payload: {
 			viewName: string;
 			width: number;
@@ -95,6 +108,7 @@
 	};
 
 	let fileInput: HTMLInputElement;
+	let annotationFileInput = $state<HTMLInputElement>();
 	let model = $state<ParsedBuildingModel | null>(null);
 	let spaces = $state<SpaceZone[]>([]);
 	let inputs = $state<ProjectInputs>({ ...DEFAULT_INPUTS });
@@ -115,6 +129,18 @@
 	let qaSlug = $state('');
 	let qaLoadStartedAt = 0;
 	let qaSourceBytes = 0;
+	let annotationMode = $state(false);
+	let annotationUnits = $state<ClassificationUnitRecord[]>([]);
+	let selectedAnnotationUnitId = $state('');
+	let annotationRecords = $state<Map<string, Tier1AnnotationRecord>>(new Map());
+	let sourceExportHash = $state('unverified');
+	let annotationRole = $state<SurfaceRole>('unknown');
+	let annotationStatus = $state<AnnotationStatus>('proposed');
+	let annotationConfidence = $state<AnnotationConfidence>('medium');
+	let annotationSourceReliability = $state<SourceLabelReliability>('absent');
+	let annotationNote = $state('');
+	let annotationMessage = $state('');
+	let selectedAnnotationUnit = $derived(annotationUnits.find((unit) => unit.id === selectedAnnotationUnitId) || annotationUnits[0] || null);
 	let readiness = $derived<ReadinessItem[]>(getReadiness(model, inputs, touched));
 	let selectedReadiness = $derived<ReadinessItem | undefined>(readiness.find((item) => item.kind === selectedAnalysis));
 	let presentParts = $derived(model ? model.partStats.filter((part) => part.count > 0) : []);
@@ -161,6 +187,7 @@
 		const corpus = params.get('corpus');
 		const format = params.get('format') || 'bome2';
 		qaMode = params.get('qa') === '1';
+		annotationMode = params.get('annotate') === 'tier1';
 		qaSlug = corpus || '';
 		const view = params.get('view') || 'isometric';
 		if (corpus) {
@@ -285,7 +312,7 @@
 		parseMessage = `Membaca ${file.name}...`;
 		try {
 			const data = await readBomModelData(file, MAX_DECOMPRESSED_MODEL_BYTES);
-			acceptModel(data, file.name);
+			acceptModel(data, file.name, await sha256File(file));
 		} catch (error) {
 			loadError = error instanceof Error ? error.message : 'JSON tidak valid';
 		} finally {
@@ -294,8 +321,9 @@
 		}
 	}
 
-	function acceptModel(data: BomModelJson, name: string) {
+	function acceptModel(data: BomModelJson, name: string, exportHash = `unverified:${name}`) {
 		model = parseBomModelJson(data, name, inputs.roomHeightM);
+		sourceExportHash = exportHash;
 		selectedInspectionId = [...model.faces].sort((left, right) => {
 			const leftUnknown = left.category === 'unknown' ? 0 : 1;
 			const rightUnknown = right.category === 'unknown' ? 0 : 1;
@@ -309,6 +337,89 @@
 		else inputs = { ...inputs, roomHeightM: detectedHeight };
 		result = null;
 		parseMessage = `${format(model.faceCount)} face terbaca dari ${name}`;
+		setupAnnotationMode();
+	}
+
+	function setupAnnotationMode() {
+		annotationUnits = [];
+		annotationRecords = new Map();
+		selectedAnnotationUnitId = '';
+		if (!annotationMode || !model?.runtimeScene) return;
+		const foundation = createGeometryFoundation(model.runtimeScene);
+		annotationUnits = buildClassificationUnits(foundation, model.sourceName).units;
+		selectedAnnotationUnitId = annotationUnits[0]?.id || '';
+		annotationMessage = `${annotationUnits.length} unit permukaan siap ditinjau.`;
+	}
+
+	function applyAnnotationDraft(role = annotationRole, status = annotationStatus) {
+		if (!selectedAnnotationUnit || !model) return;
+		const record: Tier1AnnotationRecord = {
+			modelId: model.sourceName,
+			sourceExportHash,
+			classificationUnitId: selectedAnnotationUnit.id,
+			logicalObjectId: selectedAnnotationUnit.logicalObjectId,
+			surfaceClusterIds: selectedAnnotationUnit.surfaceClusterIds,
+			expectedSurfaceRole: role,
+			status,
+			annotationConfidence,
+			evidenceNote: annotationNote.slice(0, 500),
+			sourceLabelReliability: annotationSourceReliability,
+			screenshotReferences: [],
+			annotatedAt: new Date().toISOString(),
+			reviewer: 'local-reviewer',
+			split: 'train'
+		};
+		annotationRecords = new Map(annotationRecords).set(record.classificationUnitId, record);
+		annotationRole = role;
+		annotationStatus = status;
+		annotationMessage = `${record.status}: ${record.expectedSurfaceRole}`;
+	}
+
+	function selectAnnotationUnit(id: string) {
+		selectedAnnotationUnitId = id;
+		const record = annotationRecords.get(id);
+		if (record) {
+			annotationRole = record.expectedSurfaceRole;
+			annotationStatus = record.status;
+			annotationConfidence = record.annotationConfidence;
+			annotationSourceReliability = record.sourceLabelReliability;
+			annotationNote = record.evidenceNote;
+		} else {
+			annotationRole = 'unknown'; annotationStatus = 'proposed'; annotationConfidence = 'medium'; annotationSourceReliability = 'absent'; annotationNote = '';
+		}
+	}
+
+	function moveAnnotation(delta: number) {
+		const index = Math.max(0, annotationUnits.findIndex((unit) => unit.id === selectedAnnotationUnitId));
+		const target = annotationUnits[(index + delta + annotationUnits.length) % Math.max(annotationUnits.length, 1)];
+		if (target) selectAnnotationUnit(target.id);
+	}
+
+	function exportAnnotations() {
+		if (!model) return;
+		const annotationDocument = createGroundTruthDocument({ modelId: model.sourceName, sourceExportHash, split: 'train', annotations: [...annotationRecords.values()] });
+		const blob = new Blob([JSON.stringify(annotationDocument, null, 2)], { type: 'application/json;charset=utf-8' });
+		const url = URL.createObjectURL(blob); const anchor = window.document.createElement('a'); anchor.href = url; anchor.download = `${model.sourceName}_tier1-ground-truth.json`; anchor.click(); URL.revokeObjectURL(url);
+	}
+
+	async function handleAnnotationFileChange(event: Event) {
+		const file = (event.currentTarget as HTMLInputElement).files?.[0];
+		if (!file || !model) return;
+		try {
+			const value = JSON.parse(await file.text());
+			const validation = validateGroundTruthDocument(value, { sourceExportHash, units: annotationUnits });
+			if (!validation.valid) throw new Error(validation.errors.join(' '));
+			const annotations = value.annotations as Tier1AnnotationRecord[];
+			annotationRecords = new Map(annotations.map((annotation) => [annotation.classificationUnitId, annotation]));
+			annotationMessage = `${annotations.length} annotation dimuat.`;
+			if (selectedAnnotationUnitId) selectAnnotationUnit(selectedAnnotationUnitId);
+		} catch (error) { annotationMessage = error instanceof Error ? error.message : 'Annotation JSON tidak valid.'; }
+		finally { if (annotationFileInput) annotationFileInput.value = ''; }
+	}
+
+	async function sha256File(file: File) {
+		const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+		return `sha256:${[...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')}`;
 	}
 
 	function selectInspection(event: Event) {
@@ -604,6 +715,58 @@
 			{/if}
 		</section>
 
+		{#if annotationMode && model}
+			<section class="panel-block annotation-panel" aria-label="Tier-1 annotation mode">
+				<div class="section-heading">
+					<h2>Tier-1 annotation</h2>
+					<span>{annotationRecords.size}/{annotationUnits.length}</span>
+				</div>
+				<p class="muted small">Ground truth manual. Prediksi classifier tidak ditampilkan dan tidak mengisi label.</p>
+				<div class="annotation-nav">
+					<button type="button" onclick={() => moveAnnotation(-1)}>← Prev</button>
+					<select aria-label="Classification unit" value={selectedAnnotationUnit?.id || ''} onchange={(event) => selectAnnotationUnit((event.currentTarget as HTMLSelectElement).value)}>
+						{#each annotationUnits as unit}<option value={unit.id}>{unit.id} · {format(unit.areaM2, 2)} m²</option>{/each}
+					</select>
+					<button type="button" onclick={() => moveAnnotation(1)}>Next →</button>
+				</div>
+				{#if selectedAnnotationUnit}
+					<div class="annotation-evidence">
+						<code>{selectedAnnotationUnit.id}</code>
+						<span>Object: {selectedAnnotationUnit.logicalObjectId}</span>
+						<span>Clusters: {selectedAnnotationUnit.surfaceClusterIds.join(', ')}</span>
+						<span>{format(selectedAnnotationUnit.areaM2, 2)} m² · {selectedAnnotationUnit.triangleCount} tri</span>
+						<span>Vert {Math.round(selectedAnnotationUnit.verticalAreaRatio * 100)}% · Up {Math.round(selectedAnnotationUnit.upwardHorizontalAreaRatio * 100)}% · Down {Math.round(selectedAnnotationUnit.downwardHorizontalAreaRatio * 100)}%</span>
+						<span>Elev {selectedAnnotationUnit.relativeMinElevation.toFixed(2)}–{selectedAnnotationUnit.relativeMaxElevation.toFixed(2)} · materials {selectedAnnotationUnit.materialIds.join(', ') || 'none'}</span>
+						<span>Source: {selectedAnnotationUnit.sourceNames.join(', ') || 'none'} / {selectedAnnotationUnit.sourceTags.join(', ') || 'untagged'}</span>
+					</div>
+					<div class="annotation-roles" aria-label="Surface role">
+						<button class:active={annotationRole === 'wall'} type="button" onclick={() => { annotationRole = 'wall'; applyAnnotationDraft('wall'); }}>1 Wall</button>
+						<button class:active={annotationRole === 'floor'} type="button" onclick={() => { annotationRole = 'floor'; applyAnnotationDraft('floor'); }}>2 Floor</button>
+						<button class:active={annotationRole === 'ceiling'} type="button" onclick={() => { annotationRole = 'ceiling'; applyAnnotationDraft('ceiling'); }}>3 Ceiling</button>
+						<button class:active={annotationRole === 'roof'} type="button" onclick={() => { annotationRole = 'roof'; applyAnnotationDraft('roof'); }}>4 Roof</button>
+						<button class:active={annotationRole === 'unknown'} type="button" onclick={() => { annotationRole = 'unknown'; applyAnnotationDraft('unknown'); }}>5 Unknown</button>
+					</div>
+					<div class="annotation-fields">
+						<label class="field"><span>Status</span><select bind:value={annotationStatus}><option value="proposed">proposed</option><option value="verified">verified</option><option value="ambiguous">ambiguous</option><option value="excluded">excluded</option></select></label>
+						<label class="field"><span>Confidence</span><select bind:value={annotationConfidence}><option value="high">high</option><option value="medium">medium</option><option value="low">low</option></select></label>
+						<label class="field"><span>Source label</span><select bind:value={annotationSourceReliability}><option value="correct">correct</option><option value="incorrect">incorrect</option><option value="absent">absent</option><option value="ambiguous">ambiguous</option></select></label>
+					</div>
+					<label class="field"><span>Evidence note</span><textarea bind:value={annotationNote} maxlength="500" placeholder="Visual / geometry evidence"></textarea></label>
+					<div class="button-row">
+						<button class="primary-button" type="button" onclick={() => applyAnnotationDraft()}>Save unit</button>
+						<button class="ghost-button" type="button" onclick={() => { annotationStatus = 'ambiguous'; applyAnnotationDraft(annotationRole, 'ambiguous'); }}>Ambiguous</button>
+						<button class="ghost-button" type="button" onclick={() => { annotationStatus = 'excluded'; applyAnnotationDraft(annotationRole, 'excluded'); }}>Excluded</button>
+					</div>
+					<div class="button-row">
+						<button class="ghost-button" type="button" onclick={exportAnnotations}>Export JSON</button>
+						<button class="ghost-button" type="button" onclick={() => annotationFileInput?.click()}>Reload JSON</button>
+					</div>
+					<input bind:this={annotationFileInput} accept=".json,application/json" hidden type="file" onchange={handleAnnotationFileChange} />
+				{/if}
+				{#if annotationMessage}<p class="status-line">{annotationMessage}</p>{/if}
+			</section>
+		{/if}
+
 		{#if model}
 			<section class="panel-block">
 				<div class="section-heading">
@@ -761,7 +924,7 @@
 
 	<section class="stage-panel">
 		{#if ModelCanvasComponent}
-			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} activeAnalysis={selectedAnalysis} {result} {qaMode} {qaCamera} onQaReady={handleQaReady} />
+			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} activeAnalysis={selectedAnalysis} {result} {qaMode} {qaCamera} annotationUnit={annotationMode ? selectedAnnotationUnit : null} onQaReady={handleQaReady} />
 		{:else}
 			<div class="model-stage-placeholder">
 				<strong>JSON belum dimuat</strong>
@@ -1164,6 +1327,70 @@
 		border-radius: 6px;
 		padding: 8px;
 		font-size: 0.82rem;
+	}
+
+	.annotation-panel {
+		display: grid;
+		gap: 10px;
+		border-color: #f0b77b;
+		background: #fffaf4;
+	}
+
+	.annotation-nav,
+	.annotation-roles,
+	.annotation-fields {
+		display: grid;
+		gap: 6px;
+	}
+
+	.annotation-nav {
+		grid-template-columns: auto minmax(0, 1fr) auto;
+	}
+
+	.annotation-roles {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.annotation-roles button,
+	.annotation-nav button {
+		border: 1px solid #e3c5a4;
+		border-radius: 5px;
+		padding: 7px;
+		background: #fff;
+		color: #6c3e15;
+		font-weight: 750;
+	}
+
+	.annotation-roles button.active {
+		background: #9a4c12;
+		border-color: #9a4c12;
+		color: #fff;
+	}
+
+	.annotation-fields {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+
+	.annotation-evidence {
+		display: grid;
+		gap: 4px;
+		padding: 8px;
+		border-left: 3px solid #e67e22;
+		background: #fff;
+		font-size: 0.74rem;
+		color: #5d5042;
+	}
+
+	.annotation-evidence code {
+		font-size: 0.67rem;
+		overflow-wrap: anywhere;
+		color: #78350f;
+	}
+
+	textarea {
+		min-height: 58px;
+		resize: vertical;
+		font: inherit;
 	}
 
 	.section-heading {

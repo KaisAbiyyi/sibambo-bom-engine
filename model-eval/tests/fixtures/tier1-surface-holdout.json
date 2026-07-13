@@ -1,0 +1,11 @@
+{
+  "format": "tier1_surface_ground_truth/1.0.0",
+  "modelId": "unannotated-holdout",
+  "sourceExportHash": "pending-human-verification",
+  "split": "holdout",
+  "metadata": {
+    "rationale": "Empty initial holdout. Labels remain unavailable to any future threshold-tuning workflow.",
+    "generatedAt": "2026-07-13T00:00:00.000Z"
+  },
+  "annotations": []
+}

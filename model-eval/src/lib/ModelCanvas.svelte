@@ -37,6 +37,8 @@
 	import { PART_META } from './model';
 	import { buildRuntimeGeometryGroups, runtimePartOverrides } from './render/build-runtime-scene';
 	import type { QACameraSpec } from './render/qa-camera';
+	import { buildClassificationUnitHighlight } from './annotation/highlight';
+	import type { ClassificationUnitRecord } from './annotation';
 
 	let {
 		model = null,
@@ -46,7 +48,8 @@
 		visiblePartKeys = [],
 		qaMode = false,
 		qaCamera = null,
-		onQaReady = undefined
+		onQaReady = undefined,
+		annotationUnit = null
 	}: {
 		model: ParsedBuildingModel | null;
 		activeAnalysis: AnalysisKind;
@@ -55,6 +58,7 @@
 		visiblePartKeys: PartKey[];
 		qaMode?: boolean;
 		qaCamera?: QACameraSpec | null;
+		annotationUnit?: Pick<ClassificationUnitRecord, 'sourceNodeIds' | 'sourcePrimitiveIds'> | null;
 		onQaReady?: (payload: {
 			viewName: string;
 			width: number;
@@ -96,6 +100,7 @@
 	let currentModel: ParsedBuildingModel | null = null;
 	let runtimes: PartRuntime[] = [];
 	let overlayObjects: Array<Mesh | ArrowHelper | Sprite | Group> = [];
+	let annotationHighlightMesh: Mesh | null = null;
 	const patternTextures = new Map<string, CanvasTexture>();
 
 	function init() {
@@ -231,6 +236,7 @@
 	}
 
 	function clearModel() {
+		clearAnnotationHighlight();
 		runtimes.forEach((runtime) => {
 			root.remove(runtime.mesh);
 			root.remove(runtime.edges);
@@ -262,6 +268,25 @@
 		overlayObjects = [];
 	}
 
+	function clearAnnotationHighlight() {
+		if (!annotationHighlightMesh) return;
+		root.remove(annotationHighlightMesh);
+		annotationHighlightMesh.geometry.dispose();
+		(annotationHighlightMesh.material as MeshStandardMaterial).dispose();
+		annotationHighlightMesh = null;
+	}
+
+	function rebuildAnnotationHighlight() {
+		clearAnnotationHighlight();
+		if (!annotationUnit || !model?.runtimeScene) return;
+		const geometry = buildClassificationUnitHighlight(model.runtimeScene, annotationUnit);
+		if (!geometry) return;
+		const material = new MeshStandardMaterial({ color: '#f97316', emissive: '#7c2d12', emissiveIntensity: 0.55, transparent: true, opacity: 0.92, side: DoubleSide, depthWrite: false });
+		annotationHighlightMesh = new Mesh(geometry, material);
+		annotationHighlightMesh.renderOrder = 20;
+		root.add(annotationHighlightMesh);
+	}
+
 	function buildModel() {
 		if (!mounted || !model || currentModel === model) return;
 		clearModel();
@@ -274,6 +299,7 @@
 			fitCamera();
 			applyEditTransform();
 			refreshSurfaceMaterials();
+			rebuildAnnotationHighlight();
 			buildOverlays();
 			return;
 		}
@@ -633,9 +659,10 @@
 			runtime.edges.visible = isVisible && (Boolean(result) || defaultEdgeVisible(runtime.key));
 			runtime.material.color.set(!result && runtime.textureName ? '#ffffff' : visual.color);
 			runtime.material.map = result ? null : proceduralTexture(runtime.textureName, runtime.key);
-			runtime.material.opacity = visual.opacity;
-			runtime.material.transparent = visual.opacity < 1;
-			runtime.material.depthWrite = visual.opacity > 0.35;
+			const opacity = annotationUnit ? Math.min(visual.opacity, 0.12) : visual.opacity;
+			runtime.material.opacity = opacity;
+			runtime.material.transparent = opacity < 1;
+			runtime.material.depthWrite = opacity > 0.35;
 			runtime.material.needsUpdate = true;
 			runtime.edgeMaterial.opacity = result ? 0.28 : defaultEdgeVisible(runtime.key) ? 0.2 : 0.08;
 		});
@@ -837,8 +864,10 @@
 		activeAnalysis;
 		result;
 		visiblePartKeys;
+		annotationUnit;
 		if (mounted) {
 			refreshSurfaceMaterials();
+			rebuildAnnotationHighlight();
 			buildOverlays();
 		}
 	});

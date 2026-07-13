@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tier1_surface_ground_truth/1.0.0",
+  "type": "object",
+  "required": ["format", "modelId", "sourceExportHash", "split", "metadata", "annotations"],
+  "properties": {
+    "format": { "const": "tier1_surface_ground_truth/1.0.0" },
+    "modelId": { "type": "string", "minLength": 1 },
+    "sourceExportHash": { "type": "string", "minLength": 1 },
+    "split": { "enum": ["train", "holdout"] },
+    "metadata": { "type": "object", "required": ["rationale", "generatedAt"], "properties": { "rationale": { "type": "string" }, "generatedAt": { "type": "string" } } },
+    "annotations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["modelId", "sourceExportHash", "classificationUnitId", "logicalObjectId", "surfaceClusterIds", "expectedSurfaceRole", "status", "annotationConfidence", "evidenceNote", "sourceLabelReliability", "screenshotReferences", "annotatedAt", "reviewer", "split"],
+        "properties": {
+          "modelId": { "type": "string" },
+          "sourceExportHash": { "type": "string" },
+          "classificationUnitId": { "type": "string" },
+          "logicalObjectId": { "type": "string" },
+          "surfaceClusterIds": { "type": "array", "items": { "type": "string" } },
+          "expectedSurfaceRole": { "enum": ["wall", "floor", "ceiling", "roof", "unknown"] },
+          "status": { "enum": ["proposed", "verified", "ambiguous", "excluded"] },
+          "annotationConfidence": { "enum": ["high", "medium", "low"] },
+          "sourceLabelReliability": { "enum": ["correct", "incorrect", "absent", "ambiguous"] },
+          "evidenceNote": { "type": "string" },
+          "screenshotReferences": { "type": "array", "items": { "type": "string" } },
+          "annotatedAt": { "type": "string" },
+          "reviewer": { "type": "string" },
+          "split": { "enum": ["train", "holdout"] }
+        }
+      }
+    }
+  }
+}

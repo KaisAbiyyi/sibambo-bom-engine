@@ -35,6 +35,12 @@ describe('world geometry foundation', () => {
 		expect(foundation.retainedGeometryBytes().definitionLocalBytes).toBe(36 + 12 + 12);
 	});
 
+	test('reuses world records when logical-object construction already measured a full node mesh', () => {
+		const foundation = createGeometryFoundation(scene([I, translate(1), translate(5)]));
+		foundation.buildLogicalObjectIndex();
+		expect(foundation.retainedGeometryBytes().worldRecordCount).toBe(2);
+	});
+
 	test('recomputes transformed areas and normals for rotation, mirrored, and non-uniform scale', () => {
 		const rotated = createGeometryFoundation(scene([I, rotateX90]));
 		const rotatedRecord = rotated.getWorldGeometry(rotated.instanceGraph.nodes.find((node) => node.meshId === 0)!.nodeId);
