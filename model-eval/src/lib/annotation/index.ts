@@ -84,22 +84,176 @@ export type Tier1AnnotationDocument = {
 	annotations: Tier1AnnotationRecord[];
 };
 
-export function buildClassificationUnits(foundation: GeometryFoundation, modelId = modelIdentifier(foundation)): { units: ClassificationUnitRecord[]; foundation: GeometryFoundation } {
-	const context = foundation.modelContext;
-	const unlinked: ClassificationUnitRecord[] = [];
-	for (const object of foundation.buildLogicalObjectIndex().objects) {
-		const node = foundation.instanceGraph.byNodeId.get(object.nodeId)!;
-		for (const clusters of groupCompatibleClusters(foundation.buildSurfaceClusters(object.id))) {
-			unlinked.push(unitFromClusters(modelId, object, clusters, node, context));
-		}
+export type ClassificationUnitProgress = {
+	processedLogicalObjects: number;
+	totalLogicalObjects: number;
+	unitsDiscovered: number;
+	cancelled: boolean;
+	elapsedMs: number;
+	addedUnits?: ClassificationUnitRecord[];
+};
+
+export type ClassificationUnitCounters = {
+	logicalObjectsProcessed: number;
+	clusterCacheHits: number;
+	clusterCacheMisses: number;
+	compatibleClusterComparisons: number;
+	unitAdjacencyComparisons: number;
+	unitAdjacencyPairs: number;
+	globalUnitPairScans: number;
+};
+
+/**
+ * Incremental, per-logical-object unit builder. It never compares units from
+ * unrelated logical objects, so processing order cannot change unit identity.
+ */
+export class ClassificationUnitIndex {
+	private readonly objects: ReturnType<GeometryFoundation['buildLogicalObjectIndex']>['objects'];
+	private readonly unitsByObject = new Map<string, ClassificationUnitRecord[]>();
+	private nextObjectIndex = 0;
+	private unitCount = 0;
+	private cancelled = false;
+	private readonly startedAt = performance.now();
+	readonly counters: ClassificationUnitCounters = {
+		logicalObjectsProcessed: 0,
+		clusterCacheHits: 0,
+		clusterCacheMisses: 0,
+		compatibleClusterComparisons: 0,
+		unitAdjacencyComparisons: 0,
+		unitAdjacencyPairs: 0,
+		globalUnitPairScans: 0
+	};
+
+	constructor(readonly foundation: GeometryFoundation, readonly modelId = modelIdentifier(foundation)) {
+		this.objects = foundation.buildLogicalObjectIndex().objects;
 	}
-	const units = unlinked.sort((left, right) => left.id.localeCompare(right.id));
-	for (const unit of units) {
-		const peers = units.filter((candidate) => candidate.id !== unit.id && candidate.logicalObjectId === unit.logicalObjectId);
-		unit.adjacencyUnitIds = peers.filter((candidate) => unitsTouch(unit, candidate)).map((candidate) => candidate.id).sort();
-		unit.groupingReasons.push(...splitReasons(unit, peers));
+
+	get progress(): ClassificationUnitProgress {
+		return {
+			processedLogicalObjects: this.nextObjectIndex,
+			totalLogicalObjects: this.objects.length,
+			unitsDiscovered: this.unitCount,
+			cancelled: this.cancelled,
+			elapsedMs: performance.now() - this.startedAt
+		};
 	}
-	return { units, foundation };
+
+	get units(): ClassificationUnitRecord[] {
+		return [...this.unitsByObject.values()].flat().sort((left, right) => left.id.localeCompare(right.id));
+	}
+
+	get complete() { return this.nextObjectIndex >= this.objects.length; }
+
+	cancel() { this.cancelled = true; }
+
+	resume() { this.cancelled = false; }
+
+	processNext() {
+		if (this.cancelled || this.complete) return this.progress;
+		const units = this.processObject(this.objects[this.nextObjectIndex].id);
+		this.nextObjectIndex += 1;
+		return { ...this.progress, addedUnits: units };
+	}
+
+	processObject(logicalObjectId: string) {
+		const existing = this.unitsByObject.get(logicalObjectId);
+		if (existing) return existing;
+		const object = this.objects.find((candidate) => candidate.id === logicalObjectId);
+		if (!object) throw new Error(`Logical object ${logicalObjectId} missing.`);
+		const node = this.foundation.instanceGraph.byNodeId.get(object.nodeId);
+		if (!node) throw new Error(`Logical object ${logicalObjectId} has no instance node.`);
+		const beforeGeometry = this.foundation.getDiagnostics();
+		const clusters = this.foundation.buildSurfaceClusters(object.id);
+		const afterGeometry = this.foundation.getDiagnostics();
+		this.counters.clusterCacheHits += afterGeometry.clusterCacheHits - beforeGeometry.clusterCacheHits;
+		this.counters.clusterCacheMisses += afterGeometry.clusterCacheMisses - beforeGeometry.clusterCacheMisses;
+		const units = groupCompatibleClusters(clusters, this.counters).map((group) => unitFromClusters(this.modelId, object, group, node, this.foundation.modelContext));
+		finalizeObjectUnits(units, this.counters);
+		this.unitsByObject.set(logicalObjectId, units);
+		this.unitCount += units.length;
+		this.counters.logicalObjectsProcessed += 1;
+		return units;
+	}
+
+	processAll() {
+		while (!this.complete && !this.cancelled) this.processNext();
+		return this.units;
+	}
+}
+
+export function createClassificationUnitIndex(foundation: GeometryFoundation, modelId = modelIdentifier(foundation)) {
+	return new ClassificationUnitIndex(foundation, modelId);
+}
+
+export function buildClassificationUnits(foundation: GeometryFoundation, modelId = modelIdentifier(foundation)): { units: ClassificationUnitRecord[]; foundation: GeometryFoundation; counters: ClassificationUnitCounters } {
+	const index = createClassificationUnitIndex(foundation, modelId);
+	return { units: index.processAll(), foundation, counters: index.counters };
+}
+
+export type AnnotationOrientationFilter = 'all' | 'horizontal' | 'vertical' | 'sloped' | 'mixed';
+export type AnnotationUnitSort = 'area-desc' | 'elevation-asc' | 'logical-object' | 'orientation-consistency' | 'source-name' | 'unit-id';
+export type AnnotationUnitFilters = {
+	logicalObjectId?: string;
+	orientation?: AnnotationOrientationFilter;
+	minimumAreaM2?: number;
+	maximumAreaM2?: number;
+	minimumElevationM?: number;
+	maximumElevationM?: number;
+	materialId?: number;
+	sourcePresence?: 'all' | 'present' | 'absent';
+	status?: 'all' | 'unreviewed' | AnnotationStatus;
+	confidence?: 'all' | AnnotationConfidence;
+};
+
+export function classificationUnitFingerprint(units: readonly ClassificationUnitRecord[]) {
+	return JSON.stringify(units.map((unit) => ({
+		id: unit.id,
+		logicalObjectId: unit.logicalObjectId,
+		surfaceClusterIds: [...unit.surfaceClusterIds].sort(),
+		sourcePrimitiveIds: [...unit.sourcePrimitiveIds].sort(),
+		materialIds: [...unit.materialIds].sort((left, right) => left - right),
+		bounds: [unit.worldBounds.min.x, unit.worldBounds.min.y, unit.worldBounds.min.z, unit.worldBounds.max.x, unit.worldBounds.max.y, unit.worldBounds.max.z].map((value) => Number(value.toFixed(6)))
+	})).sort((left, right) => left.id.localeCompare(right.id)));
+}
+
+export function buildAnnotationReviewQueue(units: readonly ClassificationUnitRecord[], records: ReadonlyMap<string, Tier1AnnotationRecord>, filters: AnnotationUnitFilters = {}, sort: AnnotationUnitSort = 'unit-id') {
+	const filtered = units.filter((unit) => annotationUnitMatches(unit, records.get(unit.id), filters));
+	return filtered.sort(annotationUnitComparator(sort));
+}
+
+function annotationUnitMatches(unit: ClassificationUnitRecord, record: Tier1AnnotationRecord | undefined, filters: AnnotationUnitFilters) {
+	if (filters.logicalObjectId && filters.logicalObjectId !== 'all' && unit.logicalObjectId !== filters.logicalObjectId) return false;
+	if (filters.orientation && filters.orientation !== 'all' && annotationOrientation(unit) !== filters.orientation) return false;
+	if (filters.minimumAreaM2 !== undefined && unit.areaM2 < filters.minimumAreaM2) return false;
+	if (filters.maximumAreaM2 !== undefined && unit.areaM2 > filters.maximumAreaM2) return false;
+	if (filters.minimumElevationM !== undefined && unit.minElevation < filters.minimumElevationM) return false;
+	if (filters.maximumElevationM !== undefined && unit.maxElevation > filters.maximumElevationM) return false;
+	if (filters.materialId !== undefined && !unit.materialIds.includes(filters.materialId)) return false;
+	const sourcePresent = unit.sourceNames.length > 0 || unit.sourceTags.length > 0;
+	if (filters.sourcePresence === 'present' && !sourcePresent) return false;
+	if (filters.sourcePresence === 'absent' && sourcePresent) return false;
+	if (filters.status === 'unreviewed' && record) return false;
+	if (filters.status && filters.status !== 'all' && filters.status !== 'unreviewed' && record?.status !== filters.status) return false;
+	if (filters.confidence && filters.confidence !== 'all' && record?.annotationConfidence !== filters.confidence) return false;
+	return true;
+}
+
+function annotationOrientation(unit: ClassificationUnitRecord): AnnotationOrientationFilter {
+	if (unit.upwardHorizontalAreaRatio + unit.downwardHorizontalAreaRatio >= 0.75) return 'horizontal';
+	if (unit.verticalAreaRatio >= 0.75) return 'vertical';
+	if (unit.slopedAreaRatio >= 0.75) return 'sloped';
+	return 'mixed';
+}
+
+function annotationUnitComparator(sort: AnnotationUnitSort) {
+	return (left: ClassificationUnitRecord, right: ClassificationUnitRecord) => {
+		if (sort === 'area-desc') return right.areaM2 - left.areaM2 || left.id.localeCompare(right.id);
+		if (sort === 'elevation-asc') return left.minElevation - right.minElevation || left.id.localeCompare(right.id);
+		if (sort === 'logical-object') return left.logicalObjectId.localeCompare(right.logicalObjectId) || left.id.localeCompare(right.id);
+		if (sort === 'orientation-consistency') return Math.abs(1 - Math.max(left.upwardHorizontalAreaRatio, left.downwardHorizontalAreaRatio, left.verticalAreaRatio, left.slopedAreaRatio)) - Math.abs(1 - Math.max(right.upwardHorizontalAreaRatio, right.downwardHorizontalAreaRatio, right.verticalAreaRatio, right.slopedAreaRatio)) || left.id.localeCompare(right.id);
+		if (sort === 'source-name') return left.sourceNames.join('|').localeCompare(right.sourceNames.join('|')) || left.id.localeCompare(right.id);
+		return left.id.localeCompare(right.id);
+	};
 }
 
 function unitFromClusters(modelId: string, object: ReturnType<GeometryFoundation['buildLogicalObjectIndex']>['objects'][number], clusters: SurfaceClusterRecord[], node: GeometryFoundation['instanceGraph']['nodes'][number], context: GeometryFoundation['modelContext']): ClassificationUnitRecord {
@@ -144,19 +298,62 @@ function unitFromClusters(modelId: string, object: ReturnType<GeometryFoundation
 	return unit;
 }
 
-function groupCompatibleClusters(clusters: SurfaceClusterRecord[]) {
+function groupCompatibleClusters(clusters: SurfaceClusterRecord[], counters?: ClassificationUnitCounters) {
 	const ordered = [...clusters].sort((left, right) => left.id.localeCompare(right.id));
 	const parent = ordered.map((_, index) => index);
 	const find = (index: number): number => parent[index] === index ? index : parent[index] = find(parent[index]);
 	const union = (left: number, right: number) => { const leftRoot = find(left); const rightRoot = find(right); if (leftRoot !== rightRoot) parent[rightRoot] = leftRoot; };
 	const cells = new Map<string, number[]>();
 	ordered.forEach((cluster, right) => {
-		for (const key of neighboringClusterCells(cluster.centroid)) for (const left of cells.get(key) || []) if (clustersCompatible(ordered[left], cluster)) union(left, right);
-		const key = clusterCell(cluster.centroid); cells.set(key, [...(cells.get(key) || []), right]);
+		for (const key of neighboringClusterCells(cluster.centroid)) for (const left of cells.get(key) || []) {
+			if (counters) counters.compatibleClusterComparisons += 1;
+			if (clustersCompatible(ordered[left], cluster)) union(left, right);
+		}
+		const key = clusterCell(cluster.centroid);
+		const bucket = cells.get(key);
+		if (bucket) bucket.push(right);
+		else cells.set(key, [right]);
 	});
 	const groups = new Map<number, SurfaceClusterRecord[]>();
-	ordered.forEach((cluster, index) => groups.set(find(index), [...(groups.get(find(index)) || []), cluster]));
+	ordered.forEach((cluster, index) => {
+		const root = find(index);
+		const group = groups.get(root);
+		if (group) group.push(cluster);
+		else groups.set(root, [cluster]);
+	});
 	return [...groups.values()].sort((left, right) => left.map((cluster) => cluster.id).sort()[0].localeCompare(right.map((cluster) => cluster.id).sort()[0]));
+}
+
+function finalizeObjectUnits(units: ClassificationUnitRecord[], counters: ClassificationUnitCounters) {
+	if (!units.length) return;
+	const adjacency = sweepUnitAdjacency(units, counters);
+	for (const unit of units) {
+		const peers = adjacency.get(unit.id) || [];
+		unit.adjacencyUnitIds = peers.map((peer) => peer.id).sort();
+		unit.groupingReasons.push(...splitReasonsFromAdjacency(unit, peers, units.length));
+	}
+}
+
+/** Exact sweep-and-prune broad phase; all returned pairs still use unitsTouch. */
+function sweepUnitAdjacency(units: ClassificationUnitRecord[], counters: ClassificationUnitCounters) {
+	const neighbors = new Map(units.map((unit) => [unit.id, [] as ClassificationUnitRecord[]]));
+	const ordered = [...units].sort((left, right) => left.worldBounds.min.x - right.worldBounds.min.x || left.id.localeCompare(right.id));
+	const active: ClassificationUnitRecord[] = [];
+	for (const unit of ordered) {
+		const lower = unit.worldBounds.min.x - CLASSIFICATION_UNIT_TOLERANCES.adjacencyM;
+		let write = 0;
+		for (const candidate of active) if (candidate.worldBounds.max.x >= lower) active[write++] = candidate;
+		active.length = write;
+		for (const candidate of active) {
+			counters.unitAdjacencyComparisons += 1;
+			if (!unitsTouch(unit, candidate)) continue;
+			neighbors.get(unit.id)!.push(candidate);
+			neighbors.get(candidate.id)!.push(unit);
+			counters.unitAdjacencyPairs += 1;
+		}
+		active.push(unit);
+	}
+	return neighbors;
 }
 
 function clusterCell(point: Vec3) {
@@ -216,11 +413,11 @@ function combineClusterBounds(clusters: SurfaceClusterRecord[]) {
 	return { min, max, size, center: { x: min.x + size.x / 2, y: min.y + size.y / 2, z: min.z + size.z / 2 } };
 }
 
-function splitReasons(unit: ClassificationUnitRecord, peers: ClassificationUnitRecord[]) {
-	if (!peers.length) return ['split because source ownership: no compatible cluster shares this logical object'];
+function splitReasonsFromAdjacency(unit: ClassificationUnitRecord, touchingPeers: ClassificationUnitRecord[], objectUnitCount: number) {
+	if (objectUnitCount <= 1) return ['split because source ownership: no compatible cluster shares this logical object'];
 	const reasons = new Set<string>();
-	for (const peer of peers) {
-		if (!unitsTouch(unit, peer)) { reasons.add('split because disconnected'); continue; }
+	if (touchingPeers.length < objectUnitCount - 1) reasons.add('split because disconnected');
+	for (const peer of touchingPeers) {
 		const dot = unit.dominantNormal.x * peer.dominantNormal.x + unit.dominantNormal.y * peer.dominantNormal.y + unit.dominantNormal.z * peer.dominantNormal.z;
 		if (dot < Math.cos(CLASSIFICATION_UNIT_TOLERANCES.mergeNormalAngleDeg * Math.PI / 180)) reasons.add('split because normal angle');
 		else if (CLASSIFICATION_UNIT_TOLERANCES.splitMaterialBoundaries && unit.materialIds.join('|') !== peer.materialIds.join('|')) reasons.add('split because material boundary');

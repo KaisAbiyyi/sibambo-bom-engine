@@ -4,6 +4,9 @@ import { createGeometryFoundation } from '../geometry';
 import {
 	buildClassificationUnits,
 	buildClassificationUnitHighlight,
+	buildAnnotationReviewQueue,
+	classificationUnitFingerprint,
+	createClassificationUnitIndex,
 	createGroundTruthDocument,
 	evaluateTier1Baseline,
 	aggregateLegacySurfacePredictions,
@@ -89,6 +92,28 @@ describe('Tier-1 classification units and ground truth', () => {
 		const highlight = buildClassificationUnitHighlight(scene, unit);
 		expect(highlight?.getAttribute('position').count).toBe(3);
 		expect(highlight?.boundingBox?.max.x).toBeCloseTo(1, 6);
+	});
+
+	test('builds units lazily per logical object with traversal-order independent fingerprints', () => {
+		const foundation = createGeometryFoundation(fixture({ repeated: true }));
+		const eager = buildClassificationUnits(foundation).units;
+		const incremental = createClassificationUnitIndex(createGeometryFoundation(fixture({ repeated: true })));
+		const ids = incremental.foundation.buildLogicalObjectIndex().objects.map((object) => object.id);
+		incremental.processObject(ids[1]);
+		expect(incremental.progress.processedLogicalObjects).toBe(0);
+		incremental.processNext();
+		incremental.processAll();
+		expect(classificationUnitFingerprint(incremental.units)).toBe(classificationUnitFingerprint(eager));
+		expect(incremental.counters.globalUnitPairScans).toBe(0);
+		expect(incremental.counters.unitAdjacencyComparisons).toBeLessThan(4);
+	});
+
+	test('builds deterministic annotation review queues without classifier-prefilled roles', () => {
+		const units = buildClassificationUnits(createGeometryFoundation(fixture({ repeated: true }))).units;
+		const records = new Map([[units[0].id, { classificationUnitId: units[0].id, status: 'proposed', annotationConfidence: 'high' } as Tier1AnnotationDocument['annotations'][number]]]);
+		const unreviewed = buildAnnotationReviewQueue(units, records, { status: 'unreviewed' }, 'unit-id');
+		expect(unreviewed.map((unit) => unit.id)).toEqual(units.slice(1).map((unit) => unit.id));
+		expect(buildAnnotationReviewQueue(units, records, { sourcePresence: 'present' }, 'area-desc').map((unit) => unit.id)).toEqual(buildAnnotationReviewQueue(units, records, { sourcePresence: 'present' }, 'area-desc').map((unit) => unit.id));
 	});
 });
 

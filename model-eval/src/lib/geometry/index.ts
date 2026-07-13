@@ -120,6 +120,17 @@ export type GeometryEvidence = {
 export type LevelBand = { elevation: number; supportAreaM2: number; confidence: number; sampleCount: number };
 export type ModelGeometryContext = { bounds: Bounds3; robustOccupiedBounds: Bounds3; height: number; levelBands: LevelBand[]; repeatedDefinitions: Array<{ definitionId: number; instances: number }> };
 
+export type GeometryDiagnostics = {
+	worldCacheHits: number;
+	worldCacheMisses: number;
+	faceMetricCacheHits: number;
+	faceMetricCacheMisses: number;
+	clusterCacheHits: number;
+	clusterCacheMisses: number;
+	sharedEdgeCandidateComparisons: number;
+	sharedEdgePairs: number;
+};
+
 type FaceMetric = {
 	faceIndex: number;
 	face: Bome2Face;
@@ -199,8 +210,20 @@ export class GeometryFoundation {
 	private readonly worldCache = new Map<string, WorldGeometryRecord>();
 	private readonly logicalCache = new Map<string, LogicalObjectRecord>();
 	private readonly clusterCache = new Map<string, SurfaceClusterRecord[]>();
+	private readonly faceMetricCache = new Map<string, FaceMetric>();
+	private readonly objectFaceIndexes = new Map<string, number[]>();
 	private objectIndexBuilt = false;
 	private contextCache: ModelGeometryContext | null = null;
+	private readonly diagnostics: GeometryDiagnostics = {
+		worldCacheHits: 0,
+		worldCacheMisses: 0,
+		faceMetricCacheHits: 0,
+		faceMetricCacheMisses: 0,
+		clusterCacheHits: 0,
+		clusterCacheMisses: 0,
+		sharedEdgeCandidateComparisons: 0,
+		sharedEdgePairs: 0
+	};
 
 	constructor(readonly scene: RuntimeScene) {
 		this.instanceGraph = buildInstanceGraph(scene);
@@ -208,7 +231,8 @@ export class GeometryFoundation {
 
 	getWorldGeometry(nodeId: string): WorldGeometryRecord {
 		const cached = this.worldCache.get(nodeId);
-		if (cached) return cached;
+		if (cached) { this.diagnostics.worldCacheHits += 1; return cached; }
+		this.diagnostics.worldCacheMisses += 1;
 		const node = this.requireMeshNode(nodeId);
 		const record = this.measure(node, this.faceIndexes(node.meshId!));
 		this.worldCache.set(nodeId, record);
@@ -241,10 +265,11 @@ export class GeometryFoundation {
 
 	buildSurfaceClusters(logicalObjectId: string): SurfaceClusterRecord[] {
 		const cached = this.clusterCache.get(logicalObjectId);
-		if (cached) return cached;
+		if (cached) { this.diagnostics.clusterCacheHits += 1; return cached; }
+		this.diagnostics.clusterCacheMisses += 1;
 		const object = this.requireObject(logicalObjectId);
 		const node = this.requireMeshNode(object.nodeId);
-		const metrics = object.faceOrPrimitiveIds.map((id) => this.faceMetric(node, Number(id.split(':').at(-1)))).filter(Boolean) as FaceMetric[];
+		const metrics = (this.objectFaceIndexes.get(object.id) || []).map((index) => this.faceMetric(node, index));
 		const parent = metrics.map((_, index) => index);
 		const find = (index: number): number => parent[index] === index ? index : (parent[index] = find(parent[index]));
 		const union = (a: number, b: number) => { a = find(a); b = find(b); if (a !== b) parent[b] = a; };
@@ -253,7 +278,7 @@ export class GeometryFoundation {
 			if (dot(metrics[left].normal, metrics[right].normal) < COS_CLUSTER) return;
 			if (coplanarity(metrics[left], metrics[right]) > GEOMETRY_TOLERANCES.coplanarityM) return;
 			union(left, right);
-		});
+		}, this.diagnostics);
 		const groups = new Map<number, FaceMetric[]>();
 		metrics.forEach((metric, index) => groups.set(find(index), [...(groups.get(find(index)) || []), metric]));
 		const clusters = [...groups.values()].sort((a, b) => a[0].id.localeCompare(b[0].id)).map((faces, index) => this.clusterRecord(object, faces, index));
@@ -298,6 +323,8 @@ export class GeometryFoundation {
 		return { definitionLocalBytes, instanceMatrixBytes: this.instanceGraph.nodes.length * 16 * Float32Array.BYTES_PER_ELEMENT, worldRecordCount: this.worldCache.size, logicalObjectCount: this.logicalCache.size, clusterCount: [...this.clusterCache.values()].reduce((sum, value) => sum + value.length, 0) };
 	}
 
+	getDiagnostics(): GeometryDiagnostics { return { ...this.diagnostics }; }
+
 	private addLogicalObject(node: InstanceGraphNode, faceIndexes: number[], componentIndex: number | null) {
 		const mesh = this.scene.manifest.meshes[node.meshId!];
 		const metric = faceIndexes.length === mesh.faces.length ? this.getWorldGeometry(node.nodeId) : this.measure(node, faceIndexes);
@@ -311,15 +338,21 @@ export class GeometryFoundation {
 			materialIds: [...new Set(faceIndexes.map((index) => node.materialId >= 0 ? node.materialId : mesh.faces[index].material).filter((value) => value >= 0))].sort((a, b) => a - b), surfaceClusterIds: []
 		};
 		this.logicalCache.set(id, object);
+		this.objectFaceIndexes.set(id, faceIndexes.slice());
 	}
 
 	private connectedFaceComponents(node: InstanceGraphNode, indexes: number[]) {
 		const metrics = indexes.map((index) => this.faceMetric(node, index));
 		const parent = metrics.map((_, index) => index);
 		const find = (index: number): number => parent[index] === index ? index : parent[index] = find(parent[index]);
-		forEachSharedEdgePair(metrics, (left, right) => { const leftRoot = find(left); const rightRoot = find(right); if (leftRoot !== rightRoot) parent[rightRoot] = leftRoot; });
+		forEachSharedEdgePair(metrics, (left, right) => { const leftRoot = find(left); const rightRoot = find(right); if (leftRoot !== rightRoot) parent[rightRoot] = leftRoot; }, this.diagnostics);
 		const components = new Map<number, number[]>();
-		indexes.forEach((faceIndex, index) => components.set(find(index), [...(components.get(find(index)) || []), faceIndex]));
+		indexes.forEach((faceIndex, index) => {
+			const root = find(index);
+			const component = components.get(root);
+			if (component) component.push(faceIndex);
+			else components.set(root, [faceIndex]);
+		});
 		return [...components.values()].map((component) => component.sort((left, right) => left - right)).sort((left, right) => left[0] - right[0]);
 	}
 
@@ -363,6 +396,10 @@ export class GeometryFoundation {
 	}
 
 	private faceMetric(node: InstanceGraphNode, faceIndex: number): FaceMetric {
+		const cacheKey = `${node.nodeId}:${faceIndex}`;
+		const cached = this.faceMetricCache.get(cacheKey);
+		if (cached) { this.diagnostics.faceMetricCacheHits += 1; return cached; }
+		this.diagnostics.faceMetricCacheMisses += 1;
 		const runtime = this.scene.meshes[node.meshId!]; const mesh = runtime.manifest; const face = mesh.faces[faceIndex];
 		if (!face) throw new Error(`Geometry face ${faceIndex} missing.`);
 		const points: Vec3[] = [];
@@ -378,7 +415,9 @@ export class GeometryFoundation {
 			area += triangleArea; weighted = add(weighted, multiply(center, triangleArea)); normalSum = add(normalSum, multiply(normal, triangleArea)); orientation = addOrientation(orientation, orientationFor(normal, triangleArea));
 		}
 		orientation.dominantNormal = normalize(normalSum); orientation.consistency = ratio(length(normalSum), area);
-		return { faceIndex, face, id: `${this.scene.manifest.strings[face.id] || `face:${faceIndex}`}:${faceIndex}`, materialId: node.materialId >= 0 ? node.materialId : face.material, triangleRange: [face.triangle_start, face.triangle_count], bounds, centroid: area ? multiply(weighted, 1 / area) : bounds.center, area, normal: normalize(normalSum), orientation, edges: edgeKeys(points), points };
+		const metric: FaceMetric = { faceIndex, face, id: `${this.scene.manifest.strings[face.id] || `face:${faceIndex}`}:${faceIndex}`, materialId: node.materialId >= 0 ? node.materialId : face.material, triangleRange: [face.triangle_start, face.triangle_count], bounds, centroid: area ? multiply(weighted, 1 / area) : bounds.center, area, normal: normalize(normalSum), orientation, edges: edgeKeys(points), points };
+		this.faceMetricCache.set(cacheKey, metric);
+		return metric;
 	}
 
 	private faceIndexes(meshId: number) { return this.scene.manifest.meshes[meshId].faces.map((_, index) => index); }
@@ -430,7 +469,7 @@ function shareEdge(left: FaceMetric, right: FaceMetric) {
 	}
 	return false;
 }
-function forEachSharedEdgePair(metrics: FaceMetric[], visit: (left: number, right: number) => void) {
+function forEachSharedEdgePair(metrics: FaceMetric[], visit: (left: number, right: number) => void, diagnostics?: GeometryDiagnostics) {
 	type IndexedEdge = { faceIndex: number; a: Vec3; b: Vec3 };
 	const byEdgeCell = new Map<string, IndexedEdge[]>();
 	const seenPairs = new Set<string>();
@@ -438,11 +477,14 @@ function forEachSharedEdgePair(metrics: FaceMetric[], visit: (left: number, righ
 		for (let index = 0; index < metric.points.length; index += 1) {
 			const edge = { faceIndex: right, a: metric.points[index], b: metric.points[(index + 1) % metric.points.length] };
 			for (const previous of byEdgeCell.get(edgeCell(edge.a, edge.b)) || []) {
+				if (diagnostics) diagnostics.sharedEdgeCandidateComparisons += 1;
 				const pair = `${previous.faceIndex}:${right}`;
-				if (!seenPairs.has(pair) && edgesNear(previous, edge)) { seenPairs.add(pair); visit(previous.faceIndex, right); }
+				if (!seenPairs.has(pair) && edgesNear(previous, edge)) { seenPairs.add(pair); if (diagnostics) diagnostics.sharedEdgePairs += 1; visit(previous.faceIndex, right); }
 			}
 			const key = edgeCell(edge.a, edge.b);
-			byEdgeCell.set(key, [...(byEdgeCell.get(key) || []), edge]);
+			const bucket = byEdgeCell.get(key);
+			if (bucket) bucket.push(edge);
+			else byEdgeCell.set(key, [edge]);
 		}
 	});
 }

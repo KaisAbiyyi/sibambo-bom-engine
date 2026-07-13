@@ -38,11 +38,15 @@
 		type SketchUpCameraCapture
 	} from '$lib/render/qa-camera';
 	import {
-		buildClassificationUnits,
+		buildAnnotationReviewQueue,
+		createClassificationUnitIndex,
 		createGroundTruthDocument,
 		validateGroundTruthDocument,
+		type AnnotationUnitFilters,
+		type AnnotationUnitSort,
 		type AnnotationConfidence,
 		type AnnotationStatus,
+		type ClassificationUnitIndex,
 		type ClassificationUnitRecord,
 		type SourceLabelReliability,
 		type SurfaceRole,
@@ -131,6 +135,11 @@
 	let qaSourceBytes = 0;
 	let annotationMode = $state(false);
 	let annotationUnits = $state<ClassificationUnitRecord[]>([]);
+	let annotationIndex = $state<ClassificationUnitIndex | null>(null);
+	let annotationProcessing = $state(false);
+	let annotationRun = 0;
+	let annotationFilters = $state<AnnotationUnitFilters>({ status: 'all', orientation: 'all', sourcePresence: 'all', confidence: 'all' });
+	let annotationSort = $state<AnnotationUnitSort>('unit-id');
 	let selectedAnnotationUnitId = $state('');
 	let annotationRecords = $state<Map<string, Tier1AnnotationRecord>>(new Map());
 	let sourceExportHash = $state('unverified');
@@ -140,7 +149,8 @@
 	let annotationSourceReliability = $state<SourceLabelReliability>('absent');
 	let annotationNote = $state('');
 	let annotationMessage = $state('');
-	let selectedAnnotationUnit = $derived(annotationUnits.find((unit) => unit.id === selectedAnnotationUnitId) || annotationUnits[0] || null);
+	let annotationQueue = $derived(buildAnnotationReviewQueue(annotationUnits, annotationRecords, annotationFilters, annotationSort));
+	let selectedAnnotationUnit = $derived(annotationQueue.find((unit) => unit.id === selectedAnnotationUnitId) || annotationQueue[0] || null);
 	let readiness = $derived<ReadinessItem[]>(getReadiness(model, inputs, touched));
 	let selectedReadiness = $derived<ReadinessItem | undefined>(readiness.find((item) => item.kind === selectedAnalysis));
 	let presentParts = $derived(model ? model.partStats.filter((part) => part.count > 0) : []);
@@ -341,14 +351,64 @@
 	}
 
 	function setupAnnotationMode() {
+		annotationRun += 1;
+		annotationIndex?.cancel();
+		annotationIndex = null;
 		annotationUnits = [];
 		annotationRecords = new Map();
 		selectedAnnotationUnitId = '';
 		if (!annotationMode || !model?.runtimeScene) return;
-		const foundation = createGeometryFoundation(model.runtimeScene);
-		annotationUnits = buildClassificationUnits(foundation, model.sourceName).units;
-		selectedAnnotationUnitId = annotationUnits[0]?.id || '';
-		annotationMessage = `${annotationUnits.length} unit permukaan siap ditinjau.`;
+		annotationIndex = createClassificationUnitIndex(createGeometryFoundation(model.runtimeScene), model.sourceName);
+		annotationMessage = `Menyiapkan objek pertama dari ${annotationIndex.progress.totalLogicalObjects} logical object.`;
+		void processAnnotationBatch(20);
+	}
+
+	async function processAnnotationBatch(maxObjects = 20) {
+		const index = annotationIndex;
+		const run = annotationRun;
+		if (!index || annotationProcessing || index.complete) return;
+		annotationProcessing = true;
+		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+		const added: ClassificationUnitRecord[] = [];
+		const started = performance.now();
+		for (let count = 0; count < maxObjects && !index.complete && !index.progress.cancelled; count += 1) {
+			const progress = index.processNext();
+			added.push(...(progress.addedUnits || []));
+			if (performance.now() - started > 150) break;
+		}
+		if (run !== annotationRun || index !== annotationIndex) return;
+		annotationUnits.push(...added);
+		annotationUnits = annotationUnits;
+		annotationProcessing = false;
+		if (!selectedAnnotationUnitId) selectedAnnotationUnitId = annotationQueue[0]?.id || '';
+		const progress = index.progress;
+		annotationMessage = `${progress.processedLogicalObjects}/${progress.totalLogicalObjects} logical object, ${progress.unitsDiscovered} unit, ${Math.round(progress.elapsedMs)} ms.`;
+	}
+
+	function cancelAnnotationProcessing() {
+		annotationRun += 1;
+		annotationIndex?.cancel();
+		annotationProcessing = false;
+		annotationMessage = 'Pemrosesan annotation dihentikan. Objek yang sudah diproses tetap tersimpan di cache.';
+	}
+
+	function resetAnnotationFilters() {
+		annotationFilters = { status: 'all', orientation: 'all', sourcePresence: 'all', confidence: 'all' };
+		annotationSort = 'unit-id';
+	}
+
+	function updateAnnotationObjectFilter(event: Event) {
+		const value = (event.currentTarget as HTMLSelectElement).value;
+		annotationFilters = { ...annotationFilters, logicalObjectId: value === 'all' ? undefined : value };
+	}
+
+	function updateAnnotationSelectFilter(key: 'orientation' | 'status' | 'confidence' | 'sourcePresence', event: Event) {
+		annotationFilters = { ...annotationFilters, [key]: (event.currentTarget as HTMLSelectElement).value } as AnnotationUnitFilters;
+	}
+
+	function updateAnnotationNumberFilter(key: 'materialId' | 'minimumAreaM2' | 'maximumAreaM2' | 'minimumElevationM' | 'maximumElevationM', event: Event) {
+		const value = (event.currentTarget as HTMLInputElement).value;
+		annotationFilters = { ...annotationFilters, [key]: value === '' ? undefined : Number(value) };
 	}
 
 	function applyAnnotationDraft(role = annotationRole, status = annotationStatus) {
@@ -390,8 +450,8 @@
 	}
 
 	function moveAnnotation(delta: number) {
-		const index = Math.max(0, annotationUnits.findIndex((unit) => unit.id === selectedAnnotationUnitId));
-		const target = annotationUnits[(index + delta + annotationUnits.length) % Math.max(annotationUnits.length, 1)];
+		const index = Math.max(0, annotationQueue.findIndex((unit) => unit.id === selectedAnnotationUnitId));
+		const target = annotationQueue[(index + delta + annotationQueue.length) % Math.max(annotationQueue.length, 1)];
 		if (target) selectAnnotationUnit(target.id);
 	}
 
@@ -719,13 +779,34 @@
 			<section class="panel-block annotation-panel" aria-label="Tier-1 annotation mode">
 				<div class="section-heading">
 					<h2>Tier-1 annotation</h2>
-					<span>{annotationRecords.size}/{annotationUnits.length}</span>
+					<span>{annotationRecords.size}/{annotationQueue.length} queue</span>
 				</div>
 				<p class="muted small">Ground truth manual. Prediksi classifier tidak ditampilkan dan tidak mengisi label.</p>
+				{#if annotationIndex}
+					<p class="status-line">{annotationIndex.progress.processedLogicalObjects}/{annotationIndex.progress.totalLogicalObjects} object · {annotationIndex.progress.unitsDiscovered} unit · {Math.round(annotationIndex.progress.elapsedMs)} ms</p>
+					<div class="button-row">
+						<button class="ghost-button" type="button" onclick={() => processAnnotationBatch(20)} disabled={annotationProcessing || annotationIndex.complete}>Process next 20</button>
+						<button class="ghost-button" type="button" onclick={cancelAnnotationProcessing} disabled={!annotationProcessing}>Stop</button>
+					</div>
+				{/if}
+				<div class="annotation-fields">
+					<label class="field"><span>Object</span><select value={annotationFilters.logicalObjectId || 'all'} onchange={updateAnnotationObjectFilter}><option value="all">all processed</option>{#each [...new Set(annotationUnits.map((unit) => unit.logicalObjectId))].sort() as objectId}<option value={objectId}>{objectId}</option>{/each}</select></label>
+					<label class="field"><span>Orientation</span><select value={annotationFilters.orientation || 'all'} onchange={(event) => updateAnnotationSelectFilter('orientation', event)}><option value="all">all</option><option value="horizontal">horizontal</option><option value="vertical">vertical</option><option value="sloped">sloped</option><option value="mixed">mixed</option></select></label>
+					<label class="field"><span>Status</span><select value={annotationFilters.status || 'all'} onchange={(event) => updateAnnotationSelectFilter('status', event)}><option value="all">all</option><option value="unreviewed">unreviewed</option><option value="proposed">proposed</option><option value="verified">verified</option><option value="ambiguous">ambiguous</option><option value="excluded">excluded</option></select></label>
+					<label class="field"><span>Confidence</span><select value={annotationFilters.confidence || 'all'} onchange={(event) => updateAnnotationSelectFilter('confidence', event)}><option value="all">all</option><option value="high">high</option><option value="medium">medium</option><option value="low">low</option></select></label>
+					<label class="field"><span>Source</span><select value={annotationFilters.sourcePresence || 'all'} onchange={(event) => updateAnnotationSelectFilter('sourcePresence', event)}><option value="all">all</option><option value="present">present</option><option value="absent">absent</option></select></label>
+					<label class="field"><span>Material ID</span><input type="number" value={annotationFilters.materialId ?? ''} oninput={(event) => updateAnnotationNumberFilter('materialId', event)} /></label>
+					<label class="field"><span>Min area</span><input type="number" min="0" step="0.001" value={annotationFilters.minimumAreaM2 ?? ''} oninput={(event) => updateAnnotationNumberFilter('minimumAreaM2', event)} /></label>
+					<label class="field"><span>Max area</span><input type="number" min="0" step="0.001" value={annotationFilters.maximumAreaM2 ?? ''} oninput={(event) => updateAnnotationNumberFilter('maximumAreaM2', event)} /></label>
+					<label class="field"><span>Min elevation</span><input type="number" step="0.001" value={annotationFilters.minimumElevationM ?? ''} oninput={(event) => updateAnnotationNumberFilter('minimumElevationM', event)} /></label>
+					<label class="field"><span>Max elevation</span><input type="number" step="0.001" value={annotationFilters.maximumElevationM ?? ''} oninput={(event) => updateAnnotationNumberFilter('maximumElevationM', event)} /></label>
+					<label class="field"><span>Sort</span><select bind:value={annotationSort}><option value="unit-id">unit ID</option><option value="area-desc">area descending</option><option value="elevation-asc">elevation ascending</option><option value="logical-object">logical object</option><option value="orientation-consistency">orientation consistency</option><option value="source-name">source name</option></select></label>
+				</div>
+				<div class="button-row"><button class="ghost-button" type="button" onclick={resetAnnotationFilters}>Reset filters</button><span class="muted small">{annotationQueue.length} filtered unit</span></div>
 				<div class="annotation-nav">
 					<button type="button" onclick={() => moveAnnotation(-1)}>← Prev</button>
 					<select aria-label="Classification unit" value={selectedAnnotationUnit?.id || ''} onchange={(event) => selectAnnotationUnit((event.currentTarget as HTMLSelectElement).value)}>
-						{#each annotationUnits as unit}<option value={unit.id}>{unit.id} · {format(unit.areaM2, 2)} m²</option>{/each}
+						{#each annotationQueue.slice(0, 500) as unit}<option value={unit.id}>{unit.id} · {format(unit.areaM2, 2)} m²</option>{/each}
 					</select>
 					<button type="button" onclick={() => moveAnnotation(1)}>Next →</button>
 				</div>

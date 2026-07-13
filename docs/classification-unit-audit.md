@@ -7,7 +7,7 @@ classifier prediction, name, tag, or surface-hint label.
 | --- | ---: | ---: | ---: | --- |
 | `test.skp` | 2 | 96 | 67 | One object has 95 clusters. Nineteen compatible adjacent clusters merge; 52 units remain below 0.01 m². |
 | `house2.skp` | 108 | 3,122 | 2,843 | All 108 objects contain mixed orientation clusters. 146 compatible adjacent cluster sets merge; 1,957 small units remain, mostly detailed source geometry. |
-| `presentation20.skp` | 484 nodes / 115 meshes / 11,625 source faces | pending full lazy-cluster audit | pending full lazy-cluster audit | Nested/repeated-component representative. It is retained as the complex performance audit input. |
+| `presentation20.skp` | 9,200 logical objects / 14,480 expanded instance nodes | 334,753 | 256,788 | Full compact audit completed in 108.2 s with profiling. Largest object has 1,079 primitives and 684 clusters. |
 
 `test.skp` has 418.394 m² unit area: 417.858 m² upward-horizontal and
 0.536 m² vertical. `house2.skp` has 435.291 m²: 81.140 m² upward, 76.982 m²
@@ -33,3 +33,12 @@ and instance path. This preserves reviewer-selectable source identity.
 
 Small decorative units are not silently promoted to wall, floor, ceiling, or
 roof. Annotators may mark them `unknown`, `ambiguous`, or `excluded`.
+
+## Semantic fingerprints
+
+Current exports retain prior recorded unit counts. Deterministic fingerprints
+over sorted unit IDs, cluster IDs, primitive IDs, rounded bounds, and material
+IDs are `test.skp`: `80221fe078f0a9c906236756a7d8729d87141e80b72bd7f873d10f7296fedc8c`
+(67 units), and `house2.skp`:
+`200341556e59c20009a50508292ab41e25f8e508b162d7daa5f6a670675988f2`
+(2,843 units).
