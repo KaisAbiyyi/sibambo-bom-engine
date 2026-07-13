@@ -11,7 +11,8 @@ Small valid file: [`examples/canonical-v3-small.json`](examples/canonical-v3-sma
 - Semantic version is `format.version`. A reader may accept compatible `3.x` files, but must reject unknown major versions.
 - Legacy schema `2.x` JSON and BOME1 remain readable by `model-eval`. Existing legacy export behavior remains available when `output_format` is absent or is not `canonical_v3`.
 - `model-eval/src/lib/formats/canonical-v3.ts` validates references and adapts v3 to the existing render pipeline during migration.
-- Canonical export uses `output_format: "canonical_v3"` and writes `*_canonical.json` or `*_canonical.json.gz`.
+- The SketchUp export dialog defaults to `output_format: "canonical_v3"`, pretty printing, and plain UTF-8 JSON at `<skp-name>_canonical.json`.
+- Canonical export writes `*_canonical.json` by default or `*_canonical.json.gz` only when compression is explicitly selected.
 
 ## Coordinate and transform contract
 
@@ -124,4 +125,4 @@ Do not rewrite a 2.x file by renaming fields. Parse legacy data with the compati
 
 ## Size and precision policy
 
-Canonical readable JSON favors auditability. Pretty printing is intended for examples and diagnostics; production canonical files should use minified JSON plus gzip. Canonical coordinates retain meter values rounded to 1 nanometer in the exporter. Runtime quantization belongs in BOME2/GLB derivation and must declare its scale/error budget.
+Canonical readable JSON favors auditability. The default export uses two-space pretty printing and UTF-8 JSON. Compression is opt-in. Canonical coordinates retain meter values rounded to 1 nanometer in the exporter. Runtime quantization belongs in BOME2 derivation and must declare its scale/error budget.

@@ -215,7 +215,7 @@
   <div class="field">
     <label>Output Path</label>
     <div class="path-row">
-      <input type="text" id="outputPath" placeholder="/path/to/output_bom.bome2">
+      <input type="text" id="outputPath" placeholder="/path/to/name_canonical.json">
       <button class="btn btn-browse" onclick="sketchup.browse()">Browse</button>
     </div>
     <p class="info">Suffix format ditambahkan otomatis. File sumber SKP tidak diubah.</p>
@@ -224,11 +224,11 @@
   <div class="field">
     <label for="outputFormat">Format Output</label>
     <select id="outputFormat" onchange="selectFormat(this.value)" style="width:100%;padding:9px 10px;background:#111923;color:#d9e5ee;border:1px solid #324253;border-radius:5px">
-      <option value="bome2" selected>BOME2 Runtime — indexed, instanced, quantized</option>
-      <option value="canonical_v3">Canonical JSON v3 — semantic/readable</option>
+      <option value="canonical_v3" selected>Canonical JSON v3 — semantic/readable</option>
+      <option value="bome2">BOME2 Runtime — indexed, instanced, quantized</option>
       <option value="legacy">Legacy v2/BOME1 — compatibility</option>
     </select>
-    <p class="info" id="formatInfo">Runtime Three.js teroptimasi dengan geometry definition-local dan component instancing.</p>
+    <p class="info" id="formatInfo">Sumber analisis readable: hierarchy, definitions, instances, holes, metadata, rooms, dan source identity.</p>
   </div>
 
   <!-- ── Export Level ── -->
@@ -284,11 +284,11 @@
       <label for="binaryGeometry">Simpan geometry sebagai .bome.gz binary (wajib untuk viewer)</label>
     </div>
     <div class="checkbox-row">
-      <input type="checkbox" id="prettyPrint">
-      <label for="prettyPrint">Pretty-print Canonical JSON (debug saja)</label>
+      <input type="checkbox" id="prettyPrint" checked>
+      <label for="prettyPrint">Pretty-print Canonical JSON</label>
     </div>
     <div class="checkbox-row">
-      <input type="checkbox" id="compressOutput" checked>
+      <input type="checkbox" id="compressOutput">
       <label for="compressOutput">Kompres output sebagai .gz</label>
     </div>
     <p class="info" style="margin-top:-4px;margin-bottom:6px">&#9888; Pretty-print hanya untuk Canonical JSON debug dan bisa membuat file jauh lebih besar.</p>
@@ -310,7 +310,7 @@
 
 <script>
   var currentLevel = 'visual';
-  var currentFormat = 'bome2';
+  var currentFormat = 'canonical_v3';
 
   function selectLevel(level) {
     currentLevel = level;
@@ -409,7 +409,7 @@
 
   window.onload = function() {
     sketchup.onReady();
-    selectFormat('bome2');
+    selectFormat('canonical_v3');
   };
 </script>
 

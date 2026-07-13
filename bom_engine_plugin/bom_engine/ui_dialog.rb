@@ -32,10 +32,10 @@ module BOMEngine
 
       model = Sketchup.active_model
       default_path = model.path.empty? ?
-        File.join(Dir.home, "bom_export.bome2") :
+        File.join(Dir.home, "bom_export_canonical.json") :
         File.join(
           File.dirname(model.path),
-          "#{File.basename(model.path, File.extname(model.path))}_bom.bome2"
+          "#{File.basename(model.path, File.extname(model.path))}_canonical.json"
         )
 
       dialog.add_action_callback("onReady") do |_ctx|

@@ -103,7 +103,7 @@ module BOMEngine
     #   :compress_output  [Boolean] gzip output
     #   :compact_geometry [Boolean] legacy setting; Visual/Standard always use compact mesh
     #   :binary_geometry  [Boolean] legacy setting; Visual/Standard always use .bome/.bome.gz
-    #   :output_format    [String]  canonical_v3 or legacy (default)
+    #   :output_format    [String]  canonical_v3, bome2, or legacy
     #   :selection_only   [Boolean] export only currently selected entities
     def self.run_export(settings)
       model    = Sketchup.active_model
@@ -484,10 +484,13 @@ module BOMEngine
         include_edges:     Sketchup.read_default(SETTINGS_KEY, "include_edges")     == "true",
         include_materials: Sketchup.read_default(SETTINGS_KEY, "include_materials") != "false",
         pretty_print:      Sketchup.read_default(SETTINGS_KEY, "pretty_print")      == "true",
-        compress_output:   Sketchup.read_default(SETTINGS_KEY, "compress_output")   != "false",
+        compress_output:   Sketchup.read_default(SETTINGS_KEY, "compress_output")   == "true",
         compact_geometry:  Sketchup.read_default(SETTINGS_KEY, "compact_geometry")  != "false",
         binary_geometry:   Sketchup.read_default(SETTINGS_KEY, "binary_geometry")   != "false",
-        output_format:     Sketchup.read_default(SETTINGS_KEY, "output_format").to_s
+        output_format:     begin
+          saved_format = Sketchup.read_default(SETTINGS_KEY, "output_format").to_s
+          %w[canonical_v3 bome2 legacy].include?(saved_format) ? saved_format : "canonical_v3"
+        end
       }
     end
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { parseBomModelJson } from '../model';
+import { parseBomModelJson, readBomModelData } from '../model';
 import { canonicalV3ToLegacyBom, isCanonicalV3, validateCanonicalV3 } from './canonical-v3';
 
 const identity = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
@@ -114,5 +114,13 @@ describe('canonical JSON v3 compatibility adapter', () => {
 		expect(parsed.faces.every((face) => face.holes.length === 1)).toBe(true);
 		expect(parsed.bounds.min.x).toBe(1);
 		expect(parsed.bounds.max.x).toBe(3);
+	});
+
+	test('loads readable canonical v3 .json through public file input', async () => {
+		const file = new File([JSON.stringify(fixture())], 'fixture_canonical.json', { type: 'application/json' });
+		const data = await readBomModelData(file, 1024 * 1024);
+		const parsed = parseBomModelJson(data, file.name);
+		expect(parsed.schemaVersion).toBe('3.0.0');
+		expect(parsed.faceCount).toBe(2);
 	});
 });

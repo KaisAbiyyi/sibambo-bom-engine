@@ -34,7 +34,31 @@ module BOMEngine
         model.selection.clear
         model.selection.add(group)
 
-        result = Core.export_canonical(
+        readable_result = Core.export_canonical(
+          model,
+          output_path: File.join(output_dir, 'fixture_bom.json'),
+          selection_only: true,
+          include_edges: false,
+          include_materials: true,
+          export_textures: false,
+          pretty_print: true,
+          compress_output: false,
+          silent: true
+        )
+
+        assert(readable_result[:path].end_with?('_canonical.json'), 'readable canonical suffix is deterministic')
+        assert(File.file?(readable_result[:path]), 'readable canonical output exists')
+        assert(File.binread(readable_result[:path], 2) != "\x1f\x8b", 'readable output is not gzip')
+
+        content = File.read(readable_result[:path], encoding: 'UTF-8')
+        graph = JSON.parse(content)
+        assert(content.include?("\n  \"format\""), 'readable output uses two-space indentation')
+        assert(graph.dig('format', 'version') == '3.0.0', 'Core writes canonical v3')
+        assert(graph.dig('source', 'scope') == 'selection', 'selection scope is preserved')
+        assert(graph.fetch('nodes').any? { |node| node['kind'] == 'group_instance' }, 'selection hierarchy is preserved')
+        assert(readable_result[:bytes] == File.size(readable_result[:path]), 'Core reports readable byte size')
+
+        gzip_result = Core.export_canonical(
           model,
           output_path: File.join(output_dir, 'fixture_bom.json'),
           selection_only: true,
@@ -45,16 +69,10 @@ module BOMEngine
           compress_output: true,
           silent: true
         )
-
-        assert(result[:path].end_with?('_canonical.json.gz'), 'canonical suffix is deterministic')
-        assert(File.file?(result[:path]), 'canonical gzip output exists')
-
-        content = Zlib::GzipReader.open(result[:path], &:read)
-        graph = JSON.parse(content)
-        assert(graph.dig('format', 'version') == '3.0.0', 'Core writes canonical v3')
-        assert(graph.dig('source', 'scope') == 'selection', 'selection scope is preserved')
-        assert(graph.fetch('nodes').any? { |node| node['kind'] == 'group_instance' }, 'selection hierarchy is preserved')
-        assert(result[:bytes] == File.size(result[:path]), 'Core reports written byte size')
+        assert(gzip_result[:path].end_with?('_canonical.json.gz'), 'compressed canonical suffix is deterministic')
+        assert(File.file?(gzip_result[:path]), 'compressed canonical output exists')
+        compressed = Zlib::GzipReader.open(gzip_result[:path], &:read)
+        assert(JSON.parse(compressed).dig('format', 'version') == '3.0.0', 'compressed output remains valid JSON')
 
         puts 'Core Canonical Export Tests: ALL PASSED'
         true
