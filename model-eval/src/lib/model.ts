@@ -1,5 +1,6 @@
 import { canonicalV3ToLegacyBom, isCanonicalV3 } from './formats/canonical-v3';
 import { bome2ToCanonical, isBome2Buffer, parseBome2Buffer, type Bome2RuntimeScene } from './formats/bome2';
+import { isModelEvalJsonV1, parseModelEvalJsonV1, type ModelEvalRuntimeScene } from './formats/model-eval-json';
 import { CATEGORY_LABELS, classifyBuildingFaces, type BuildingCategory, type ClassificationTrace } from './classifier/classifier';
 
 export type SurfaceKey =
@@ -107,6 +108,7 @@ export type BomModelJson = {
 	metadata?: Record<string, unknown>;
 	geometry_format?: string;
 	__bome2Runtime?: Bome2RuntimeScene;
+	__modelEvalRuntime?: ModelEvalRuntimeScene;
 };
 
 export type CompactMeshMaterial = {
@@ -228,7 +230,7 @@ export type ParsedBuildingModel = {
 	materials: Array<{ name: string; color: string; reflectance?: number | string }>;
 	confidence: number;
 	warnings: string[];
-	runtimeScene?: Bome2RuntimeScene;
+	runtimeScene?: Bome2RuntimeScene | ModelEvalRuntimeScene;
 };
 
 const BOME_MAGIC = 'BOME1\n';
@@ -248,7 +250,10 @@ export async function readBomModelData(file: File, maxDecompressedBytes: number)
 		canonical.__bome2Runtime = runtime;
 		return canonical;
 	}
-	return isBomeBuffer(buffer) ? parseBomeBuffer(buffer) : (JSON.parse(new TextDecoder().decode(buffer)) as BomModelJson);
+	if (isBomeBuffer(buffer)) return parseBomeBuffer(buffer);
+	const parsed = JSON.parse(new TextDecoder().decode(buffer)) as BomModelJson;
+	if (isModelEvalJsonV1(parsed)) return { __modelEvalRuntime: parseModelEvalJsonV1(parsed) };
+	return parsed;
 }
 
 async function readModelArrayBuffer(file: File, maxDecompressedBytes: number) {
@@ -1047,6 +1052,7 @@ function materialRows(materials: BomModelJson['materials']) {
 }
 
 export function parseBomModelJson(data: BomModelJson, sourceName: string, defaultHeight = DEFAULT_INPUTS.roomHeightM): ParsedBuildingModel {
+	if (data.__modelEvalRuntime) return parseCompactModelEvalRuntime(data.__modelEvalRuntime, sourceName);
 	const runtimeScene = data.__bome2Runtime;
 	if (isCanonicalV3(data)) data = canonicalV3ToLegacyBom(data);
 	const compactMesh = data.geometry_format === 'compact_mesh_v1' ? data.mesh : null;
@@ -1372,6 +1378,95 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 		warnings,
 		runtimeScene
 	};
+}
+
+function parseCompactModelEvalRuntime(runtimeScene: ModelEvalRuntimeScene, sourceName: string): ParsedBuildingModel {
+	const { manifest } = runtimeScene;
+	const stringAt = (index: number) => (index >= 0 && index < manifest.strings.length ? manifest.strings[index] : '');
+	const bounds = emptyBounds();
+	const surfaces = new Map<SurfaceKey, { count: number; areaM2: number }>();
+	const parts = new Map<PartKey, { count: number; areaM2: number }>();
+	const components: ComponentDetection = { doors: 0, windows: 0, roofElements: 0, wallElements: 0, furniture: 0, structural: 0 };
+	const definitionVisits = new Set<number>();
+	let faceCount = 0;
+	let vertexCount = 0;
+
+	const identity = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+	const transformAt = (index: number) => Array.from(runtimeScene.transforms.subarray(index * 16, index * 16 + 16));
+	const visitDefinition = (definitionIndex: number, parent: number[], ancestry: number[]) => {
+		if (ancestry.includes(definitionIndex)) throw new Error(`Model-Eval JSON invalid: recursive definition ${ancestry.concat(definitionIndex).join(' -> ')}.`);
+		const definition = manifest.definitions[definitionIndex];
+		if (!definition) throw new Error('Model-Eval JSON invalid: definition reference.');
+		if (definition.mesh >= 0) {
+			const mesh = runtimeScene.meshes[definition.mesh];
+			if (!mesh) throw new Error('Model-Eval JSON invalid: mesh reference.');
+			vertexCount += mesh.positions.length / 3;
+			for (let index = 0; index < mesh.positions.length; index += 3) expandBounds(bounds, vectorToWorld(transformPoint(parent, mesh.positions[index], mesh.positions[index + 1], mesh.positions[index + 2])));
+			for (const face of mesh.manifest.faces) {
+				faceCount += 1;
+				const surface = normalizeSurface(stringAt(face.surface_hint), '');
+				const currentSurface = surfaces.get(surface) || { count: 0, areaM2: 0 };
+				currentSurface.count += 1;
+				currentSurface.areaM2 += face.area_m2;
+				surfaces.set(surface, currentSurface);
+				const part = detectPartKey('', surface, emptyBounds());
+				const currentPart = parts.get(part) || { count: 0, areaM2: 0 };
+				currentPart.count += 1;
+				currentPart.areaM2 += face.area_m2;
+				parts.set(part, currentPart);
+			}
+		}
+		for (const nodeIndex of definition.nodes) {
+			const node = manifest.nodes[nodeIndex];
+			if (!node || node.visible === false) continue;
+			const nameKind = detectNameKind(stringAt(node.name));
+			if (nameKind) components[nameKind] += 1;
+			visitDefinition(node.definition, multiplyMatrix(parent, transformAt(node.transform)), ancestry.concat(definitionIndex));
+		}
+		definitionVisits.add(definitionIndex);
+	};
+	const root = manifest.nodes[manifest.root_node];
+	if (!root) throw new Error('Model-Eval JSON invalid: root node.');
+	visitDefinition(root.definition, multiplyMatrix(identity, transformAt(root.transform)), []);
+	if (!faceCount) throw new Error('Tidak ada Face renderable di Model-Eval JSON.');
+
+	const surfaceStats = [...surfaces.entries()].map(([key, value]) => ({ key, label: SURFACE_META[key].label, count: value.count, areaM2: round(value.areaM2, 1), confidence: key === 'other' ? 0.45 : 0.82 })).sort((a, b) => b.areaM2 - a.areaM2);
+	const partStats = [...parts.entries()].map(([key, value]) => ({ key, label: PART_META[key].label, count: value.count, areaM2: round(value.areaM2, 1), color: PART_META[key].color })).sort((a, b) => PART_META[a.key].order - PART_META[b.key].order);
+	const materialRows = manifest.materials.slice(0, 24).map((material) => ({ name: stringAt(material.name) || 'Material', color: stringAt(material.color_hex) || '#94a3b8', reflectance: '-' }));
+	const finalBounds = finalizeBounds(bounds);
+	return {
+		sourceName,
+		schemaVersion: 'model_eval_json_v1',
+		exportLevel: 'compact-runtime',
+		exportedAt: stringAt(manifest.source.exported_at) || '-',
+		entitiesTotal: manifest.nodes.length,
+		faceCount,
+		vertexCount,
+		faces: [],
+		spaces: [],
+		bounds: finalBounds,
+		surfaceStats,
+		partStats,
+		categoryStats: [],
+		components,
+		materials: materialRows,
+		confidence: 0.72,
+		warnings: [
+			'Detail FaceRecord, classifier trace, dan room detection ditunda sampai inspector/analysis memintanya.',
+			'Compact renderer memakai indexed mesh dan instance table langsung; tidak ada Canonical-v3 expansion saat load.'
+		],
+		runtimeScene
+	};
+}
+
+function multiplyMatrix(left: number[], right: number[]) {
+	const result = new Array<number>(16).fill(0);
+	for (let column = 0; column < 4; column += 1) for (let row = 0; row < 4; row += 1) for (let index = 0; index < 4; index += 1) result[column * 4 + row] += left[index * 4 + row] * right[column * 4 + index];
+	return result;
+}
+
+function transformPoint(matrix: number[], x: number, y: number, z: number): BomVector {
+	return { x: matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12], y: matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13], z: matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14] };
 }
 
 function categoryToPartKey(category: BuildingCategory): PartKey {

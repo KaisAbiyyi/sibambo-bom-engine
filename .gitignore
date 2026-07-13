@@ -1,6 +1,8 @@
 .DS_Store
 .claude/
 *.skp
+*.skb
+/skps/
 *.rbz
 *.docx
 node_modules/

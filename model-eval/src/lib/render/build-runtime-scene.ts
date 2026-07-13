@@ -1,5 +1,6 @@
 import { Box3, BufferGeometry, Float32BufferAttribute, Matrix4, Vector3 } from 'three';
 import type { Bome2RuntimeScene } from '../formats/bome2';
+import type { ModelEvalRuntimeScene } from '../formats/model-eval-json';
 import type { PartKey } from '../model';
 
 export type RuntimeGeometryGroup = {
@@ -25,7 +26,7 @@ const AXIS_TO_THREE = new Matrix4().set(
 );
 const AXIS_FROM_THREE = AXIS_TO_THREE.clone().invert();
 
-export function buildRuntimeGeometryGroups(scene: Bome2RuntimeScene, partOverrides: ReadonlyMap<string, PartKey> = new Map()): RuntimeGeometryGroup[] {
+export function buildRuntimeGeometryGroups(scene: Bome2RuntimeScene | ModelEvalRuntimeScene, partOverrides: ReadonlyMap<string, PartKey> = new Map()): RuntimeGeometryGroup[] {
 	const { manifest } = scene;
 	const occurrences = new Map<number, Occurrence[]>();
 	const rootNode = manifest.nodes[manifest.root_node];

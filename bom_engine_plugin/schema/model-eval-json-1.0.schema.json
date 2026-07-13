@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sibambo.dev/schemas/bom-engine/model-eval-json/1.0.0/schema.json",
+  "title": "BOM Engine Model-Eval JSON",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "units", "coordinate_system", "source", "strings", "materials", "tags", "transforms", "meshes", "definitions", "nodes", "root_node", "statistics"],
+  "properties": {
+    "format": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "identifier", "schema"],
+      "properties": {
+        "name": { "const": "BOM Engine Model-Eval JSON" },
+        "version": { "const": "1.0.0" },
+        "identifier": { "const": "model_eval_json_v1" },
+        "schema": { "type": "string" }
+      }
+    },
+    "units": { "const": "m" },
+    "coordinate_system": { "type": "object" },
+    "source": { "$ref": "#/$defs/intArray4" },
+    "strings": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "materials": { "type": "array", "items": { "$ref": "#/$defs/material" } },
+    "tags": { "type": "array", "items": { "$ref": "#/$defs/tag" } },
+    "transforms": { "type": "array", "items": { "type": "number" }, "minItems": 16 },
+    "meshes": { "type": "array", "items": { "$ref": "#/$defs/mesh" } },
+    "definitions": { "type": "array", "items": { "$ref": "#/$defs/definition" } },
+    "nodes": { "type": "array", "items": { "$ref": "#/$defs/node" } },
+    "root_node": { "type": "integer", "minimum": 0 },
+    "statistics": { "type": "object" }
+  },
+  "$defs": {
+    "int": { "type": "integer" },
+    "intArray4": { "type": "array", "prefixItems": [{ "$ref": "#/$defs/int" }, { "$ref": "#/$defs/int" }, { "$ref": "#/$defs/int" }, { "$ref": "#/$defs/int" }], "items": false },
+    "material": { "type": "array", "prefixItems": [{ "$ref": "#/$defs/int" }, { "$ref": "#/$defs/int" }, { "$ref": "#/$defs/int" }, { "type": "number" }], "items": false },
+    "tag": { "type": "array", "prefixItems": [{ "$ref": "#/$defs/int" }, { "$ref": "#/$defs/int" }, { "type": "boolean" }], "items": false },
+    "quantization": { "type": "object", "required": ["component_type", "minimum_m", "maximum_m", "scale_m", "measured_max_error_m", "error_budget_m"], "properties": { "component_type": { "enum": ["uint16", "uint32"] }, "minimum_m": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } }, "maximum_m": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } }, "scale_m": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } }, "measured_max_error_m": { "type": "number", "maximum": 0.001 }, "error_budget_m": { "type": "number", "maximum": 0.001 } } },
+    "mesh": { "type": "object", "additionalProperties": false, "required": ["id", "definition", "vertex_count", "triangle_count", "quantization", "positions", "loops", "triangles", "faces"], "properties": { "id": { "$ref": "#/$defs/int" }, "definition": { "$ref": "#/$defs/int" }, "vertex_count": { "type": "integer", "minimum": 0 }, "triangle_count": { "type": "integer", "minimum": 0 }, "quantization": { "$ref": "#/$defs/quantization" }, "positions": { "type": "array", "items": { "$ref": "#/$defs/int" } }, "loops": { "type": "array", "items": { "$ref": "#/$defs/int" } }, "triangles": { "type": "array", "items": { "$ref": "#/$defs/int" } }, "faces": { "type": "array", "items": { "type": "array", "minItems": 12, "maxItems": 12 } } } },
+    "definition": { "type": "array", "prefixItems": [{ "$ref": "#/$defs/int" }, { "$ref": "#/$defs/int" }, { "$ref": "#/$defs/int" }, { "$ref": "#/$defs/int" }, { "type": "array", "items": { "$ref": "#/$defs/int" } }], "items": false },
+    "node": { "type": "array", "prefixItems": [{ "$ref": "#/$defs/int" }, { "$ref": "#/$defs/int" }, { "$ref": "#/$defs/int" }, { "$ref": "#/$defs/int" }, { "$ref": "#/$defs/int" }, { "$ref": "#/$defs/int" }, { "$ref": "#/$defs/int" }, { "type": "boolean" }, { "$ref": "#/$defs/int" }], "items": false }
+  }
+}

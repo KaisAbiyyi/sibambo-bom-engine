@@ -16,12 +16,14 @@ require_relative 'canonical_graph_builder'
 require_relative 'canonical_json_writer'
 require_relative 'quantizer'
 require_relative 'bome2_writer'
+require_relative 'model_eval_json_writer'
 require_relative 'texture_exporter'
 require_relative 'binary_mesh_streamer'
 require_relative 'ui_dialog'
 require_relative 'observer'
 require 'json'
 require 'zlib'
+require 'fileutils'
 
 module BOMEngine
   module Core
@@ -32,8 +34,10 @@ module BOMEngine
       plugins_menu = UI.menu("Plugins")
       bom_menu     = plugins_menu.add_submenu("BOM Engine")
 
-      bom_menu.add_item("Export Model to JSON...") { export_with_dialog }
+      bom_menu.add_item("Quick Export for Model-Eval") { quick_export_for_model_eval }
+      bom_menu.add_item("Export With Options...") { export_with_dialog }
       bom_menu.add_item("Quick Export (last settings)") { quick_export }
+      bom_menu.add_item("Open Last Export Folder") { open_last_export_folder }
       bom_menu.add_separator
 
       sel_item = bom_menu.add_item("Export Selection to JSON...") { export_selection_with_dialog }
@@ -49,12 +53,12 @@ module BOMEngine
 
       # Toolbar
       toolbar = UI::Toolbar.new("BOM Engine")
-      cmd = UI::Command.new("Export Model") { export_with_dialog }
+      cmd = UI::Command.new("Quick Export for Model-Eval") { quick_export_for_model_eval }
       icon_path = File.join(File.dirname(__FILE__), "ui", "toolbar_icon.png")
       cmd.small_icon       = icon_path
       cmd.large_icon       = icon_path
-      cmd.tooltip          = "BOM Engine: Export model to BOME/JSON"
-      cmd.status_bar_text  = "Export SketchUp model to BOM Engine BOME/JSON"
+      cmd.tooltip          = "BOM Engine: Quick Export for Model-Eval"
+      cmd.status_bar_text  = "Export compact Model-Eval JSON without a dialog"
       toolbar.add_item(cmd)
       toolbar.restore
 
@@ -90,6 +94,47 @@ module BOMEngine
       last = load_last_settings
       return export_with_dialog if last.nil?
       run_export(last)
+    end
+
+    # Native default workflow. It deliberately does not consult advanced-dialog
+    # settings, so compression and pretty-print cannot change this output.
+    def self.quick_export_for_model_eval
+      model = Sketchup.active_model
+      started_at = Time.now
+      output_path = model_eval_output_path(model)
+      begin
+        result = export_model_eval_json(model, output_path)
+        elapsed = (Time.now - started_at).round(3)
+        stats = result[:validation]
+        message = "Model-Eval export selesai!\n\n" \
+                  "File: #{result[:path]}\n" \
+                  "Ukuran: #{result[:bytes]} bytes\n" \
+                  "Waktu: #{elapsed}s\n" \
+                  "Objek: #{stats[:nodes]}\n" \
+                  "Triangles: #{stats[:triangles]}\n" \
+                  "Format: model_eval_json_v1 / 1.0.0"
+        Logger.info(message.gsub("\n", ' | '))
+        Sketchup.write_default(SETTINGS_KEY, 'last_model_eval_export_path', result[:path])
+        UI.messagebox(message, MB_OK)
+        result.merge(elapsed_seconds: elapsed)
+      rescue => e
+        Logger.error("Model-Eval quick export failed: #{e.message}\n#{e.backtrace.first(5).join("\n")}")
+        UI.messagebox("Model-Eval quick export gagal:\n#{e.message}", MB_OK)
+        nil
+      end
+    end
+
+    def self.open_last_export_folder
+      path = Sketchup.read_default(SETTINGS_KEY, 'last_model_eval_export_path', '').to_s
+      directory = path.empty? ? model_eval_output_directory(Sketchup.active_model) : File.dirname(path)
+      unless Dir.exist?(directory)
+        UI.messagebox("Folder export belum ada: #{directory}", MB_OK)
+        return
+      end
+      UI.openURL("file:///#{directory.tr('\\\\', '/')}")
+    rescue => e
+      Logger.error("Open Model-Eval export folder failed: #{e.message}")
+      UI.messagebox("Folder export tidak dapat dibuka:\n#{e.message}", MB_OK)
     end
 
     # Run a full export with the given settings hash.
@@ -367,6 +412,39 @@ module BOMEngine
       elapsed = (Time.now - started_at).round(3)
       Logger.info("BOME2 export complete in #{elapsed}s -> #{output_path}")
       result.merge(validation).merge(elapsed_seconds: elapsed, format: 'bome2')
+    end
+
+    def self.export_model_eval_json(model, output_path)
+      FileUtils.mkdir_p(File.dirname(output_path)) unless Dir.exist?(File.dirname(output_path))
+      graph = build_model_eval_graph(model)
+      result = ModelEvalJSONWriter.write(output_path, graph)
+      Logger.info("Model-Eval JSON export complete -> #{output_path} (#{result[:bytes]} bytes, #{result[:validation][:triangles]} triangles)")
+      result.merge(format: 'model_eval_json_v1')
+    end
+
+    def self.model_eval_output_directory(model)
+      unless model.path.to_s.empty?
+        return File.join(File.dirname(model.path), 'model-eval-exports')
+      end
+      documents = File.join(ENV['USERPROFILE'].to_s.empty? ? Dir.home : ENV['USERPROFILE'], 'Documents')
+      File.join(documents, 'BOMEngineExports')
+    end
+
+    def self.model_eval_output_path(model)
+      directory = model_eval_output_directory(model)
+      base_name = model.path.to_s.empty? ? 'Untitled' : File.basename(model.path, File.extname(model.path))
+      File.join(directory, "#{base_name}_model-eval.json")
+    end
+
+    def self.build_model_eval_graph(model)
+      CanonicalGraphBuilder.build(
+        model: model,
+        entities: model.entities,
+        parent_transform: Geom::Transformation.new,
+        settings: { selection_only: false, include_edges: false, export_textures: false, output_format: 'model_eval_json_v1' },
+        spatial: {},
+        texture_writer: nil
+      )
     end
 
     def self.build_canonical_graph(model, settings, output_path)
