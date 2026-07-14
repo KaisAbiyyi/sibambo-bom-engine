@@ -6,9 +6,11 @@ import { calculateRoomEvidenceFingerprint, calculateBarrierGraphFingerprint, nor
 import { findBoundaryLoopCandidates, calculateBoundaryLoopFingerprint, rankBoundaryLoopCandidates } from '../src/lib/rooms/loops';
 import { assignHorizontalEvidenceToLoops, calculateLoopSurfaceAssignmentFingerprint, rankLoopSurfaceAssignments, calculateRankedLoopSurfaceAssignmentFingerprint } from '../src/lib/rooms/surfaces';
 import { buildVerticalEnvelopeCandidates, calculateVerticalEnvelopeCandidateFingerprint } from '../src/lib/rooms/envelopes';
-import type { BoundaryLoopDiagnostics, LoopSurfaceAssignment, RankedBoundaryLoopCandidate, RankedLoopSurfaceAssignment, LoopSurfaceRoleSelection, RankedLoopSurfaceAssignmentDiagnostics, RankedLoopSurfaceAssignmentResult, VerticalEnvelopeCandidateResult } from '../src/lib/rooms/types';
+import { assembleRoomCandidates, calculateRoomCandidateFingerprint } from '../src/lib/rooms/candidates';
+import type { BoundaryLoopDiagnostics, LoopSurfaceAssignment, RankedBoundaryLoopCandidate, RankedLoopSurfaceAssignment, LoopSurfaceRoleSelection, RankedLoopSurfaceAssignmentDiagnostics, RankedLoopSurfaceAssignmentResult, VerticalEnvelopeCandidateResult, RoomCandidateResult, RoomCandidate } from '../src/lib/rooms/types';
 import { createHash } from 'crypto';
 import { resolve } from 'path';
+
 
 function computeValueStats(valuesInput: number[]) {
 	if (valuesInput.length === 0) {
@@ -87,7 +89,46 @@ function computeEnvelopeStats(result: VerticalEnvelopeCandidateResult, loopsOfSt
 	};
 }
 
+function computeRoomStats(result: RoomCandidateResult, candidatesOfStatus: RoomCandidate[]) {
+	const candidateCount = candidatesOfStatus.length;
+	const areaStats = computeValueStats(candidatesOfStatus.map(c => c.planArea));
+	const heightStats = computeValueStats(candidatesOfStatus.map(c => c.clearHeight));
+	const volumeStats = computeValueStats(candidatesOfStatus.map(c => c.estimatedVolume));
+	const fingerprint = calculateRoomCandidateFingerprint(candidatesOfStatus);
+
+	const topCandidates = candidatesOfStatus
+		.slice()
+		.sort((a, b) => {
+			const statusOrder = { primary: 0, secondary: 1, ambiguous: 2 };
+			if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
+			if (b.score !== a.score) return b.score - a.score;
+			return a.id.localeCompare(b.id);
+		})
+		.slice(0, 5)
+		.map(c => ({
+			id: c.id,
+			loopId: c.loopId,
+			envelopeId: c.selectedEnvelopeId,
+			status: c.status,
+			score: Number(c.score.toFixed(6)),
+			planArea: Number(c.planArea.toFixed(6)),
+			clearHeight: Number(c.clearHeight.toFixed(6)),
+			estimatedVolume: Number(c.estimatedVolume.toFixed(6)),
+			qualityFlags: c.qualityFlags
+		}));
+
+	return {
+		candidateCount,
+		areaStats,
+		heightStats,
+		volumeStats,
+		fingerprint,
+		topCandidates
+	};
+}
+
 function computeAreaStats(candidates: Array<{ area: number }>) {
+
 	if (candidates.length === 0) {
 		return { min: 0, median: 0, max: 0 };
 	}
@@ -205,6 +246,8 @@ function parseOptions(args: string[]) {
 	let graphs = false;
 	let loops = false;
 	let surfaces = false;
+	let envelopes = false;
+	let rooms = false;
 
 	for (let i = 0; i < args.length; i++) {
 		const arg = args[i];
@@ -217,6 +260,8 @@ function parseOptions(args: string[]) {
 		else if (arg === '--graphs') graphs = true;
 		else if (arg === '--loops') loops = true;
 		else if (arg === '--surfaces') surfaces = true;
+		else if (arg === '--envelopes') envelopes = true;
+		else if (arg === '--rooms') rooms = true;
 		else if (!arg.startsWith('--') && !path) path = arg;
 	}
 
@@ -224,14 +269,15 @@ function parseOptions(args: string[]) {
 		path = resolve(import.meta.dirname, '../../skps/model-eval-exports/house2_model-eval.json');
 	}
 
-	return { path, isJson, house2, summary, snapshot, storeys, barriers, graphs, loops, surfaces };
+	return { path, isJson, house2, summary, snapshot, storeys, barriers, graphs, loops, surfaces, envelopes, rooms };
 }
 
 const options = parseOptions(Bun.argv.slice(2));
 
 if (!options.path) {
-	console.error('Usage: bun run audit-room-evidence.ts <absolute-model-json-path> [--json] [--house2] [--summary|--snapshot|--storeys|--barriers|--graphs|--loops|--surfaces]');
+	console.error('Usage: bun run audit-room-evidence.ts <absolute-model-json-path> [--json] [--house2] [--summary|--snapshot|--storeys|--barriers|--graphs|--loops|--surfaces|--envelopes|--rooms]');
 	process.exit(1);
+
 }
 
 const path = options.path;
@@ -294,11 +340,14 @@ try {
 	const secondaryCandidates = snapshot.storeyBands.filter(b => b.status === 'secondary');
 	const noiseCandidates = snapshot.storeyBands.filter(b => b.status === 'noise');
 
+	const allNormalizedGraphs: any[] = [];
 	const getGraphInfo = (candId: string) => {
 		const g = snapshot.barrierGraphs?.find(x => x.storeyCandidateId === candId);
 		if (!g) return null;
 		const normG = normalizeBarrierGraph(g);
+		allNormalizedGraphs.push(normG);
 		const nd = normG.normalizationDiagnostics;
+
 		const loopRes = findBoundaryLoopCandidates(normG);
 		const rankedRes = rankBoundaryLoopCandidates(loopRes.candidates, normG, loopRes.diagnostics);
 		return {
@@ -468,6 +517,7 @@ try {
 	const aggregateRankedSurfaceStats = computeRankedSurfaceStats(rankedSurfaceAssignmentsResult, allRankedCandidateList);
 
 	const verticalEnvelopesResult = buildVerticalEnvelopeCandidates(allRankedCandidateList, rankedSurfaceAssignmentsResult.assignments);
+	const roomsResult = assembleRoomCandidates(allRankedCandidateList, rankedSurfaceAssignmentsResult.assignments, verticalEnvelopesResult.candidates, allNormalizedGraphs);
 
 	const summary = {
 		inputPath: path,
@@ -542,15 +592,25 @@ try {
 				}
 			}
 		},
+		rooms: {
+			diagnostics: roomsResult.diagnostics,
+			stats: {
+				primary: computeRoomStats(roomsResult, roomsResult.candidates.filter(c => c.status === 'primary')),
+				secondary: computeRoomStats(roomsResult, roomsResult.candidates.filter(c => c.status === 'secondary')),
+				ambiguous: computeRoomStats(roomsResult, roomsResult.candidates.filter(c => c.status === 'ambiguous')),
+				aggregate: computeRoomStats(roomsResult, roomsResult.candidates)
+			}
+		},
 		primaryCandidates: primaryCandidatesDetails,
 		secondaryCandidates: secondaryCandidatesDetails
+
 	};
 
 
 	if (isJson) {
 		console.log(JSON.stringify(summary, null, 2));
 	} else {
-		const showAll = !options.summary && !options.storeys && !options.barriers && !options.graphs && !options.loops && !options.surfaces;
+		const showAll = !options.summary && !options.storeys && !options.barriers && !options.graphs && !options.loops && !options.surfaces && !options.envelopes && !options.rooms;
 
 		if (showAll || options.summary) {
 			console.log(`=== ROOM EVIDENCE AUDIT SUMMARY ===`);
@@ -575,9 +635,11 @@ try {
 			console.log(`Initial FaceRecord Expansion:  ${summary.initialFaceRecordExpansion}`);
 			console.log(`Total Loop Candidates:         ${summary.loops.totalCandidateCount}`);
 			console.log(`Total Surface Assignments:     ${summary.surfaces.diagnostics.assignmentsAccepted}`);
+			console.log(`Total Vertical Envelopes:      ${summary.surfaces.envelopes.diagnostics.primaryEnvelopeCandidates + summary.surfaces.envelopes.diagnostics.secondaryEnvelopeCandidates}`);
+			console.log(`Total Room Candidates:         ${summary.rooms.diagnostics.primaryRoomCandidates + summary.rooms.diagnostics.secondaryRoomCandidates + summary.rooms.diagnostics.ambiguousRoomCandidates}`);
 		}
 
-		if (showAll || options.storeys || options.graphs || options.loops || options.surfaces) {
+		if (showAll || options.storeys || options.graphs || options.loops || options.surfaces || options.envelopes || options.rooms) {
 			console.log(`\n=== PRIMARY CANDIDATES DETAILS ===`);
 			for (const p of summary.primaryCandidates) {
 				console.log(`  - ID: ${p.id.length > 80 ? p.id.slice(0, 77) + '...' : p.id}`);
@@ -586,7 +648,7 @@ try {
 				console.log(`    Total Area:       ${p.totalArea.toFixed(3)} m2`);
 				console.log(`    Coverage Ratio:   ${p.modelRelativeCoverage.toFixed(6)}`);
 				console.log(`    Ambiguous:        ${p.isAmbiguous}`);
-				if (p.graph && (showAll || options.graphs || options.loops || options.surfaces)) {
+				if (p.graph && (showAll || options.graphs || options.loops || options.surfaces || options.envelopes || options.rooms)) {
 					if (showAll || options.graphs) {
 						console.log(`    Graph Nodes:      ${p.graph.nodeCount}`);
 						console.log(`    Graph Edges:      ${p.graph.edgeCount}`);
@@ -635,7 +697,8 @@ try {
 				console.log(`    Total Area:       ${s.totalArea.toFixed(3)} m2`);
 				console.log(`    Coverage Ratio:   ${s.modelRelativeCoverage.toFixed(6)}`);
 				console.log(`    Ambiguous:        ${s.isAmbiguous}`);
-				if (s.graph && (showAll || options.graphs || options.loops || options.surfaces)) {
+				if (s.graph && (showAll || options.graphs || options.loops || options.surfaces || options.envelopes || options.rooms)) {
+
 					if (showAll || options.graphs) {
 						console.log(`    Graph Nodes:      ${s.graph.nodeCount}`);
 						console.log(`    Graph Edges:      ${s.graph.edgeCount}`);
@@ -787,7 +850,9 @@ try {
 				const flagsStr = Object.entries(topA.flags).filter(([_, val]) => val).map(([k]) => k).join(',');
 				console.log(`      - [${topA.role.toUpperCase()}] loop=${topA.loopId} score=${topA.score.toFixed(3)} loopCov=${topA.loopCoverage.toFixed(3)} evCov=${topA.evidenceCoverage.toFixed(3)} dist=${topA.verticalDistance.toFixed(3)} flags=[${flagsStr || 'none'}]`);
 			}
+		}
 
+		if (showAll || options.envelopes || options.surfaces) {
 			const ed = summary.surfaces.envelopes.diagnostics;
 			console.log(`\n=== VERTICAL ENVELOPE CANDIDATES SUMMARY ===`);
 			console.log(`Loops Inspected:               ${ed.loopsInspected}`);
@@ -841,8 +906,72 @@ try {
 			console.log(`    Estimated Volume Range:    min=${est.aggregate.volumeStats.min} median=${est.aggregate.volumeStats.median} max=${est.aggregate.volumeStats.max} m3`);
 			console.log(`    Envelope Fingerprint:      ${est.aggregate.fingerprint}`);
 		}
+
+		if (showAll || options.rooms) {
+			const rd = summary.rooms.diagnostics;
+			console.log(`\n=== GEOMETRIC ROOM CANDIDATES SUMMARY ===`);
+			console.log(`Loops Inspected:               ${rd.loopsInspected}`);
+			console.log(`Noise Loops Skipped:           ${rd.noiseLoopsSkipped}`);
+			console.log(`Primary Room Candidates:       ${rd.primaryRoomCandidates}`);
+			console.log(`Secondary Room Candidates:     ${rd.secondaryRoomCandidates}`);
+			console.log(`Ambiguous Room Candidates:     ${rd.ambiguousRoomCandidates}`);
+			console.log(`Loops Without Envelopes:       ${rd.loopsWithoutValidEnvelopes}`);
+
+			console.log(`Invalid Area Rejected:         ${rd.invalidAreaCandidatesRejected}`);
+			console.log(`Invalid Height Rejected:       ${rd.invalidHeightCandidatesRejected}`);
+			console.log(`Alternative Envelopes Saved:   ${rd.alternativeEnvelopesPreserved}`);
+			console.log(`Total Candidate Area:          ${rd.totalCandidateArea.toFixed(3)} m2`);
+			console.log(`Total Estimated Volume:        ${rd.totalEstimatedVolume.toFixed(3)} m3`);
+			console.log(`Aggregate Room FP:             ${rd.fingerprint}`);
+
+
+			const rst = summary.rooms.stats;
+			console.log(`\n  [Primary Room Candidates Stats]`);
+			console.log(`    Candidate Count:           ${rst.primary.candidateCount}`);
+			console.log(`    Plan Area Range:           min=${rst.primary.areaStats.min} median=${rst.primary.areaStats.median} max=${rst.primary.areaStats.max} m2`);
+			console.log(`    Clear Height Range:        min=${rst.primary.heightStats.min} median=${rst.primary.heightStats.median} max=${rst.primary.heightStats.max} m`);
+			console.log(`    Estimated Volume Range:    min=${rst.primary.volumeStats.min} median=${rst.primary.volumeStats.median} max=${rst.primary.volumeStats.max} m3`);
+			console.log(`    Room Candidate FP:         ${rst.primary.fingerprint}`);
+			console.log(`    Top Candidates:`);
+			for (const topR of rst.primary.topCandidates) {
+				const flagsStr = Object.entries(topR.qualityFlags).filter(([_, val]) => val).map(([k]) => k).join(',');
+				console.log(`      - [${topR.status.toUpperCase()}] id=${topR.id.length > 45 ? topR.id.slice(0, 42) + '...' : topR.id} score=${topR.score.toFixed(3)} area=${topR.planArea.toFixed(3)}m2 height=${topR.clearHeight.toFixed(3)}m vol=${topR.estimatedVolume.toFixed(3)}m3 flags=[${flagsStr || 'none'}]`);
+			}
+
+			console.log(`\n  [Secondary Room Candidates Stats]`);
+			console.log(`    Candidate Count:           ${rst.secondary.candidateCount}`);
+			console.log(`    Plan Area Range:           min=${rst.secondary.areaStats.min} median=${rst.secondary.areaStats.median} max=${rst.secondary.areaStats.max} m2`);
+			console.log(`    Clear Height Range:        min=${rst.secondary.heightStats.min} median=${rst.secondary.heightStats.median} max=${rst.secondary.heightStats.max} m`);
+			console.log(`    Estimated Volume Range:    min=${rst.secondary.volumeStats.min} median=${rst.secondary.volumeStats.median} max=${rst.secondary.volumeStats.max} m3`);
+			console.log(`    Room Candidate FP:         ${rst.secondary.fingerprint}`);
+			console.log(`    Top Candidates:`);
+			for (const topR of rst.secondary.topCandidates) {
+				const flagsStr = Object.entries(topR.qualityFlags).filter(([_, val]) => val).map(([k]) => k).join(',');
+				console.log(`      - [${topR.status.toUpperCase()}] id=${topR.id.length > 45 ? topR.id.slice(0, 42) + '...' : topR.id} score=${topR.score.toFixed(3)} area=${topR.planArea.toFixed(3)}m2 height=${topR.clearHeight.toFixed(3)}m vol=${topR.estimatedVolume.toFixed(3)}m3 flags=[${flagsStr || 'none'}]`);
+			}
+
+			console.log(`\n  [Ambiguous Room Candidates Stats]`);
+			console.log(`    Candidate Count:           ${rst.ambiguous.candidateCount}`);
+			console.log(`    Plan Area Range:           min=${rst.ambiguous.areaStats.min} median=${rst.ambiguous.areaStats.median} max=${rst.ambiguous.areaStats.max} m2`);
+			console.log(`    Clear Height Range:        min=${rst.ambiguous.heightStats.min} median=${rst.ambiguous.heightStats.median} max=${rst.ambiguous.heightStats.max} m`);
+			console.log(`    Estimated Volume Range:    min=${rst.ambiguous.volumeStats.min} median=${rst.ambiguous.volumeStats.median} max=${rst.ambiguous.volumeStats.max} m3`);
+			console.log(`    Room Candidate FP:         ${rst.ambiguous.fingerprint}`);
+			console.log(`    Top Candidates:`);
+			for (const topR of rst.ambiguous.topCandidates) {
+				const flagsStr = Object.entries(topR.qualityFlags).filter(([_, val]) => val).map(([k]) => k).join(',');
+				console.log(`      - [${topR.status.toUpperCase()}] id=${topR.id.length > 45 ? topR.id.slice(0, 42) + '...' : topR.id} score=${topR.score.toFixed(3)} area=${topR.planArea.toFixed(3)}m2 height=${topR.clearHeight.toFixed(3)}m vol=${topR.estimatedVolume.toFixed(3)}m3 flags=[${flagsStr || 'none'}]`);
+			}
+
+			console.log(`\n  [Aggregate Room Candidates Stats]`);
+			console.log(`    Candidate Count:           ${rst.aggregate.candidateCount}`);
+			console.log(`    Plan Area Range:           min=${rst.aggregate.areaStats.min} median=${rst.aggregate.areaStats.median} max=${rst.aggregate.areaStats.max} m2`);
+			console.log(`    Clear Height Range:        min=${rst.aggregate.heightStats.min} median=${rst.aggregate.heightStats.median} max=${rst.aggregate.heightStats.max} m`);
+			console.log(`    Estimated Volume Range:    min=${rst.aggregate.volumeStats.min} median=${rst.aggregate.volumeStats.median} max=${rst.aggregate.volumeStats.max} m3`);
+			console.log(`    Room Candidate FP:         ${rst.aggregate.fingerprint}`);
+		}
 	}
 } catch (e: any) {
+
 	console.error(e.stack || e.message);
 	process.exit(1);
 }

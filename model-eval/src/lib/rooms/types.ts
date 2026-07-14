@@ -371,3 +371,64 @@ export interface VerticalEnvelopeCandidateResult {
 	candidates: VerticalEnvelopeCandidate[];
 	diagnostics: VerticalEnvelopeDiagnostics;
 }
+
+export type RoomCandidateStatus = 'primary' | 'secondary' | 'ambiguous';
+
+export interface RoomCandidateQualityFlags {
+	isAmbiguousEnvelope: boolean;
+	hasAlternativeEnvelopes: boolean;
+	isSecondaryFallback: boolean;
+	weakLowerSupport: boolean;
+	weakUpperCover: boolean;
+	geometricallyPlausible: boolean;
+}
+
+export interface RoomCandidate {
+	id: string;
+	loopId: string;
+	loopCandidateId: string;
+	storeyCandidateId: string;
+	selectedEnvelopeId: string;
+	envelopeCandidateId: string;
+	alternativeEnvelopeIds: string[];
+	orderedBoundaryNodeIds: string[];
+	orderedBoundaryEdgeIds: string[];
+	planPolygon: PlanCoord[];
+	planBounds: PlanBounds;
+	planArea: number;
+	perimeter: number;
+	lowerElevation: number;
+	upperElevation: number;
+	clearHeight: number;
+	estimatedVolume: number;
+	lowerHorizontalEvidenceId: string;
+	upperHorizontalEvidenceId: string;
+	verticalEvidenceIds: string[];
+	logicalObjectIds: string[];
+	classificationUnitIds: string[];
+	materialIds: number[];
+	score: number;
+	status: RoomCandidateStatus;
+	qualityFlags: RoomCandidateQualityFlags;
+}
+
+export interface RoomCandidateDiagnostics {
+	loopsInspected: number;
+	noiseLoopsSkipped: number;
+	primaryRoomCandidates: number;
+	secondaryRoomCandidates: number;
+	ambiguousRoomCandidates: number;
+	loopsWithoutValidEnvelopes: number;
+	invalidAreaCandidatesRejected: number;
+	invalidHeightCandidatesRejected: number;
+	alternativeEnvelopesPreserved: number;
+	totalCandidateArea: number;
+	totalEstimatedVolume: number;
+	fingerprint: string;
+}
+
+export interface RoomCandidateResult {
+	candidates: RoomCandidate[];
+	diagnostics: RoomCandidateDiagnostics;
+}
+

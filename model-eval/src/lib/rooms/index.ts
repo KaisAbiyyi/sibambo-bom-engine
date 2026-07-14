@@ -4,3 +4,4 @@ export * from './processor';
 export * from './loops';
 export * from './surfaces';
 export * from './envelopes';
+export * from './candidates';
