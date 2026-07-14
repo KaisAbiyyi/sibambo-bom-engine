@@ -423,4 +423,67 @@ describe('refineVerticalEnvelopeCandidates tests', () => {
 
 		expect(res1.diagnostics.refinementFingerprint).toBe(res2.diagnostics.refinementFingerprint);
 	});
+
+	test('7. eligibleForRoomAssembly is true for valid candidate', () => {
+		const loop = createMockLoop('loop1');
+		const lower = createMockAssignment('lower1', 'loop1', 'lower-support', 0.0);
+		const upper = createMockAssignment('upper1', 'loop1', 'upper-cover', 3.0);
+		const rawEnvs = buildVerticalEnvelopeCandidates([loop], [lower, upper]).candidates;
+		const storey = createMockStorey('storey:test', 0.0, 0.5);
+		const barrier = createMockBarrier('v1', 0.0, 3.0);
+
+		const result = refineVerticalEnvelopeCandidates(rawEnvs, [loop], [barrier], [storey]);
+		expect(result.candidates[0].eligibleForRoomAssembly).toBe(true);
+		expect(result.candidates[0].ineligibilityReasons.length).toBe(0);
+	});
+
+	test('8. eligibleForRoomAssembly is false when refined score is below threshold', () => {
+		const loop = createMockLoop('loop1');
+		const lower = createMockAssignment('lower1', 'loop1', 'lower-support', 0.0);
+		const upper = createMockAssignment('upper1', 'loop1', 'upper-cover', 3.0);
+		// Force raw score to 20
+		upper.score = 20;
+		lower.score = 20;
+		const rawEnvs = buildVerticalEnvelopeCandidates([loop], [lower, upper]).candidates;
+		rawEnvs[0].score = 20; // manually set
+
+		const storey = createMockStorey('storey:test', 0.0, 0.5);
+		const barrier = createMockBarrier('v1', 0.0, 3.0);
+
+		const result = refineVerticalEnvelopeCandidates(rawEnvs, [loop], [barrier], [storey]);
+		expect(result.candidates[0].eligibleForRoomAssembly).toBe(false);
+		expect(result.candidates[0].ineligibilityReasons).toContain('refined-score-below-threshold');
+	});
+
+	test('9. eligibleForRoomAssembly is false when non-positive height', () => {
+		const loop = createMockLoop('loop1');
+		const lower = createMockAssignment('lower1', 'loop1', 'lower-support', 3.0);
+		const upper = createMockAssignment('upper1', 'loop1', 'upper-cover', 0.0);
+		const rawEnvs = buildVerticalEnvelopeCandidates([loop], [lower, upper]).candidates;
+		const storey = createMockStorey('storey:test', 0.0, 0.5);
+		const barrier = createMockBarrier('v1', 0.0, 3.0);
+
+		const result = refineVerticalEnvelopeCandidates(rawEnvs, [loop], [barrier], [storey]);
+		expect(result.candidates[0].eligibleForRoomAssembly).toBe(false);
+		expect(result.candidates[0].ineligibilityReasons).toContain('non-positive-height');
+	});
+
+	test('10. relative tolerances are correctly derived from robust span', () => {
+		const loop = createMockLoop('loop1');
+		const lower = createMockAssignment('lower1', 'loop1', 'lower-support', 0.0);
+		const upper = createMockAssignment('upper1', 'loop1', 'upper-cover', 4.0);
+		const rawEnvs = buildVerticalEnvelopeCandidates([loop], [lower, upper]).candidates;
+		const storey = createMockStorey('storey:test', 0.0, 0.5);
+		
+		// robust span = 4.0m
+		const barrier = createMockBarrier('v1', 0.0, 4.0);
+
+		const result = refineVerticalEnvelopeCandidates(rawEnvs, [loop], [barrier], [storey]);
+		const cand = result.candidates[0];
+		
+		// Base: min(0.15, max(0.05, 0.05 * 4.0)) = 0.15
+		expect(cand.relativeBaseTolerance).toBe(0.15);
+		// Top: min(0.30, max(0.05, 0.10 * 4.0)) = 0.30
+		expect(cand.relativeTopTolerance).toBe(0.30);
+	});
 });

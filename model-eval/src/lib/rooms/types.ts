@@ -376,6 +376,10 @@ export interface LoopVerticalExtentProfile {
 	loopId: string;
 	evidenceIds: string[];
 	evidenceCount: number;
+	referencedEvidenceCount: number;
+	referencedEvidenceFound: number;
+	rejectedReferencedEvidence: number;
+	missingReferencedEvidenceIds: string[];
 	minObservedBase: number;
 	maxObservedTop: number;
 	robustBase: number;
@@ -404,18 +408,25 @@ export interface RefinedVerticalEnvelopeCandidate extends VerticalEnvelopeCandid
 	barrierSpanCoverage: number;
 	refinementReasons: string[];
 	verticalExtentProfile: LoopVerticalExtentProfile;
+	eligibleForRoomAssembly: boolean;
+	ineligibilityReasons: string[];
+	relativeBaseTolerance: number;
+	relativeTopTolerance: number;
 }
 
 export interface VerticalEnvelopeRefinementDiagnostics {
 	loopsInspected: number;
 	loopsWithUsableProfiles: number;
 	loopsWithInsufficientEvidence: number;
+	loopsWithoutEligibleEnvelopes: number;
 	rawPrimaryCount: number;
 	rawSecondaryCount: number;
 	rawNoiseCount: number;
 	refinedPrimaryCount: number;
 	refinedSecondaryCount: number;
 	refinedNoiseCount: number;
+	eligibleEnvelopeCount: number;
+	ineligibleFallbackCount: number;
 	envelopesPromoted: number;
 	envelopesDemoted: number;
 	selectedEnvelopeChangedCount: number;

@@ -494,6 +494,7 @@ export function refineVerticalEnvelopeCandidates(
 	let loopsInspected = 0;
 	let loopsWithUsableProfiles = 0;
 	let loopsWithInsufficientEvidence = 0;
+	let loopsWithoutEligibleEnvelopes = 0;
 	let rawPrimaryCount = 0;
 	let rawSecondaryCount = 0;
 	let rawNoiseCount = 0;
@@ -548,9 +549,21 @@ export function refineVerticalEnvelopeCandidates(
 		const storeyBand = storeyBands.find((s) => s.id === loop.storeyCandidateId);
 		const storeyFloor = storeyBand ? storeyBand.elevationRange.min : 0.0;
 
-		const barriers = verticalBarrierEvidence.filter((v) =>
-			loop.verticalEvidenceIds.includes(v.id)
-		);
+		const referencedEvidenceCount = loop.verticalEvidenceIds.length;
+		const missingReferencedEvidenceIds: string[] = [];
+		const barriers: VerticalBarrierEvidence[] = [];
+
+		for (const id of loop.verticalEvidenceIds) {
+			const v = verticalBarrierEvidence.find(ev => ev.id === id);
+			if (v) {
+				barriers.push(v);
+			} else {
+				missingReferencedEvidenceIds.push(id);
+			}
+		}
+
+		const referencedEvidenceFound = barriers.length;
+		const rejectedReferencedEvidence = missingReferencedEvidenceIds.length;
 
 		const bases: number[] = [];
 		const tops: number[] = [];
@@ -638,6 +651,10 @@ export function refineVerticalEnvelopeCandidates(
 					loopId: loop.id,
 					evidenceIds,
 					evidenceCount: evidenceIds.length,
+					referencedEvidenceCount,
+					referencedEvidenceFound,
+					rejectedReferencedEvidence,
+					missingReferencedEvidenceIds,
 					minObservedBase: minObservedBase === Infinity ? 0 : minObservedBase,
 					maxObservedTop: maxObservedTop === -Infinity ? 0 : maxObservedTop,
 					robustBase,
@@ -665,6 +682,10 @@ export function refineVerticalEnvelopeCandidates(
 				loopId: loop.id,
 				evidenceIds: [],
 				evidenceCount: 0,
+				referencedEvidenceCount,
+				referencedEvidenceFound,
+				rejectedReferencedEvidence,
+				missingReferencedEvidenceIds,
 				minObservedBase: minObservedBase === Infinity ? 0 : minObservedBase,
 				maxObservedTop: maxObservedTop === -Infinity ? 0 : maxObservedTop,
 				robustBase: 0,
@@ -744,6 +765,10 @@ export function refineVerticalEnvelopeCandidates(
 						loopId,
 						evidenceIds: [],
 						evidenceCount: 0,
+						referencedEvidenceCount: 0,
+						referencedEvidenceFound: 0,
+						rejectedReferencedEvidence: 0,
+						missingReferencedEvidenceIds: [],
 						minObservedBase: 0,
 						maxObservedTop: 0,
 						robustBase: 0,
@@ -759,7 +784,11 @@ export function refineVerticalEnvelopeCandidates(
 							fragmentedVerticalEvidence: false,
 							approximateExtent: false
 						}
-					}
+					},
+					eligibleForRoomAssembly: false,
+					ineligibilityReasons: ['insufficient-evidence'],
+					relativeBaseTolerance: 0.15,
+					relativeTopTolerance: 0.30
 				};
 				loopCandidates.push(refinedCand);
 			} else {
@@ -768,9 +797,11 @@ export function refineVerticalEnvelopeCandidates(
 				baseAlignment = baseDiff;
 				topAlignment = topDiff;
 
-				const alignTol = Math.max(0.05, 0.1 * profile.robustSpan);
-				const baseAligned = baseDiff <= alignTol;
-				const topAligned = topDiff <= alignTol;
+				const relativeBaseTolerance = Math.min(0.15, Math.max(0.05, 0.05 * profile.robustSpan));
+				const relativeTopTolerance = Math.min(0.30, Math.max(0.05, 0.10 * profile.robustSpan));
+
+				const baseAligned = baseDiff <= relativeBaseTolerance;
+				const topAligned = topDiff <= relativeTopTolerance;
 
 				const coveredMin = Math.max(env.lowerElevation, profile.robustBase);
 				const coveredMax = Math.min(env.upperElevation, profile.robustTop);
@@ -782,7 +813,7 @@ export function refineVerticalEnvelopeCandidates(
 				if (baseAligned) {
 					refinementReasons.push('base-aligned');
 				} else {
-					const basePenalty = Math.min(30, (baseDiff - alignTol) * 30);
+					const basePenalty = Math.min(30, (baseDiff - relativeBaseTolerance) * 30);
 					penalty += basePenalty;
 					refinementReasons.push(`base-displaced-${baseDiff.toFixed(3)}m`);
 				}
@@ -790,7 +821,7 @@ export function refineVerticalEnvelopeCandidates(
 				if (topAligned) {
 					refinementReasons.push('top-aligned');
 				} else {
-					const topPenalty = Math.min(30, (topDiff - alignTol) * 30);
+					const topPenalty = Math.min(30, (topDiff - relativeTopTolerance) * 30);
 					penalty += topPenalty;
 					refinementReasons.push(`top-displaced-${topDiff.toFixed(3)}m`);
 				}
@@ -832,20 +863,40 @@ export function refineVerticalEnvelopeCandidates(
 					topAlignment,
 					barrierSpanCoverage,
 					refinementReasons,
-					verticalExtentProfile: profile
+					verticalExtentProfile: profile,
+					eligibleForRoomAssembly: false,
+					ineligibilityReasons: [],
+					relativeBaseTolerance,
+					relativeTopTolerance
 				};
 				loopCandidates.push(refinedCand);
 			}
 		}
 
+		let eligibleCountInLoop = 0;
+		for (const cand of loopCandidates) {
+			const ineligibilityReasons: string[] = [];
+			if (cand.qualityFlags.missingLower) ineligibilityReasons.push('missing-lower-support');
+			if (cand.qualityFlags.missingUpper) ineligibilityReasons.push('missing-upper-cover');
+			if (cand.qualityFlags.nonPositiveHeight) ineligibilityReasons.push('non-positive-height');
+			if (cand.refinedScore < 30) ineligibilityReasons.push('refined-score-below-threshold');
+			else if (cand.refinedScore <= 0) ineligibilityReasons.push('refined-score-zero');
+			
+			if (ineligibilityReasons.length === 0) {
+				cand.eligibleForRoomAssembly = true;
+				eligibleCountInLoop++;
+			} else {
+				cand.eligibleForRoomAssembly = false;
+				cand.ineligibilityReasons = ineligibilityReasons;
+			}
+		}
+
+		if (eligibleCountInLoop === 0) {
+			loopsWithoutEligibleEnvelopes++;
+		}
+
 		// Rank within loop
-		const validCandidates = loopCandidates.filter(
-			(c) =>
-				!c.qualityFlags.missingLower &&
-				!c.qualityFlags.missingUpper &&
-				!c.qualityFlags.nonPositiveHeight &&
-				c.rawScore > 0
-		);
+		const validCandidates = loopCandidates.filter(c => c.eligibleForRoomAssembly);
 
 		if (validCandidates.length > 0) {
 			validCandidates.sort((a, b) => {
@@ -855,12 +906,7 @@ export function refineVerticalEnvelopeCandidates(
 
 			const topCandidate = validCandidates[0];
 			for (const cand of loopCandidates) {
-				if (
-					cand.qualityFlags.missingLower ||
-					cand.qualityFlags.missingUpper ||
-					cand.qualityFlags.nonPositiveHeight ||
-					cand.rawScore <= 0
-				) {
+				if (!cand.eligibleForRoomAssembly) {
 					cand.refinedStatus = 'noise';
 					cand.status = 'noise';
 					continue;
@@ -974,16 +1020,22 @@ export function refineVerticalEnvelopeCandidates(
 
 	const refinementFingerprint = calculateRefinedVerticalEnvelopeCandidateFingerprint(refinedCandidates);
 
+	const eligibleEnvelopeCount = refinedCandidates.filter(c => c.eligibleForRoomAssembly).length;
+	const ineligibleFallbackCount = refinedCandidates.filter(c => !c.eligibleForRoomAssembly && (c.rawStatus === 'primary' || c.rawStatus === 'secondary')).length;
+
 	const diagnostics: VerticalEnvelopeRefinementDiagnostics = {
 		loopsInspected,
 		loopsWithUsableProfiles,
 		loopsWithInsufficientEvidence,
+		loopsWithoutEligibleEnvelopes,
 		rawPrimaryCount,
 		rawSecondaryCount,
 		rawNoiseCount,
 		refinedPrimaryCount,
 		refinedSecondaryCount,
 		refinedNoiseCount,
+		eligibleEnvelopeCount,
+		ineligibleFallbackCount,
 		envelopesPromoted,
 		envelopesDemoted,
 		selectedEnvelopeChangedCount,

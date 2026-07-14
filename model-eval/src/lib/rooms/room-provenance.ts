@@ -126,7 +126,11 @@ function toEnvelopeTrace(envelope: VerticalEnvelopeCandidate) {
 		topAlignment: ref.topAlignment,
 		barrierSpanCoverage: ref.barrierSpanCoverage,
 		refinementReasons: ref.refinementReasons,
-		verticalExtentProfile: ref.verticalExtentProfile
+		verticalExtentProfile: ref.verticalExtentProfile,
+		eligibleForRoomAssembly: ref.eligibleForRoomAssembly,
+		ineligibilityReasons: ref.ineligibilityReasons,
+		relativeBaseTolerance: ref.relativeBaseTolerance,
+		relativeTopTolerance: ref.relativeTopTolerance
 	};
 }
 
