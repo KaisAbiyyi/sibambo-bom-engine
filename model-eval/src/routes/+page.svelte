@@ -55,6 +55,7 @@
 	import { createGeometryFoundation } from '$lib/geometry';
 	import type { RoomCandidate } from '$lib/rooms/types';
 	import { runRoomDebugPipeline } from '$lib/rooms/room-debug-pipeline';
+	import { resolveRoomCandidateSelection } from '$lib/rooms/debug-selection';
 
 
 	type NumberInputKey = 'peopleCount' | 'operationHours' | 'setPointC' | 'orientationDeg' | 'glassRatio' | 'roomHeightM';
@@ -68,6 +69,9 @@
 		qaCamera?: QACameraSpec | null;
 		annotationUnit?: Pick<ClassificationUnitRecord, 'sourceNodeIds' | 'sourcePrimitiveIds'> | null;
 		roomCandidates?: RoomCandidate[];
+		selectedRoomCandidateId?: string | null;
+		onRoomCandidateSelect?: (id: string) => void;
+		roomFocusRequest?: number;
 		onQaReady?: (payload: {
 			viewName: string;
 			width: number;
@@ -160,9 +164,12 @@
 	let roomDebugDurationMs = $state(0);
 	let roomDebugError = $state('');
 	let roomDebugRunning = $state(false);
+	let selectedRoomCandidateId = $state<string | null>(null);
+	let roomFocusRequest = $state(0);
 
 	let annotationQueue = $derived(buildAnnotationReviewQueue(annotationUnits, annotationRecords, annotationFilters, annotationSort));
 	let selectedAnnotationUnit = $derived(annotationQueue.find((unit) => unit.id === selectedAnnotationUnitId) || annotationQueue[0] || null);
+	let selectedRoomCandidate = $derived(roomCandidates.find((candidate) => candidate.id === selectedRoomCandidateId) || null);
 	let readiness = $derived<ReadinessItem[]>(getReadiness(model, inputs, touched));
 	let selectedReadiness = $derived<ReadinessItem | undefined>(readiness.find((item) => item.kind === selectedAnalysis));
 	let presentParts = $derived(model ? model.partStats.filter((part) => part.count > 0) : []);
@@ -435,15 +442,24 @@
 		roomDebugError = '';
 		roomCandidates = [];
 		try {
-			const res = await runRoomDebugPipeline(scene);
-			roomCandidates = res.candidates;
-			roomDebugDurationMs = res.durationMs;
+		const res = await runRoomDebugPipeline(scene);
+		roomCandidates = res.candidates;
+		selectedRoomCandidateId = resolveRoomCandidateSelection(res.candidates, selectedRoomCandidateId);
+		roomDebugDurationMs = res.durationMs;
 			if (res.error) roomDebugError = res.error;
 		} catch (err) {
 			roomDebugError = err instanceof Error ? err.message : String(err);
 		} finally {
 			roomDebugRunning = false;
 		}
+	}
+
+	function selectRoomCandidate(id: string) {
+		if (roomCandidates.some((candidate) => candidate.id === id)) selectedRoomCandidateId = id;
+	}
+
+	function focusSelectedRoomCandidate() {
+		if (selectedRoomCandidateId) roomFocusRequest += 1;
 	}
 
 
@@ -1173,7 +1189,7 @@
 
 	<section class="stage-panel">
 		{#if ModelCanvasComponent}
-			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} activeAnalysis={selectedAnalysis} {result} {qaMode} {qaCamera} annotationUnit={annotationMode ? selectedAnnotationUnit : null} roomCandidates={roomDebug ? roomCandidates : []} onQaReady={handleQaReady} />
+			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} activeAnalysis={selectedAnalysis} {result} {qaMode} {qaCamera} annotationUnit={annotationMode ? selectedAnnotationUnit : null} roomCandidates={roomDebug ? roomCandidates : []} {selectedRoomCandidateId} onRoomCandidateSelect={selectRoomCandidate} {roomFocusRequest} onQaReady={handleQaReady} />
 
 		{:else}
 			<div class="model-stage-placeholder">
@@ -1212,19 +1228,38 @@
 				{/if}
 				{#if roomCandidates.length > 0}
 					<div class="room-debug-hud__timing">{roomDebugDurationMs.toFixed(0)} ms</div>
+					<button class="room-debug-hud__focus" type="button" onclick={focusSelectedRoomCandidate} disabled={!selectedRoomCandidateId}>Focus selected</button>
 					<ul class="room-debug-hud__list">
 						{#each roomCandidates.slice(0, 12) as c (c.id)}
-							<li class="room-debug-hud__item room-debug-hud__item--{c.status}">
-								<span class="room-debug-hud__status">{c.status[0].toUpperCase()}</span>
-								<span class="room-debug-hud__area">{c.planArea.toFixed(1)} m²</span>
-								<span class="room-debug-hud__elev">{c.lowerElevation.toFixed(2)}–{c.upperElevation.toFixed(2)} m</span>
-								<span class="room-debug-hud__id">{c.id.slice(-8)}</span>
+							<li>
+								<button class="room-debug-hud__item room-debug-hud__item--{c.status}" class:room-debug-hud__item--selected={c.id === selectedRoomCandidateId} type="button" aria-pressed={c.id === selectedRoomCandidateId} onclick={() => selectRoomCandidate(c.id)}>
+									<span class="room-debug-hud__status">{c.status[0].toUpperCase()}</span>
+									<span class="room-debug-hud__area">{c.planArea.toFixed(1)} m²</span>
+									<span class="room-debug-hud__elev">{c.lowerElevation.toFixed(2)}–{c.upperElevation.toFixed(2)} m</span>
+									<span class="room-debug-hud__id">{c.id.slice(-8)}</span>
+								</button>
 							</li>
 						{/each}
 						{#if roomCandidates.length > 12}
 							<li class="room-debug-hud__more">+{roomCandidates.length - 12} more</li>
 						{/if}
 					</ul>
+					{#if selectedRoomCandidate}
+						<div class="room-debug-hud__details">
+							<strong>Selected candidate</strong>
+							<dl>
+								<dt>ID</dt><dd>{selectedRoomCandidate.id}</dd>
+								<dt>Status</dt><dd>{selectedRoomCandidate.status}</dd>
+								<dt>Area</dt><dd>{selectedRoomCandidate.planArea.toFixed(6)} m²</dd>
+								<dt>Elevations</dt><dd>{selectedRoomCandidate.lowerElevation.toFixed(6)}–{selectedRoomCandidate.upperElevation.toFixed(6)} m</dd>
+								<dt>Clear height</dt><dd>{selectedRoomCandidate.clearHeight.toFixed(6)} m</dd>
+								<dt>Volume</dt><dd>{selectedRoomCandidate.estimatedVolume.toFixed(6)} m³</dd>
+								<dt>Envelope</dt><dd>{selectedRoomCandidate.selectedEnvelopeId}</dd>
+								<dt>Alternatives</dt><dd>{selectedRoomCandidate.alternativeEnvelopeIds.length}</dd>
+								<dt>Quality</dt><dd>{Object.entries(selectedRoomCandidate.qualityFlags).filter(([, value]) => value).map(([key]) => key).join(', ') || 'none'}</dd>
+							</dl>
+						</div>
+					{/if}
 				{/if}
 			</div>
 		{/if}
@@ -2081,6 +2116,21 @@
 		margin-bottom: 6px;
 	}
 
+	.room-debug-hud__focus {
+		width: 100%;
+		margin: 0 0 6px;
+		padding: 4px 7px;
+		border: 1px solid rgba(34, 211, 238, 0.52);
+		border-radius: 5px;
+		background: rgba(34, 211, 238, 0.12);
+		color: #cffafe;
+		font: inherit;
+		font-weight: 700;
+		cursor: pointer;
+	}
+
+	.room-debug-hud__focus:disabled { opacity: 0.45; cursor: not-allowed; }
+
 	.room-debug-hud__error {
 		color: #f87171;
 		font-size: 0.72rem;
@@ -2104,9 +2154,20 @@
 		align-items: center;
 		padding: 3px 6px;
 		border-radius: 5px;
+		width: 100%;
+		border-top: 0;
+		border-right: 0;
+		border-bottom: 0;
 		background: rgba(255, 255, 255, 0.04);
+		color: inherit;
+		font: inherit;
+		text-align: left;
+		cursor: pointer;
 		font-variant-numeric: tabular-nums;
 	}
+
+	.room-debug-hud__item:hover { background: rgba(255, 255, 255, 0.10); }
+	.room-debug-hud__item--selected { background: rgba(34, 211, 238, 0.20); box-shadow: inset 0 0 0 1px rgba(207, 250, 254, 0.6); }
 
 	.room-debug-hud__item--primary { border-left: 2px solid #22d3ee; }
 	.room-debug-hud__item--secondary { border-left: 2px solid #a78bfa; }
@@ -2122,6 +2183,18 @@
 		color: #475569;
 		font-style: italic;
 	}
+
+	.room-debug-hud__details {
+		margin-top: 8px;
+		padding-top: 8px;
+		border-top: 1px solid rgba(148, 163, 184, 0.28);
+		font-size: 0.68rem;
+	}
+
+	.room-debug-hud__details strong { color: #e2e8f0; }
+	.room-debug-hud__details dl { display: grid; grid-template-columns: 72px 1fr; gap: 3px 6px; margin: 6px 0 0; }
+	.room-debug-hud__details dt { color: #94a3b8; }
+	.room-debug-hud__details dd { margin: 0; color: #cbd5e1; overflow-wrap: anywhere; }
 
 	.field {
 		display: grid;

@@ -23,6 +23,7 @@
 		PerspectiveCamera,
 		PlaneGeometry,
 		RepeatWrapping,
+		Raycaster,
 		Scene,
 		ShapeUtils,
 		SphereGeometry,
@@ -40,6 +41,7 @@
 	import { buildClassificationUnitHighlight } from './annotation/highlight';
 	import type { ClassificationUnitRecord } from './annotation';
 	import type { RoomCandidate } from './rooms/types';
+	import { getRoomCandidateBounds, resolveRoomCandidateId } from './rooms/debug-selection';
 
 
 	let {
@@ -52,7 +54,10 @@
 		qaCamera = null,
 		onQaReady = undefined,
 		annotationUnit = null,
-		roomCandidates = []
+		roomCandidates = [],
+		selectedRoomCandidateId = null,
+		onRoomCandidateSelect = undefined,
+		roomFocusRequest = 0
 	}: {
 		model: ParsedBuildingModel | null;
 		activeAnalysis: AnalysisKind;
@@ -63,6 +68,9 @@
 		qaCamera?: QACameraSpec | null;
 		annotationUnit?: Pick<ClassificationUnitRecord, 'sourceNodeIds' | 'sourcePrimitiveIds'> | null;
 		roomCandidates?: RoomCandidate[];
+		selectedRoomCandidateId?: string | null;
+		onRoomCandidateSelect?: (id: string) => void;
+		roomFocusRequest?: number;
 		onQaReady?: (payload: {
 			viewName: string;
 			width: number;
@@ -105,6 +113,9 @@
 	let currentModel: ParsedBuildingModel | null = null;
 	let runtimes: PartRuntime[] = [];
 	let overlayObjects: Array<Mesh | ArrowHelper | Sprite | Group | LineSegments> = [];
+	const roomRaycaster = new Raycaster();
+	const pointer = new Vector2();
+	let appliedRoomFocusRequest = 0;
 
 	let annotationHighlightMesh: Mesh | null = null;
 	const patternTextures = new Map<string, CanvasTexture>();
@@ -142,6 +153,7 @@
 
 		controls = new OrbitControls(camera, renderer.domElement);
 		configureControls();
+		renderer.domElement.addEventListener('click', onCanvasClick);
 
 		resizeObserver = new ResizeObserver(resize);
 		resizeObserver.observe(stageEl);
@@ -181,6 +193,17 @@
 		controls.dampingFactor = 0.08;
 		controls.minPolarAngle = Math.PI * 0.12;
 		controls.maxPolarAngle = Math.PI * 0.88;
+	}
+
+	function onCanvasClick(event: MouseEvent) {
+		if (!renderer || !camera || roomCandidates.length === 0) return;
+
+		const rect = renderer.domElement.getBoundingClientRect();
+		pointer.set(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
+		roomRaycaster.setFromCamera(pointer, camera);
+		const hit = roomRaycaster.intersectObjects(overlayObjects, true)[0];
+		const candidateId = resolveRoomCandidateId(hit?.object);
+		if (candidateId) onRoomCandidateSelect?.(candidateId);
 	}
 
 	function applyQaCamera() {
@@ -763,6 +786,25 @@
 		controls.update();
 	}
 
+	function focusRoomCandidate(candidate: RoomCandidate) {
+		if (!camera || !controls) return;
+		const bounds = getRoomCandidateBounds(candidate);
+		const box = new Box3(
+			new Vector3(bounds.min.x, bounds.min.y, bounds.min.z),
+			new Vector3(bounds.max.x, bounds.max.y, bounds.max.z)
+		);
+		const target = box.getCenter(new Vector3());
+		const size = box.getSize(new Vector3());
+		const span = Math.max(size.x, size.y, size.z, 0.6);
+		const direction = camera.position.clone().sub(controls.target);
+		if (direction.lengthSq() < 0.0001) direction.set(1, 0.7, 1);
+		camera.position.copy(target).add(direction.normalize().multiplyScalar(Math.max(span * 2, 2.2)));
+		camera.lookAt(target);
+		camera.updateProjectionMatrix();
+		controls.target.copy(target);
+		controls.update();
+	}
+
 	function buildOverlays() {
 		clearOverlays();
 		if (!model || !result) return;
@@ -798,6 +840,9 @@
 
 			const hex = ROOM_STATUS_COLOR[candidate.status] ?? '#22d3ee';
 			const color = new Color(hex);
+			const selected = candidate.id === selectedRoomCandidateId;
+			const candidateGroup = new Group();
+			candidateGroup.userData.roomCandidateId = candidate.id;
 
 			// ------------------------------------------------------------------
 			// Floor cap (at lowerElevation)
@@ -827,16 +872,16 @@
 			const floorMat = new MeshStandardMaterial({
 				color,
 				transparent: true,
-				opacity: 0.18,
+				opacity: selected ? 0.42 : 0.18,
 				side: DoubleSide,
 				depthWrite: false,
 				roughness: 0.8,
 				metalness: 0
 			});
 			const floorMesh = new Mesh(floorGeo, floorMat);
+			floorMesh.userData.roomCandidateId = candidate.id;
 			floorMesh.renderOrder = 10;
-			overlayRoot.add(floorMesh);
-			overlayObjects.push(floorMesh);
+			candidateGroup.add(floorMesh);
 
 			// ------------------------------------------------------------------
 			// Ceiling cap (at upperElevation)
@@ -854,16 +899,16 @@
 			const ceilMat = new MeshStandardMaterial({
 				color,
 				transparent: true,
-				opacity: 0.10,
+				opacity: selected ? 0.26 : 0.10,
 				side: DoubleSide,
 				depthWrite: false,
 				roughness: 0.8,
 				metalness: 0
 			});
 			const ceilMesh = new Mesh(ceilGeo, ceilMat);
+			ceilMesh.userData.roomCandidateId = candidate.id;
 			ceilMesh.renderOrder = 10;
-			overlayRoot.add(ceilMesh);
-			overlayObjects.push(ceilMesh);
+			candidateGroup.add(ceilMesh);
 
 			// ------------------------------------------------------------------
 			// Perimeter wireframe at floor level
@@ -879,11 +924,11 @@
 			}
 			const edgeGeo = new BufferGeometry();
 			edgeGeo.setAttribute('position', new Float32BufferAttribute(edgePositions, 3));
-			const edgeMat = new LineBasicMaterial({ color, linewidth: 1 });
+			const edgeMat = new LineBasicMaterial({ color: selected ? color.clone().lerp(new Color('#ffffff'), 0.36) : color, linewidth: 1 });
 			const wire = new LineSegments(edgeGeo, edgeMat);
+			wire.userData.roomCandidateId = candidate.id;
 			wire.renderOrder = 11;
-			overlayRoot.add(wire);
-			overlayObjects.push(wire);
+			candidateGroup.add(wire);
 
 			// ------------------------------------------------------------------
 			// Label at centroid, midway between floor and ceiling
@@ -894,23 +939,25 @@
 			const shortId = candidate.id.slice(-8);
 			const labelText = `${candidate.status[0].toUpperCase()} ${candidate.planArea.toFixed(1)}m² h${candidate.clearHeight.toFixed(2)}`;
 			const labelPos = new Vector3(cx, midY + span * 0.015, cz);
-			const lbl = makeRoomLabel(labelText, shortId, hex, labelPos, span);
-			overlayRoot.add(lbl);
-			overlayObjects.push(lbl);
+			const lbl = makeRoomLabel(labelText, shortId, hex, labelPos, span, selected);
+			lbl.userData.roomCandidateId = candidate.id;
+			candidateGroup.add(lbl);
+			overlayRoot.add(candidateGroup);
+			overlayObjects.push(candidateGroup);
 		}
 	}
 
-	function makeRoomLabel(line1: string, line2: string, color: string, position: Vector3, span: number) {
+	function makeRoomLabel(line1: string, line2: string, color: string, position: Vector3, span: number, selected = false) {
 		const canvas = document.createElement('canvas');
 		canvas.width = 512;
 		canvas.height = 176;
 		const ctx = canvas.getContext('2d')!;
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		ctx.fillStyle = 'rgba(10, 15, 20, 0.80)';
+		ctx.fillStyle = selected ? 'rgba(16, 30, 40, 0.96)' : 'rgba(10, 15, 20, 0.80)';
 		roundRect(ctx, 16, 20, 480, 140, 16);
 		ctx.fill();
 		ctx.strokeStyle = color;
-		ctx.lineWidth = 4;
+		ctx.lineWidth = selected ? 7 : 4;
 		roundRect(ctx, 16, 20, 480, 140, 16);
 		ctx.stroke();
 		ctx.fillStyle = '#e2e8f0';
@@ -1010,6 +1057,7 @@
 		if (raf) window.cancelAnimationFrame(raf);
 		resizeObserver?.disconnect();
 		controls?.dispose();
+		renderer?.domElement.removeEventListener('click', onCanvasClick);
 		clearModel();
 		patternTextures.forEach((texture) => texture.dispose());
 		patternTextures.clear();
@@ -1031,12 +1079,23 @@
 		visiblePartKeys;
 		annotationUnit;
 		roomCandidates;
+		selectedRoomCandidateId;
 		if (mounted) {
 			refreshSurfaceMaterials();
 			rebuildAnnotationHighlight();
 			buildOverlays();
 			buildRoomDebugOverlays();
 		}
+	});
+
+	$effect(() => {
+		roomFocusRequest;
+		selectedRoomCandidateId;
+		roomCandidates;
+		if (!mounted || roomFocusRequest === appliedRoomFocusRequest) return;
+		appliedRoomFocusRequest = roomFocusRequest;
+		const candidate = roomCandidates.find((item) => item.id === selectedRoomCandidateId);
+		if (candidate) focusRoomCandidate(candidate);
 	});
 
 
