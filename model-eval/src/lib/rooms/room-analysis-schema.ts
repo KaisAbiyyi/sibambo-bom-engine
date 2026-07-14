@@ -226,7 +226,7 @@ function validatePayload(raw: unknown): { ok: true; value: PersistedRoomAnalysis
 
 	if (issues.length > 0) return { ok: false, issues };
 
-	const payload = raw as PersistedRoomAnalysisPayload;
+	const payload = raw as unknown as PersistedRoomAnalysisPayload;
 
 	// Cross-field invariants
 	const crossResult = validatePayloadCrossFieldInvariants(payload);

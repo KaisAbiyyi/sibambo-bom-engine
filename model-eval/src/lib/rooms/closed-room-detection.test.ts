@@ -59,8 +59,9 @@ function mockGraph(storeyCandidateId: string, nodes: any[], edges: any[]): Norma
 			nodesBefore: nodes.length, nodesAfter: nodes.length,
 			edgesBefore: edges.length, edgesAfter: edges.length,
 			componentsBefore: 1, componentsAfter: 1,
-			endpointsSnapped: 0, edgesSplit: 0, edgesMerged: 0, zeroLengthEdgesRejected: 0,
-			openEndpoints: 0
+			endpointsSnapped: 0, intersectionsFound: 0, tJunctionsFound: 0,
+			edgesSplit: 0, collinearOverlapsMerged: 0, duplicateSubsegmentsRemoved: 0,
+			zeroLengthRejected: 0, degree1Nodes: 0, degree2Nodes: 0, degree3PlusNodes: 0
 		}
 	};
 }

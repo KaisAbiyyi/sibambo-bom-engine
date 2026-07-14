@@ -3,6 +3,7 @@ import {
 	getRoomCandidateBounds,
 	getPrismSideVertexCount,
 	getVisibleRoomCandidates,
+	resolveDetectedRoomId,
 	resolveRoomCandidateId,
 	resolveRoomCandidateSelection,
 	type RoomDebugVisibility
@@ -67,5 +68,20 @@ describe('room debug selection helpers', () => {
 
 	test('creates two triangles for every polygon prism side', () => {
 		expect(getPrismSideVertexCount(candidate('room:one').planPolygon)).toBe(18);
+	});
+
+	test('resolves detected room ID from overlay child through its parent', () => {
+		const parent = { userData: { detectedRoomId: 'detected:room:01' }, parent: null };
+		const child = { userData: {}, parent };
+		const grandchild = { userData: { roomCandidateId: 'cand:01' }, parent: child };
+
+		expect(resolveDetectedRoomId(child)).toBe('detected:room:01');
+		expect(resolveDetectedRoomId(grandchild)).toBe('detected:room:01');
+		expect(resolveDetectedRoomId({ userData: {}, parent: null })).toBeNull();
+	});
+
+	test('supports topology visibility in RoomDebugVisibility type and filtering', () => {
+		const visibility: RoomDebugVisibility = { primary: true, secondary: true, plan: true, prism: true, labels: true, topology: false };
+		expect(visibility.topology).toBe(false);
 	});
 });

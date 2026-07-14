@@ -20,6 +20,21 @@ import { buildRoomCandidateTraces, type RoomCandidateTrace } from './room-proven
 import { detectClosedRooms, type ClosedRoomDetectionInput } from './closed-room-detection';
 import type { RoomCandidate, RoomCandidateDiagnostics } from './types';
 import type { DetectedRoom, DetectedRoomResult } from './detected-room';
+import { buildRoomTopology, type RoomTopologyResult, type RoomTopologyGraph } from './topology';
+import { inferRoomSemantics, type RoomSemanticResult, type RoomSemanticInference, type SemanticObjectInput } from './semantics';
+
+export type RoomIntelligenceDiagnostics = {
+	roomDetection?: any;
+	topology?: any;
+	semantics?: any;
+};
+
+export type RoomIntelligenceResult = {
+	detectedRooms: DetectedRoom[];
+	topology: RoomTopologyGraph;
+	semantics: RoomSemanticInference[];
+	diagnostics: RoomIntelligenceDiagnostics;
+};
 
 export type RoomDebugResult = {
 	candidates: RoomCandidate[];
@@ -30,6 +45,12 @@ export type RoomDebugResult = {
 	error?: string;
 	/** Task 3B.3: Closed rooms detected from validated loop and envelope evidence */
 	detectedRooms?: DetectedRoomResult;
+	/** Task 3B.4: Topology graph of detected rooms */
+	topology?: RoomTopologyResult;
+	/** Task 3B.5: Semantic classification of detected rooms */
+	semantics?: RoomSemanticResult;
+	/** Combined RoomIntelligenceResult contract */
+	intelligence?: RoomIntelligenceResult;
 };
 
 
@@ -134,13 +155,42 @@ export async function runRoomDebugPipeline(scene: RuntimeScene): Promise<RoomDeb
 		};
 		const detectedRooms = detectClosedRooms(detectionInput);
 
+		// Task 3B.4 & 3B.5 — Topology and Semantics
+		const topology = buildRoomTopology(detectedRooms, snapshot.boundaryOpenings ?? [], modelDiagonalM);
+		const semanticObjects: SemanticObjectInput[] = objects.map((obj) => {
+			const unit = units.find((u) => u.logicalObjectId === obj.id);
+			const unitTags = unit ? unit.sourceTags.join(' ') : '';
+			const unitNames = unit ? unit.sourceNames.join(' ') : '';
+			return {
+				id: obj.id,
+				name: `${obj.sourceName || ''} ${obj.sourceTag || ''} ${unitNames} ${unitTags}`.trim(),
+				category: obj.sourceTag || (unit ? unit.sourceTags[0] : undefined) || undefined,
+				centroid: obj.centroid,
+				boundingBox: obj.worldBounds
+			};
+		});
+		const semantics = inferRoomSemantics(detectedRooms.rooms, topology.graph, { objects: semanticObjects });
+		const intelligence: RoomIntelligenceResult = {
+			detectedRooms: detectedRooms.rooms,
+			topology: topology.graph,
+			semantics: semantics.inferences,
+			diagnostics: {
+				roomDetection: detectedRooms.diagnostics,
+				topology: topology.graph.diagnostics,
+				semantics: semantics.diagnostics
+			}
+		};
+
 		return {
 			candidates: roomsResult.candidates,
 			traces,
 			diagnostics: roomsResult.diagnostics,
 			dataQuality,
 			durationMs: performance.now() - t0,
-			detectedRooms
+			detectedRooms,
+			topology,
+			semantics,
+			intelligence
 		};
 	} catch (err) {
 		return {

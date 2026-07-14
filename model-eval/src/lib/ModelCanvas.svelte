@@ -42,7 +42,10 @@
 	import type { ClassificationUnitRecord } from './annotation';
 	import type { RoomCandidate } from './rooms/types';
 	import type { RoomCandidateTrace } from './rooms/room-provenance';
-	import { getPrismSideVertexCount, getRoomCandidateBounds, resolveRoomCandidateId, type RoomDebugVisibility } from './rooms/debug-selection';
+	import { getPrismSideVertexCount, getRoomCandidateBounds, resolveRoomCandidateId, resolveDetectedRoomId, type RoomDebugVisibility } from './rooms/debug-selection';
+	import type { RoomTopologyGraph } from './rooms/topology';
+	import type { RoomSemanticResult } from './rooms/semantics';
+	import type { DetectedRoom } from './rooms/detected-room';
 
 
 	let {
@@ -61,7 +64,12 @@
 		roomFocusRequest = 0,
 		roomOverlayVisibility = { primary: true, secondary: true, plan: true, prism: true, labels: true },
 		selectedRoomCandidateTrace = null,
-		showSelectedRoomEvidence = false
+		showSelectedRoomEvidence = false,
+		roomTopology = null,
+		roomSemantics = null,
+		detectedRooms = null,
+		selectedDetectedRoomId = null,
+		onDetectedRoomSelect = undefined
 	}: {
 		model: ParsedBuildingModel | null;
 		activeAnalysis: AnalysisKind;
@@ -78,6 +86,11 @@
 		roomOverlayVisibility?: RoomDebugVisibility;
 		selectedRoomCandidateTrace?: RoomCandidateTrace | null;
 		showSelectedRoomEvidence?: boolean;
+		roomTopology?: RoomTopologyGraph | null;
+		roomSemantics?: RoomSemanticResult | null;
+		detectedRooms?: DetectedRoom[] | null;
+		selectedDetectedRoomId?: string | null;
+		onDetectedRoomSelect?: (id: string) => void;
 		onQaReady?: (payload: {
 			viewName: string;
 			width: number;
@@ -88,7 +101,6 @@
 			renderedBounds: { min: { x: number; y: number; z: number }; max: { x: number; y: number; z: number } } | null;
 		}) => void;
 	} = $props();
-
 
 	type PartRuntime = {
 		key: PartKey;
@@ -204,7 +216,7 @@
 	}
 
 	function onCanvasClick(event: MouseEvent) {
-		if (!renderer || !camera || roomCandidates.length === 0) return;
+		if (!renderer || !camera || (roomCandidates.length === 0 && (!detectedRooms || detectedRooms.length === 0))) return;
 
 		const rect = renderer.domElement.getBoundingClientRect();
 		pointer.set(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
@@ -212,6 +224,8 @@
 		const hit = roomRaycaster.intersectObjects(overlayObjects, true)[0];
 		const candidateId = resolveRoomCandidateId(hit?.object);
 		if (candidateId) onRoomCandidateSelect?.(candidateId);
+		const drId = resolveDetectedRoomId(hit?.object);
+		if (drId) onDetectedRoomSelect?.(drId);
 	}
 
 	function applyQaCamera() {
@@ -856,7 +870,10 @@
 
 			const hex = ROOM_STATUS_COLOR[candidate.status] ?? '#22d3ee';
 			const color = new Color(hex);
-			const selected = candidate.id === selectedRoomCandidateId;
+			const dr = detectedRooms?.find((r) => r.evidence.sourceLoopId === candidate.loopCandidateId);
+			const sem = dr && roomSemantics ? roomSemantics.inferences.find((s) => s.roomId === dr.id) : null;
+			const selected = candidate.id === selectedRoomCandidateId || (dr && dr.id === selectedDetectedRoomId);
+
 			const shape2D = polygon.map((p) => new Vector2(p.x, p.z));
 			let tris: number[][];
 			try {
@@ -875,6 +892,7 @@
 				floorGeo.computeVertexNormals();
 				const floorMesh = new Mesh(floorGeo, roomSurfaceMaterial(color, selected ? 0.42 : 0.18));
 				floorMesh.userData.roomCandidateId = candidate.id;
+				if (dr) floorMesh.userData.detectedRoomId = dr.id;
 				floorMesh.renderOrder = 10;
 				planGroup.add(floorMesh);
 
@@ -884,6 +902,7 @@
 				ceilGeo.computeVertexNormals();
 				const ceilMesh = new Mesh(ceilGeo, roomSurfaceMaterial(color, selected ? 0.26 : 0.10));
 				ceilMesh.userData.roomCandidateId = candidate.id;
+				if (dr) ceilMesh.userData.detectedRoomId = dr.id;
 				ceilMesh.renderOrder = 10;
 				planGroup.add(ceilMesh);
 
@@ -891,6 +910,7 @@
 				edgeGeo.setAttribute('position', new Float32BufferAttribute(roomBoundaryPositions(polygon, floorY), 3));
 				const wire = new LineSegments(edgeGeo, new LineBasicMaterial({ color: selected ? color.clone().lerp(new Color('#ffffff'), 0.36) : color, linewidth: 1 }));
 				wire.userData.roomCandidateId = candidate.id;
+				if (dr) wire.userData.detectedRoomId = dr.id;
 				wire.renderOrder = 11;
 				planGroup.add(wire);
 				overlayRoot.add(planGroup);
@@ -906,6 +926,7 @@
 				prismGeo.computeVertexNormals();
 				const prism = new Mesh(prismGeo, roomSurfaceMaterial(color, selected ? 0.28 : 0.12));
 				prism.userData.roomCandidateId = candidate.id;
+				if (dr) prism.userData.detectedRoomId = dr.id;
 				prism.renderOrder = 9;
 				prismGroup.add(prism);
 				overlayRoot.add(prismGroup);
@@ -917,14 +938,151 @@
 			const cz = polygon.reduce((s, p) => s + p.z, 0) / polygon.length;
 			const midY = (floorY + ceilY) / 2;
 			const shortId = candidate.id.slice(-8);
-			const labelText = `${candidate.status[0].toUpperCase()} ${candidate.planArea.toFixed(1)}m² h${candidate.clearHeight.toFixed(2)}`;
+			const labelText = sem
+				? `[${sem.primaryFunction.toUpperCase()}] ${candidate.planArea.toFixed(1)}m² (${Math.round(sem.confidence * 100)}%)`
+				: `${candidate.status[0].toUpperCase()} ${candidate.planArea.toFixed(1)}m² h${candidate.clearHeight.toFixed(2)}`;
 			const labelPos = new Vector3(cx, midY + span * 0.015, cz);
 			const lbl = makeRoomLabel(labelText, shortId, hex, labelPos, span, selected);
 			lbl.userData.roomCandidateId = candidate.id;
+			if (dr) lbl.userData.detectedRoomId = dr.id;
 			const labelGroup = createRoomOverlayGroup(candidate.id, 'label');
 			labelGroup.add(lbl);
 			overlayRoot.add(labelGroup);
 			overlayObjects.push(labelGroup);
+		}
+	}
+
+	function buildTopologyOverlays() {
+		if (!model || !roomTopology || roomOverlayVisibility.topology === false) return;
+
+		const activeDetectedRoomId = selectedDetectedRoomId || (
+			selectedRoomCandidateId && detectedRooms
+				? detectedRooms.find((r) => r.evidence.sourceLoopId === roomCandidates.find((c) => c.id === selectedRoomCandidateId)?.loopCandidateId)?.id
+				: null
+		);
+
+		const candidateMap = new Map<string, RoomCandidate>();
+		if (detectedRooms && roomCandidates.length > 0) {
+			for (const dr of detectedRooms) {
+				const cand = roomCandidates.find((c) => c.loopCandidateId === dr.evidence.sourceLoopId);
+				if (cand) candidateMap.set(dr.id, cand);
+			}
+		}
+
+		for (const sb of roomTopology.sharedBoundaries) {
+			const isConnectedToActive = activeDetectedRoomId && (sb.roomAId === activeDetectedRoomId || sb.roomBId === activeDetectedRoomId);
+			if (activeDetectedRoomId && !isConnectedToActive) continue;
+
+			const candA = candidateMap.get(sb.roomAId);
+			const candB = candidateMap.get(sb.roomBId);
+			const floorY = Math.min(candA?.lowerElevation ?? 0, candB?.lowerElevation ?? 0) + 0.05;
+			const ceilY = Math.min(candA?.upperElevation ?? 3, candB?.upperElevation ?? 3) - 0.05;
+
+			const start = sb.segment.start;
+			const end = sb.segment.end;
+			const wallGroup = createRoomOverlayGroup(sb.id, 'topology');
+			const pos = [
+				start.x, floorY, start.z,
+				end.x, floorY, end.z,
+				end.x, ceilY, end.z,
+				start.x, floorY, start.z,
+				end.x, ceilY, end.z,
+				start.x, ceilY, start.z
+			];
+			const geo = new BufferGeometry();
+			geo.setAttribute('position', new Float32BufferAttribute(pos, 3));
+			geo.computeVertexNormals();
+			const mesh = new Mesh(
+				geo,
+				new MeshStandardMaterial({
+					color: new Color(isConnectedToActive ? '#d946ef' : '#a855f7'),
+					transparent: true,
+					opacity: isConnectedToActive ? 0.65 : 0.2,
+					side: DoubleSide
+				})
+			);
+			mesh.renderOrder = 14;
+			wallGroup.add(mesh);
+			overlayRoot.add(wallGroup);
+			overlayObjects.push(wallGroup);
+		}
+
+		for (const conn of roomTopology.connections) {
+			const isConnectedToActive = activeDetectedRoomId && (conn.fromRoomId === activeDetectedRoomId || conn.toRoomId === activeDetectedRoomId);
+			if (activeDetectedRoomId && !isConnectedToActive) continue;
+
+			if (conn.evidence.segment) {
+				const cand = candidateMap.get(conn.fromRoomId) || candidateMap.get(conn.toRoomId);
+				const floorY = (cand?.lowerElevation ?? 0) + 0.08;
+				const topY = floorY + (conn.headElevation ?? (conn.type === 'vertical_connection' ? 3.0 : 2.1));
+
+				const start = conn.evidence.segment.start;
+				const end = conn.evidence.segment.end;
+				const connGroup = createRoomOverlayGroup(conn.id, 'topology');
+				const pos = [
+					start.x, floorY, start.z,
+					end.x, floorY, end.z,
+					end.x, topY, end.z,
+					start.x, floorY, start.z,
+					end.x, topY, end.z,
+					start.x, topY, start.z
+				];
+				const geo = new BufferGeometry();
+				geo.setAttribute('position', new Float32BufferAttribute(pos, 3));
+				geo.computeVertexNormals();
+				const mesh = new Mesh(
+					geo,
+					new MeshStandardMaterial({
+						color: new Color(conn.type === 'vertical_connection' ? '#f59e0b' : '#10b981'),
+						transparent: true,
+						opacity: isConnectedToActive ? 0.75 : 0.3,
+						side: DoubleSide
+					})
+				);
+				mesh.renderOrder = 15;
+				connGroup.add(mesh);
+				overlayRoot.add(connGroup);
+				overlayObjects.push(connGroup);
+			}
+		}
+
+		for (const ext of roomTopology.exteriorConnections) {
+			const isConnectedToActive = activeDetectedRoomId && ext.roomId === activeDetectedRoomId;
+			if (activeDetectedRoomId && !isConnectedToActive) continue;
+
+			if (ext.boundarySegment) {
+				const cand = candidateMap.get(ext.roomId);
+				const floorY = (cand?.lowerElevation ?? 0) + (ext.sillElevation ?? (ext.type === 'window' ? 0.9 : 0.05));
+				const topY = (cand?.lowerElevation ?? 0) + (ext.headElevation ?? 2.1);
+
+				const start = ext.boundarySegment.start;
+				const end = ext.boundarySegment.end;
+				const extGroup = createRoomOverlayGroup(ext.id, 'topology');
+				const pos = [
+					start.x, floorY, start.z,
+					end.x, floorY, end.z,
+					end.x, topY, end.z,
+					start.x, floorY, start.z,
+					end.x, topY, end.z,
+					start.x, topY, start.z
+				];
+				const geo = new BufferGeometry();
+				geo.setAttribute('position', new Float32BufferAttribute(pos, 3));
+				geo.computeVertexNormals();
+				const mesh = new Mesh(
+					geo,
+					new MeshStandardMaterial({
+						color: new Color(ext.type === 'window' ? '#06b6d4' : '#10b981'),
+						transparent: true,
+						opacity: isConnectedToActive ? 0.75 : 0.3,
+						side: DoubleSide
+					})
+				);
+				mesh.renderOrder = 15;
+				extGroup.add(mesh);
+				overlayRoot.add(extGroup);
+				overlayObjects.push(extGroup);
+			}
 		}
 	}
 
@@ -953,7 +1111,7 @@
 		if (trace.upperEvidence) addGeometry('evidence-upper', trace.upperEvidence.geometry, trace.upperEvidence.elevation, '#fb7185');
 	}
 
-	function createRoomOverlayGroup(id: string, kind: 'plan' | 'prism' | 'label') {
+	function createRoomOverlayGroup(id: string, kind: 'plan' | 'prism' | 'label' | 'topology') {
 		const group = new Group();
 		group.userData.roomCandidateId = id;
 		group.userData.roomOverlayKind = kind;
@@ -1120,6 +1278,7 @@
 		if (mounted) buildModel();
 	});
 
+
 	$effect(() => {
 		activeAnalysis;
 		result;
@@ -1127,14 +1286,18 @@
 		annotationUnit;
 		roomCandidates;
 		selectedRoomCandidateId;
+		selectedDetectedRoomId;
 		roomOverlayVisibility;
 		selectedRoomCandidateTrace;
 		showSelectedRoomEvidence;
+		roomTopology;
+		roomSemantics;
 		if (mounted) {
 			refreshSurfaceMaterials();
 			rebuildAnnotationHighlight();
 			buildOverlays();
 			buildRoomDebugOverlays();
+			buildTopologyOverlays();
 			buildSelectedEvidenceOverlays();
 		}
 	});
@@ -1142,17 +1305,16 @@
 	$effect(() => {
 		roomFocusRequest;
 		selectedRoomCandidateId;
+		selectedDetectedRoomId;
 		roomCandidates;
 		if (!mounted || roomFocusRequest === appliedRoomFocusRequest) return;
 		appliedRoomFocusRequest = roomFocusRequest;
-		const candidate = roomCandidates.find((item) => item.id === selectedRoomCandidateId);
+		let candidate = roomCandidates.find((item) => item.id === selectedRoomCandidateId);
+		if (!candidate && selectedDetectedRoomId && detectedRooms) {
+			const dr = detectedRooms.find((r) => r.id === selectedDetectedRoomId);
+			if (dr) candidate = roomCandidates.find((c) => c.loopCandidateId === dr.evidence.sourceLoopId);
+		}
 		if (candidate) focusRoomCandidate(candidate);
-	});
-
-
-	$effect(() => {
-		spaces;
-		if (mounted) applyEditTransform();
 	});
 
 	$effect(() => {

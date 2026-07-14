@@ -58,6 +58,9 @@
 	import { serializeRoomCandidateTrace, type RoomCandidateTrace } from '$lib/rooms/room-provenance';
 	import { getVisibleRoomCandidates, resolveRoomCandidateSelection, type RoomDebugVisibility } from '$lib/rooms/debug-selection';
 	import { compatibilityMessage, type PersistedAnalysisCompatibilityReason } from '$lib/rooms/room-analysis-schema';
+	import type { DetectedRoom, DetectedRoomResult } from '$lib/rooms/detected-room';
+	import type { RoomTopologyGraph, RoomTopologyResult, RoomConnection } from '$lib/rooms/topology';
+	import type { RoomSemanticResult, RoomSemanticInference } from '$lib/rooms/semantics';
 
 
 	type NumberInputKey = 'peopleCount' | 'operationHours' | 'setPointC' | 'orientationDeg' | 'glassRatio' | 'roomHeightM';
@@ -77,6 +80,11 @@
 		roomOverlayVisibility?: RoomDebugVisibility;
 		selectedRoomCandidateTrace?: RoomCandidateTrace | null;
 		showSelectedRoomEvidence?: boolean;
+		roomTopology?: RoomTopologyGraph | null;
+		roomSemantics?: RoomSemanticResult | null;
+		detectedRooms?: DetectedRoom[] | null;
+		selectedDetectedRoomId?: string | null;
+		onDetectedRoomSelect?: (id: string) => void;
 		onQaReady?: (payload: {
 			viewName: string;
 			width: number;
@@ -170,12 +178,16 @@
 	let roomDebugDurationMs = $state(0);
 	let roomDebugDiagnostics = $state<import('$lib/rooms/types').RoomCandidateDiagnostics | undefined>(undefined);
 	let roomDebugDetectedRooms = $state<import('$lib/rooms/detected-room').DetectedRoomResult | undefined>(undefined);
+	let roomDebugTopology = $state<import('$lib/rooms/topology').RoomTopologyResult | undefined>(undefined);
+	let roomDebugSemantics = $state<import('$lib/rooms/semantics').RoomSemanticResult | undefined>(undefined);
+	let roomDebugIntelligence = $state<import('$lib/rooms/room-debug-pipeline').RoomIntelligenceResult | undefined>(undefined);
 	let roomDebugError = $state('');
 	let roomDebugSchemaError = $state<{ reason: PersistedAnalysisCompatibilityReason; message: string } | undefined>(undefined);
 	let roomDebugRunning = $state(false);
 	let selectedRoomCandidateId = $state<string | null>(null);
+	let selectedDetectedRoomId = $state<string | null>(null);
 	let roomFocusRequest = $state(0);
-	let roomOverlayVisibility = $state<RoomDebugVisibility>({ primary: true, secondary: true, plan: true, prism: true, labels: true });
+	let roomOverlayVisibility = $state<RoomDebugVisibility>({ primary: true, secondary: true, plan: true, prism: true, labels: true, topology: true });
 	let showSelectedRoomEvidence = $state(false);
 	let roomTraceCopyMessage = $state('');
 
@@ -183,6 +195,9 @@
 	let selectedAnnotationUnit = $derived(annotationQueue.find((unit) => unit.id === selectedAnnotationUnitId) || annotationQueue[0] || null);
 	let selectedRoomCandidate = $derived(roomCandidates.find((candidate) => candidate.id === selectedRoomCandidateId) || null);
 	let selectedRoomCandidateTrace = $derived(roomCandidateTraces.find((trace) => trace.candidate.id === selectedRoomCandidateId) || null);
+	let selectedDetectedRoom = $derived(roomDebugDetectedRooms?.rooms.find((r: DetectedRoom) => r.id === selectedDetectedRoomId) || null);
+	let selectedRoomSemantic = $derived(roomDebugSemantics?.inferences.find((s: RoomSemanticInference) => s.roomId === selectedDetectedRoomId) || null);
+	let selectedRoomConnections = $derived(roomDebugTopology?.graph.connections.filter((c: RoomConnection) => c.fromRoomId === selectedDetectedRoomId || c.toRoomId === selectedDetectedRoomId) || []);
 	let visibleRoomCandidates = $derived(getVisibleRoomCandidates(roomCandidates, roomOverlayVisibility));
 	let readiness = $derived<ReadinessItem[]>(getReadiness(model, inputs, touched));
 	let selectedReadiness = $derived<ReadinessItem | undefined>(readiness.find((item) => item.kind === selectedAnalysis));
@@ -469,6 +484,9 @@
 		roomDebugDurationMs = res.durationMs;
 		roomDebugDiagnostics = res.diagnostics;
 		roomDebugDetectedRooms = res.detectedRooms;
+		roomDebugTopology = res.topology;
+		roomDebugSemantics = res.semantics;
+		roomDebugIntelligence = res.intelligence;
 		if (res.error) roomDebugError = res.error;
 		} catch (err) {
 			roomDebugError = err instanceof Error ? err.message : String(err);
@@ -478,11 +496,29 @@
 	}
 
 	function selectRoomCandidate(id: string) {
-		if (roomCandidates.some((candidate) => candidate.id === id)) selectedRoomCandidateId = id;
+		if (roomCandidates.some((candidate) => candidate.id === id)) {
+			selectedRoomCandidateId = id;
+			if (roomDebugDetectedRooms) {
+				const cand = roomCandidates.find((c) => c.id === id);
+				const dr = cand ? roomDebugDetectedRooms.rooms.find((r) => r.evidence.sourceLoopId === cand.loopCandidateId) : null;
+				selectedDetectedRoomId = dr ? dr.id : null;
+			}
+		}
+	}
+
+	function selectDetectedRoom(id: string) {
+		selectedDetectedRoomId = id;
+		if (roomDebugDetectedRooms && roomCandidates.length > 0) {
+			const dr = roomDebugDetectedRooms.rooms.find((r) => r.id === id);
+			if (dr) {
+				const cand = roomCandidates.find((c) => c.loopCandidateId === dr.evidence.sourceLoopId);
+				if (cand) selectedRoomCandidateId = cand.id;
+			}
+		}
 	}
 
 	function focusSelectedRoomCandidate() {
-		if (selectedRoomCandidateId) roomFocusRequest += 1;
+		if (selectedRoomCandidateId || selectedDetectedRoomId) roomFocusRequest += 1;
 	}
 
 	function toggleRoomOverlayVisibility(key: keyof RoomDebugVisibility) {
@@ -1227,7 +1263,7 @@
 
 	<section class="stage-panel">
 		{#if ModelCanvasComponent}
-			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} activeAnalysis={selectedAnalysis} {result} {qaMode} {qaCamera} annotationUnit={annotationMode ? selectedAnnotationUnit : null} roomCandidates={roomDebug ? visibleRoomCandidates : []} {selectedRoomCandidateId} onRoomCandidateSelect={selectRoomCandidate} {roomFocusRequest} {roomOverlayVisibility} {selectedRoomCandidateTrace} {showSelectedRoomEvidence} onQaReady={handleQaReady} />
+			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} activeAnalysis={selectedAnalysis} {result} {qaMode} {qaCamera} annotationUnit={annotationMode ? selectedAnnotationUnit : null} roomCandidates={roomDebug ? visibleRoomCandidates : []} {selectedRoomCandidateId} onRoomCandidateSelect={selectRoomCandidate} roomTopology={roomDebug ? (roomDebugTopology?.graph ?? null) : null} roomSemantics={roomDebug ? (roomDebugSemantics ?? null) : null} detectedRooms={roomDebug ? (roomDebugDetectedRooms?.rooms ?? null) : null} {selectedDetectedRoomId} onDetectedRoomSelect={selectDetectedRoom} {roomFocusRequest} {roomOverlayVisibility} {selectedRoomCandidateTrace} {showSelectedRoomEvidence} onQaReady={handleQaReady} />
 
 		{:else}
 			<div class="model-stage-placeholder">
@@ -1275,8 +1311,9 @@
 					<button class:room-debug-hud__control--active={roomOverlayVisibility.plan} class="room-debug-hud__control" type="button" aria-pressed={roomOverlayVisibility.plan} onclick={() => toggleRoomOverlayVisibility('plan')}>Show plan polygons</button>
 					<button class:room-debug-hud__control--active={roomOverlayVisibility.prism} class="room-debug-hud__control" type="button" aria-pressed={roomOverlayVisibility.prism} onclick={() => toggleRoomOverlayVisibility('prism')}>Show vertical prisms</button>
 					<button class:room-debug-hud__control--active={roomOverlayVisibility.labels} class="room-debug-hud__control" type="button" aria-pressed={roomOverlayVisibility.labels} onclick={() => toggleRoomOverlayVisibility('labels')}>Show labels</button>
+					<button class:room-debug-hud__control--active={roomOverlayVisibility.topology} class="room-debug-hud__control" type="button" aria-pressed={roomOverlayVisibility.topology} onclick={() => toggleRoomOverlayVisibility('topology')}>Show topology</button>
 				</div>
-				<button class="room-debug-hud__focus" type="button" onclick={focusSelectedRoomCandidate} disabled={!selectedRoomCandidateId}>Focus selected</button>
+				<button class="room-debug-hud__focus" type="button" onclick={focusSelectedRoomCandidate} disabled={!selectedRoomCandidateId && !selectedDetectedRoomId}>Focus selected</button>
 				<button class:room-debug-hud__control--active={showSelectedRoomEvidence} class="room-debug-hud__control room-debug-hud__evidence-toggle" type="button" aria-pressed={showSelectedRoomEvidence} disabled={!selectedRoomCandidateTrace} onclick={() => showSelectedRoomEvidence = !showSelectedRoomEvidence}>Show selected evidence</button>
 				{#if visibleRoomCandidates.length > 0}
 					<div class="room-debug-hud__timing">{roomDebugDurationMs.toFixed(0)} ms</div>
@@ -1304,18 +1341,47 @@
 							</div>
 							<ul class="room-debug-hud__detected-list">
 								{#each roomDebugDetectedRooms.rooms.slice(0, 8) as dr (dr.id)}
-									<li class="room-debug-hud__detected-item room-debug-hud__detected-item--{dr.status}">
-										<span class="room-debug-hud__detected-status">{dr.status[0].toUpperCase()}</span>
-										<span class="room-debug-hud__detected-area">{dr.floorArea.toFixed(1)} m²</span>
-										<span class="room-debug-hud__detected-height">{dr.height.toFixed(2)} m</span>
-										<span class="room-debug-hud__detected-confidence" title="Confidence: {dr.confidence.level}">{dr.confidence.level[0].toUpperCase()}</span>
-										<span class="room-debug-hud__detected-id" title={dr.id}>{dr.id.slice(-10)}</span>
+									<li>
+										<button class="room-debug-hud__detected-item room-debug-hud__detected-item--{dr.status}" class:room-debug-hud__item--selected={dr.id === selectedDetectedRoomId} type="button" aria-pressed={dr.id === selectedDetectedRoomId} onclick={() => selectDetectedRoom(dr.id)}>
+											<span class="room-debug-hud__detected-status">{dr.status[0].toUpperCase()}</span>
+											<span class="room-debug-hud__detected-area">{dr.floorArea.toFixed(1)} m²</span>
+											<span class="room-debug-hud__detected-height">{dr.height.toFixed(2)} m</span>
+											<span class="room-debug-hud__detected-confidence" title="Confidence: {dr.confidence.level}">{dr.confidence.level[0].toUpperCase()}</span>
+											<span class="room-debug-hud__detected-id" title={dr.id}>{dr.id.slice(-10)}</span>
+										</button>
 									</li>
 								{/each}
 							</ul>
 							{#if roomDebugDetectedRooms.diagnostics.openingBridgesApplied > 0}
 								<div class="room-debug-hud__detected-note">⬡ {roomDebugDetectedRooms.diagnostics.openingBridgesApplied} opening bridge(s) applied</div>
 							{/if}
+						</div>
+					{/if}
+					{#if selectedDetectedRoom}
+						<div class="room-debug-hud__details">
+							<strong>Selected detected room</strong>
+							<dl>
+								<dt>ID</dt><dd>{selectedDetectedRoom.id}</dd>
+								<dt>Status</dt><dd>{selectedDetectedRoom.status}</dd>
+								<dt>Confidence</dt><dd>{selectedDetectedRoom.confidence.level} ({selectedDetectedRoom.confidence.score.toFixed(2)})</dd>
+								<dt>Floor area</dt><dd>{selectedDetectedRoom.floorArea.toFixed(2)} m²</dd>
+								<dt>Height</dt><dd>{selectedDetectedRoom.height.toFixed(2)} m</dd>
+								<dt>Volume</dt><dd>{selectedDetectedRoom.estimatedVolume.toFixed(2)} m³</dd>
+								{#if selectedRoomSemantic}
+									<dt>Primary function</dt><dd>{selectedRoomSemantic.primaryFunction}</dd>
+									<dt>Semantic conf</dt><dd>{selectedRoomSemantic.confidence.toFixed(2)}</dd>
+									<dt>Explanations</dt><dd>{selectedRoomSemantic.candidates.find((c) => c.function === selectedRoomSemantic?.primaryFunction)?.evidence.appliedRules.join('; ') || 'inferred'}</dd>
+								{/if}
+								{#if selectedRoomConnections.length > 0}
+									<dt>Adjacencies</dt>
+									<dd>
+										{selectedRoomConnections.map((c) => {
+											const otherId = c.fromRoomId === selectedDetectedRoomId ? c.toRoomId : c.fromRoomId;
+											return `${otherId.slice(-8)} (${c.type}${c.openingId ? ': connected' : ''})`;
+										}).join(', ')}
+									</dd>
+								{/if}
+							</dl>
 						</div>
 					{/if}
 					<ul class="room-debug-hud__list">

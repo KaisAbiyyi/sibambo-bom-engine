@@ -6,10 +6,11 @@ export type RoomDebugVisibility = {
 	plan: boolean;
 	prism: boolean;
 	labels: boolean;
+	topology?: boolean;
 };
 
 type OverlayObject = {
-	userData?: { roomCandidateId?: unknown };
+	userData?: { roomCandidateId?: unknown; detectedRoomId?: unknown };
 	parent?: OverlayObject | null;
 };
 
@@ -17,6 +18,16 @@ export function resolveRoomCandidateId(object: OverlayObject | null | undefined)
 	let current = object;
 	while (current) {
 		const id = current.userData?.roomCandidateId;
+		if (typeof id === 'string') return id;
+		current = current.parent;
+	}
+	return null;
+}
+
+export function resolveDetectedRoomId(object: OverlayObject | null | undefined) {
+	let current = object;
+	while (current) {
+		const id = current.userData?.detectedRoomId;
 		if (typeof id === 'string') return id;
 		current = current.parent;
 	}

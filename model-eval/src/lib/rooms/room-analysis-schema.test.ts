@@ -399,26 +399,26 @@ describe('Room Analysis Schema Versioning', () => {
 	// ─── M. Geometry regression ───────────────────────────────────────────
 
 	test('M. Geometry regression — room IDs and data survive round trip', () => {
-		const candidate: RoomCandidate = {
+		const candidate = {
 			id: 'room:loop1:env1',
 			loopCandidateId: 'loop1',
 			envelopeCandidateId: 'env1',
 			alternativeEnvelopeIds: [],
 			storeyCandidateId: 'storey1',
 			planPolygon: [{ x: 0, z: 0 }, { x: 5, z: 0 }, { x: 5, z: 5 }, { x: 0, z: 5 }],
-			baseElevation: 0,
-			topElevation: 3,
+			lowerElevation: 0,
+			upperElevation: 3,
 			clearHeight: 3,
-			planAreaM2: 25,
-			estimatedVolumeM3: 75,
+			planArea: 25,
+			estimatedVolume: 75,
 			perimeter: 20,
 			logicalObjectIds: ['obj1'],
 			classificationUnitIds: ['cu1'],
 			materialIds: [1],
 			score: 100,
 			status: 'primary',
-			qualityFlags: {}
-		};
+			qualityFlags: {} as any
+		} as any as RoomCandidate;
 
 		const payload = makeCleanPayload({ candidates: [candidate] });
 		const json = serializeRoomAnalysis(payload);
@@ -429,7 +429,7 @@ describe('Room Analysis Schema Versioning', () => {
 
 		const recovered = parsed.value.payload.candidates[0] as RoomCandidate;
 		expect(recovered.id).toBe('room:loop1:env1');
-		expect(recovered.planAreaM2).toBe(25);
+		expect(recovered.planArea).toBe(25);
 		expect(recovered.clearHeight).toBe(3);
 		expect(recovered.planPolygon).toHaveLength(4);
 		expect(recovered.planPolygon![0]).toEqual({ x: 0, z: 0 });

@@ -4,29 +4,29 @@ import { serializeRoomAnalysis, parsePersistedRoomAnalysisJson } from './room-an
 import type { RankedBoundaryLoopCandidate, VerticalEnvelopeCandidate, LoopSurfaceAssignment } from './types';
 
 describe('Pipeline Diagnostics', () => {
-	const mockLoop: RankedBoundaryLoopCandidate = {
+	const mockLoop = {
 		id: 'loop1',
 		storeyCandidateId: 's1',
 		status: 'primary',
 		score: 100,
 		perimeterMetrics: { totalPerimeter: 10, validBarrierPerimeter: 10 },
 		areaM2: 25,
-		bounds: { minX: 0, maxX: 5, minZ: 0, maxZ: 5 },
+		bounds: { min: { x: 0, z: 0 }, max: { x: 5, z: 5 } },
 		edgeIds: [],
 		sourceIds: []
-	};
+	} as any;
 
-	const mockAssignment: LoopSurfaceAssignment = {
+	const mockAssignment = {
 		id: 'assign1',
 		loopCandidateId: 'loop1',
-		role: 'lower',
+		role: 'lower-support',
 		elevation: 0,
 		evidenceCoverageRatio: 1,
 		loopCoverageRatio: 1,
 		isApproximate: false,
 		sourceIds: [],
 		materialIds: []
-	};
+	} as any;
 
 	const baseEnvelope = {
 		id: 'env1',

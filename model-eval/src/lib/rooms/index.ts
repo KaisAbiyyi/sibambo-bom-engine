@@ -7,3 +7,5 @@ export * from './envelopes';
 export * from './candidates';
 export * from './detected-room';
 export * from './closed-room-detection';
+export * from './topology';
+export * from './semantics';

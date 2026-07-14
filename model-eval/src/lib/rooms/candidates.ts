@@ -34,7 +34,8 @@ import type {
 	RoomCandidateDiagnostics,
 	RoomCandidateResult,
 	RoomCandidateStatus,
-	PlanCoord
+	PlanCoord,
+	RefinedCandidateValidationReason
 } from './types';
 import { parseRefinedVerticalEnvelopeCandidate, type CandidateParseResult } from './runtime-validation';
 import type { NormalizedBarrierGraph } from './helpers';
@@ -167,8 +168,9 @@ export function mergeRoomCandidateResults(results: RoomCandidateResult[]): RoomC
 		mergedDiag.envelopeValidation.quarantined += ev.quarantined;
 
 		for (const [reason, count] of Object.entries(ev.reasons)) {
-			mergedDiag.envelopeValidation.reasons[reason as any] = 
-				(mergedDiag.envelopeValidation.reasons[reason as any] || 0) + (count as number);
+			const r = reason as RefinedCandidateValidationReason;
+			mergedDiag.envelopeValidation.reasons[r] = 
+				(mergedDiag.envelopeValidation.reasons[r] || 0) + (count as number);
 		}
 		
 		if (d.hasQuarantinedEnvelopeInputs) {
