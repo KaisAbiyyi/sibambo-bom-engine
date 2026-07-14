@@ -61,6 +61,13 @@
 	import type { DetectedRoom, DetectedRoomResult } from '$lib/rooms/detected-room';
 	import type { RoomTopologyGraph, RoomTopologyResult, RoomConnection } from '$lib/rooms/topology';
 	import type { RoomSemanticResult, RoomSemanticInference } from '$lib/rooms/semantics';
+	import {
+		DEFAULT_ANALYSIS_CONFIGURATION,
+		runBuildingAnalysisPipeline,
+		type RoomAnalysisConfiguration,
+		type BuildingAnalysisResult,
+		type RoomAnalysisResult
+	} from '$lib/rooms/analysis';
 
 
 	type NumberInputKey = 'peopleCount' | 'operationHours' | 'setPointC' | 'orientationDeg' | 'glassRatio' | 'roomHeightM';
@@ -83,6 +90,7 @@
 		roomTopology?: RoomTopologyGraph | null;
 		roomSemantics?: RoomSemanticResult | null;
 		detectedRooms?: DetectedRoom[] | null;
+		buildingAnalysis?: BuildingAnalysisResult | null;
 		selectedDetectedRoomId?: string | null;
 		onDetectedRoomSelect?: (id: string) => void;
 		onQaReady?: (payload: {
@@ -187,7 +195,7 @@
 	let selectedRoomCandidateId = $state<string | null>(null);
 	let selectedDetectedRoomId = $state<string | null>(null);
 	let roomFocusRequest = $state(0);
-	let roomOverlayVisibility = $state<RoomDebugVisibility>({ primary: true, secondary: true, plan: true, prism: true, labels: true, topology: true });
+	let roomOverlayVisibility = $state<RoomDebugVisibility>({ primary: true, secondary: true, plan: true, prism: true, labels: true, topology: true, analysisOverlay: 'none' });
 	let showSelectedRoomEvidence = $state(false);
 	let roomTraceCopyMessage = $state('');
 
@@ -1263,7 +1271,7 @@
 
 	<section class="stage-panel">
 		{#if ModelCanvasComponent}
-			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} activeAnalysis={selectedAnalysis} {result} {qaMode} {qaCamera} annotationUnit={annotationMode ? selectedAnnotationUnit : null} roomCandidates={roomDebug ? visibleRoomCandidates : []} {selectedRoomCandidateId} onRoomCandidateSelect={selectRoomCandidate} roomTopology={roomDebug ? (roomDebugTopology?.graph ?? null) : null} roomSemantics={roomDebug ? (roomDebugSemantics ?? null) : null} detectedRooms={roomDebug ? (roomDebugDetectedRooms?.rooms ?? null) : null} {selectedDetectedRoomId} onDetectedRoomSelect={selectDetectedRoom} {roomFocusRequest} {roomOverlayVisibility} {selectedRoomCandidateTrace} {showSelectedRoomEvidence} onQaReady={handleQaReady} />
+			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} activeAnalysis={selectedAnalysis} {result} {qaMode} {qaCamera} annotationUnit={annotationMode ? selectedAnnotationUnit : null} roomCandidates={roomDebug ? visibleRoomCandidates : []} {selectedRoomCandidateId} onRoomCandidateSelect={selectRoomCandidate} roomTopology={roomDebug ? (roomDebugTopology?.graph ?? null) : null} roomSemantics={roomDebug ? (roomDebugSemantics ?? null) : null} detectedRooms={roomDebug ? (roomDebugDetectedRooms?.rooms ?? null) : null} buildingAnalysis={roomDebug ? (roomDebugIntelligence?.analysis ?? null) : null} {selectedDetectedRoomId} onDetectedRoomSelect={selectDetectedRoom} {roomFocusRequest} {roomOverlayVisibility} {selectedRoomCandidateTrace} {showSelectedRoomEvidence} onQaReady={handleQaReady} />
 
 		{:else}
 			<div class="model-stage-placeholder">
@@ -1312,6 +1320,23 @@
 					<button class:room-debug-hud__control--active={roomOverlayVisibility.prism} class="room-debug-hud__control" type="button" aria-pressed={roomOverlayVisibility.prism} onclick={() => toggleRoomOverlayVisibility('prism')}>Show vertical prisms</button>
 					<button class:room-debug-hud__control--active={roomOverlayVisibility.labels} class="room-debug-hud__control" type="button" aria-pressed={roomOverlayVisibility.labels} onclick={() => toggleRoomOverlayVisibility('labels')}>Show labels</button>
 					<button class:room-debug-hud__control--active={roomOverlayVisibility.topology} class="room-debug-hud__control" type="button" aria-pressed={roomOverlayVisibility.topology} onclick={() => toggleRoomOverlayVisibility('topology')}>Show topology</button>
+					<select
+						class="room-debug-hud__control"
+						value={roomOverlayVisibility.analysisOverlay ?? 'none'}
+						onchange={(e) => {
+							roomOverlayVisibility = {
+								...roomOverlayVisibility,
+								analysisOverlay: (e.currentTarget as HTMLSelectElement).value as any
+							};
+						}}
+						aria-label="3D Analysis Overlay"
+					>
+						<option value="none">Overlay: None</option>
+						<option value="thermal">Overlay: Thermal Comfort</option>
+						<option value="ventilation">Overlay: Ventilation Arrows</option>
+						<option value="lighting">Overlay: Luminaire Grid</option>
+						<option value="flow">Overlay: Human Flow Paths</option>
+					</select>
 				</div>
 				<button class="room-debug-hud__focus" type="button" onclick={focusSelectedRoomCandidate} disabled={!selectedRoomCandidateId && !selectedDetectedRoomId}>Focus selected</button>
 				<button class:room-debug-hud__control--active={showSelectedRoomEvidence} class="room-debug-hud__control room-debug-hud__evidence-toggle" type="button" aria-pressed={showSelectedRoomEvidence} disabled={!selectedRoomCandidateTrace} onclick={() => showSelectedRoomEvidence = !showSelectedRoomEvidence}>Show selected evidence</button>

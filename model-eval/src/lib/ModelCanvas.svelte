@@ -46,6 +46,7 @@
 	import type { RoomTopologyGraph } from './rooms/topology';
 	import type { RoomSemanticResult } from './rooms/semantics';
 	import type { DetectedRoom } from './rooms/detected-room';
+	import type { BuildingAnalysisResult } from './rooms/analysis';
 
 
 	let {
@@ -68,6 +69,7 @@
 		roomTopology = null,
 		roomSemantics = null,
 		detectedRooms = null,
+		buildingAnalysis = null,
 		selectedDetectedRoomId = null,
 		onDetectedRoomSelect = undefined
 	}: {
@@ -89,6 +91,7 @@
 		roomTopology?: RoomTopologyGraph | null;
 		roomSemantics?: RoomSemanticResult | null;
 		detectedRooms?: DetectedRoom[] | null;
+		buildingAnalysis?: BuildingAnalysisResult | null;
 		selectedDetectedRoomId?: string | null;
 		onDetectedRoomSelect?: (id: string) => void;
 		onQaReady?: (payload: {
@@ -868,10 +871,24 @@
 			const polygon = candidate.planPolygon;
 			if (!polygon || polygon.length < 3) continue;
 
-			const hex = ROOM_STATUS_COLOR[candidate.status] ?? '#22d3ee';
-			const color = new Color(hex);
 			const dr = detectedRooms?.find((r) => r.evidence.sourceLoopId === candidate.loopCandidateId);
 			const sem = dr && roomSemantics ? roomSemantics.inferences.find((s) => s.roomId === dr.id) : null;
+			const roomAnalysis = dr && buildingAnalysis ? buildingAnalysis.rooms.find((ra) => ra.roomId === dr.id) : null;
+			let hex = ROOM_STATUS_COLOR[candidate.status] ?? '#22d3ee';
+			if (roomOverlayVisibility?.analysisOverlay === 'thermal' && roomAnalysis) {
+				const status = roomAnalysis.thermalComfort.status;
+				if (status === 'comfortable') hex = '#22c55e';
+				else if (status === 'warm') hex = '#f97316';
+				else if (status === 'cool') hex = '#3b82f6';
+				else hex = '#64748b';
+			} else if (roomOverlayVisibility?.analysisOverlay === 'flow' && roomAnalysis) {
+				const score = roomAnalysis.humanFlow.movementScore.value ?? 50;
+				if (roomAnalysis.humanFlow.isIsolated) hex = '#ef4444';
+				else if (score >= 75) hex = '#10b981';
+				else if (score >= 40) hex = '#eab308';
+				else hex = '#f97316';
+			}
+			const color = new Color(hex);
 			const selected = candidate.id === selectedRoomCandidateId || (dr && dr.id === selectedDetectedRoomId);
 
 			const shape2D = polygon.map((p) => new Vector2(p.x, p.z));
@@ -1107,11 +1124,91 @@
 			evidenceOverlayObjects.push(group);
 		};
 		addGeometry('evidence-loop', trace.loop.geometry, trace.candidate.lowerElevation, '#f8fafc');
-		if (trace.lowerEvidence) addGeometry('evidence-lower', trace.lowerEvidence.geometry, trace.lowerEvidence.elevation, '#22c55e');
 		if (trace.upperEvidence) addGeometry('evidence-upper', trace.upperEvidence.geometry, trace.upperEvidence.elevation, '#fb7185');
 	}
 
-	function createRoomOverlayGroup(id: string, kind: 'plan' | 'prism' | 'label' | 'topology') {
+	function buildAnalysisOverlays() {
+		if (!model || !buildingAnalysis || !roomOverlayVisibility?.analysisOverlay || roomOverlayVisibility.analysisOverlay === 'none') return;
+
+		const mode = roomOverlayVisibility.analysisOverlay;
+		const activeDetectedRoomId = selectedDetectedRoomId || (
+			selectedRoomCandidateId && detectedRooms
+				? detectedRooms.find((r) => r.evidence.sourceLoopId === roomCandidates.find((c) => c.id === selectedRoomCandidateId)?.loopCandidateId)?.id
+				: null
+		);
+
+		if (mode === 'ventilation') {
+			for (const roomRes of buildingAnalysis.rooms) {
+				if (activeDetectedRoomId && roomRes.roomId !== activeDetectedRoomId) continue;
+				const dr = detectedRooms?.find((r) => r.id === roomRes.roomId);
+				if (!dr) continue;
+
+				const center = new Vector3(dr.centroid.x, dr.centroid.y, dr.centroid.z);
+				if (roomTopology) {
+					const extConns = roomTopology.exteriorConnections.filter((ec) => ec.roomId === dr.id);
+					for (const ec of extConns) {
+						if (!ec.boundarySegment) continue;
+						const start = ec.boundarySegment.start;
+						const end = ec.boundarySegment.end;
+						const midX = (start.x + end.x) / 2;
+						const midZ = (start.z + end.z) / 2;
+						const midY = ((ec.sillElevation ?? 0.9) + (ec.headElevation ?? 2.1)) / 2;
+						const origin = new Vector3(midX, midY, midZ);
+						const dir = center.clone().sub(origin).normalize();
+						const dist = Math.min(origin.distanceTo(center) * 0.8, 2.5);
+						const arrow = new ArrowHelper(dir, origin, dist, 0x06b6d4, 0.4, 0.25);
+						const group = createRoomOverlayGroup(dr.id, 'analysis_vent');
+						group.add(arrow);
+						overlayRoot.add(group);
+						overlayObjects.push(group);
+					}
+				}
+			}
+		} else if (mode === 'lighting') {
+			const sphereGeo = new SphereGeometry(0.12, 16, 16);
+			for (const roomRes of buildingAnalysis.rooms) {
+				if (activeDetectedRoomId && roomRes.roomId !== activeDetectedRoomId) continue;
+				const dr = detectedRooms?.find((r) => r.id === roomRes.roomId);
+				if (!dr) continue;
+
+				const positions = roomRes.artificialLighting.proposedPositions;
+				for (const pos of positions) {
+					const mat = new MeshStandardMaterial({
+						color: pos.isValidInsidePolygon ? 0xfacc15 : 0xef4444,
+						emissive: pos.isValidInsidePolygon ? 0xeab308 : 0xdc2626,
+						emissiveIntensity: 0.6
+					});
+					const sphere = new Mesh(sphereGeo, mat);
+					sphere.position.set(pos.position.x, pos.position.y, pos.position.z);
+					const group = createRoomOverlayGroup(dr.id, 'analysis_light');
+					group.add(sphere);
+					overlayRoot.add(group);
+					overlayObjects.push(group);
+				}
+			}
+		} else if (mode === 'flow') {
+			if (!roomTopology) return;
+			const lineMat = new LineBasicMaterial({ color: 0x10b981, linewidth: 2 });
+			for (const conn of roomTopology.connections) {
+				if (!conn.traversable) continue;
+				if (activeDetectedRoomId && conn.fromRoomId !== activeDetectedRoomId && conn.toRoomId !== activeDetectedRoomId) continue;
+				const drFrom = detectedRooms?.find((r) => r.id === conn.fromRoomId);
+				const drTo = detectedRooms?.find((r) => r.id === conn.toRoomId);
+				if (!drFrom || !drTo) continue;
+
+				const pFrom = new Vector3(drFrom.centroid.x, drFrom.centroid.y, drFrom.centroid.z);
+				const pTo = new Vector3(drTo.centroid.x, drTo.centroid.y, drTo.centroid.z);
+				const geo = new BufferGeometry().setFromPoints([pFrom, pTo]);
+				const line = new LineSegments(geo, lineMat);
+				const group = createRoomOverlayGroup(conn.fromRoomId, 'analysis_flow');
+				group.add(line);
+				overlayRoot.add(group);
+				overlayObjects.push(group);
+			}
+		}
+	}
+
+	function createRoomOverlayGroup(id: string, kind: string) {
 		const group = new Group();
 		group.userData.roomCandidateId = id;
 		group.userData.roomOverlayKind = kind;
@@ -1292,6 +1389,7 @@
 		showSelectedRoomEvidence;
 		roomTopology;
 		roomSemantics;
+		buildingAnalysis;
 		if (mounted) {
 			refreshSurfaceMaterials();
 			rebuildAnnotationHighlight();
@@ -1299,6 +1397,7 @@
 			buildRoomDebugOverlays();
 			buildTopologyOverlays();
 			buildSelectedEvidenceOverlays();
+			buildAnalysisOverlays();
 		}
 	});
 

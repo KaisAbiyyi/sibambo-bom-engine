@@ -22,17 +22,20 @@ import type { RoomCandidate, RoomCandidateDiagnostics } from './types';
 import type { DetectedRoom, DetectedRoomResult } from './detected-room';
 import { buildRoomTopology, type RoomTopologyResult, type RoomTopologyGraph } from './topology';
 import { inferRoomSemantics, type RoomSemanticResult, type RoomSemanticInference, type SemanticObjectInput } from './semantics';
+import { runBuildingAnalysisPipeline, type BuildingAnalysisResult } from './analysis';
 
 export type RoomIntelligenceDiagnostics = {
 	roomDetection?: any;
 	topology?: any;
 	semantics?: any;
+	analysis?: any;
 };
 
 export type RoomIntelligenceResult = {
 	detectedRooms: DetectedRoom[];
 	topology: RoomTopologyGraph;
 	semantics: RoomSemanticInference[];
+	analysis?: BuildingAnalysisResult;
 	diagnostics: RoomIntelligenceDiagnostics;
 };
 
@@ -49,6 +52,8 @@ export type RoomDebugResult = {
 	topology?: RoomTopologyResult;
 	/** Task 3B.5: Semantic classification of detected rooms */
 	semantics?: RoomSemanticResult;
+	/** Task 3C: Building and room performance analysis */
+	analysis?: BuildingAnalysisResult;
 	/** Combined RoomIntelligenceResult contract */
 	intelligence?: RoomIntelligenceResult;
 };
@@ -170,14 +175,17 @@ export async function runRoomDebugPipeline(scene: RuntimeScene): Promise<RoomDeb
 			};
 		});
 		const semantics = inferRoomSemantics(detectedRooms.rooms, topology.graph, { objects: semanticObjects });
+		const analysis = runBuildingAnalysisPipeline(detectedRooms.rooms, topology.graph, semantics.inferences);
 		const intelligence: RoomIntelligenceResult = {
 			detectedRooms: detectedRooms.rooms,
 			topology: topology.graph,
 			semantics: semantics.inferences,
+			analysis,
 			diagnostics: {
 				roomDetection: detectedRooms.diagnostics,
 				topology: topology.graph.diagnostics,
-				semantics: semantics.diagnostics
+				semantics: semantics.diagnostics,
+				analysis: analysis.diagnostics
 			}
 		};
 
@@ -190,6 +198,7 @@ export async function runRoomDebugPipeline(scene: RuntimeScene): Promise<RoomDeb
 			detectedRooms,
 			topology,
 			semantics,
+			analysis,
 			intelligence
 		};
 	} catch (err) {

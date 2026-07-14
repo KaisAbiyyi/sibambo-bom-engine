@@ -7,6 +7,8 @@ export type RoomDebugVisibility = {
 	prism: boolean;
 	labels: boolean;
 	topology?: boolean;
+	analysis?: boolean;
+	analysisOverlay?: 'none' | 'thermal' | 'ventilation' | 'lighting' | 'flow';
 };
 
 type OverlayObject = {
