@@ -126,3 +126,42 @@ export interface RoomEvidenceSnapshot {
 	barrierGraphs?: BarrierGraph[];
 	normalizedBarrierGraphs?: import('./helpers').NormalizedBarrierGraph[];
 }
+
+export interface BoundaryLoopCandidate {
+	id: string;
+	storeyCandidateId: string;
+	connectedComponentIndex: number;
+	nodeIds: string[];
+	edgeIds: string[];
+	verticalEvidenceIds: string[];
+	sourceEvidenceIds: string[];
+	logicalObjectIds: string[];
+	classificationUnitIds: string[];
+	materialIds: number[];
+	signedArea: number;
+	absoluteArea: number;
+	area: number;
+	perimeter: number;
+	planBounds: PlanBounds;
+	bounds?: PlanBounds;
+	orientation: 'cw' | 'ccw';
+	isAmbiguous: boolean;
+	quality: number;
+}
+
+export interface BoundaryLoopDiagnostics {
+	componentsInspected: number;
+	halfEdgesCreated: number;
+	traversalsAttempted: number;
+	closedTraversalsFound: number;
+	outerFacesExcluded: number;
+	duplicateLoopsRemoved: number;
+	zeroAreaLoopsRejected: number;
+	selfIntersectingLoopsRejected: number;
+	acceptedCandidates: number;
+}
+
+export interface BoundaryLoopResult {
+	candidates: BoundaryLoopCandidate[];
+	diagnostics: BoundaryLoopDiagnostics;
+}
