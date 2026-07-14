@@ -36,6 +36,7 @@ import type {
 	RoomCandidateStatus,
 	PlanCoord
 } from './types';
+import { parseRefinedVerticalEnvelopeCandidate, type CandidateParseResult } from './runtime-validation';
 import type { NormalizedBarrierGraph } from './helpers';
 
 
@@ -126,7 +127,16 @@ export function assembleRoomCandidates(
 		const loopEnvelopes = envelopes.filter((e) => {
 			if (e.loopCandidateId !== loop.id) return false;
 			if (e.status === 'noise') return false;
-			if ((e as any).eligibleForRoomAssembly !== true) return false;
+			
+			const parseResult = parseRefinedVerticalEnvelopeCandidate(e);
+			if (!parseResult.ok) {
+				diagnostics.invalidEnvelopesQuarantined = (diagnostics.invalidEnvelopesQuarantined || 0) + 1;
+				if (!diagnostics.invalidEnvelopeReasons) diagnostics.invalidEnvelopeReasons = {};
+				const reasonKey = parseResult.reason;
+				diagnostics.invalidEnvelopeReasons[reasonKey] = (diagnostics.invalidEnvelopeReasons[reasonKey] || 0) + 1;
+				return false;
+			}
+			if (parseResult.value.eligibleForRoomAssembly !== true) return false;
 			return true;
 		});
 

@@ -496,6 +496,8 @@ export interface RoomCandidateDiagnostics {
 	alternativeEnvelopesPreserved: number;
 	totalCandidateArea: number;
 	totalEstimatedVolume: number;
+	invalidEnvelopesQuarantined?: number;
+	invalidEnvelopeReasons?: Record<string, number>;
 	fingerprint: string;
 }
 

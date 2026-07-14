@@ -94,7 +94,19 @@ function createMockEnvelope(
 			weakUpperCover: false,
 			geometricallyPlausible: true
 		},
-		eligibleForRoomAssembly: true
+		barrierSpanCoverage: 1.0,
+		refinementReasons: [],
+		verticalExtentProfile: {
+			evidenceCount: 1,
+			referencedEvidenceCount: 1,
+			referencedEvidenceFound: 1,
+			rejectedReferencedEvidence: 0,
+			missingReferencedEvidenceIds: []
+		},
+		eligibleForRoomAssembly: true,
+		ineligibilityReasons: [],
+		relativeBaseTolerance: 0.15,
+		relativeTopTolerance: 0.30
 	} as unknown as any;
 }
 
