@@ -12,6 +12,15 @@ export interface StoreyBandEvidence {
 	storeyName?: string;
 	quality: number;
 	isAmbiguous: boolean;
+	totalArea?: number;
+	projectedPlanArea?: number;
+	memberCount?: number;
+	upwardArea?: number;
+	downwardArea?: number;
+	modelRelativeCoverage?: number;
+	compactness?: number;
+	score?: number;
+	status?: 'primary' | 'secondary' | 'noise';
 }
 
 export interface HorizontalSurfaceEvidence {

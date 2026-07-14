@@ -12,7 +12,8 @@ import {
 	extractHorizontalSurfaceEvidence,
 	buildStoreyBands,
 	extractVerticalBarrierEvidence,
-	calculateRoomEvidenceFingerprint
+	calculateRoomEvidenceFingerprint,
+	rankStoreyBandCandidates
 } from './helpers';
 import { createRoomEvidenceProcessor } from './processor';
 import type {
@@ -533,5 +534,65 @@ describe('Room evidence types and deterministic IDs', () => {
 		// 8. Invalid path / invalid format returns a clear non-zero failure
 		const runBadPath = Bun.spawnSync(['bun', 'run', 'scripts/audit-room-evidence.ts', 'nonexistent-file.json']);
 		expect(runBadPath.exitCode).toBe(1);
+	});
+
+	test('12. storey band candidate ranking and filtering', () => {
+		const makeHoriz = (id: string, area: number, y: number, isCeiling = false) => ({
+			id,
+			logicalObjectId: logObjA,
+			classificationUnitIds: [id],
+			elevation: y,
+			planBounds: { min: { x: 0, z: 0 }, max: { x: Math.sqrt(area), z: Math.sqrt(area) } },
+			surfaceType: isCeiling ? 'ceiling' : 'floor',
+			areaM2: area,
+			quality: 1.0,
+			isAmbiguous: false
+		});
+
+		const b1 = makeHoriz('floor_large', 100, 0.0);
+		const b2 = makeHoriz('table', 1.5, 1.0);
+		const b3 = makeHoriz('shelf1', 1.0, 2.0);
+		const b4 = makeHoriz('shelf2', 1.0, 2.02);
+
+		const horizontalEvidence = [b1, b2, b3, b4];
+		const rawBands = buildStoreyBands(horizontalEvidence as any);
+		expect(rawBands.length).toBe(3);
+
+		const ranked = rankStoreyBandCandidates(rawBands, horizontalEvidence as any);
+
+		expect(ranked.length).toBe(3);
+		expect(ranked[0].classificationUnitIds).toContain('floor_large');
+		expect(ranked[0].status).toBe('primary');
+
+		const shelfBand = ranked.find(r => r.classificationUnitIds.includes('shelf1'));
+		expect(shelfBand).toBeDefined();
+		expect(shelfBand!.status).toBe('noise');
+		expect(ranked[0].score!).toBeGreaterThan(shelfBand!.score!);
+
+		const rankedShuf = rankStoreyBandCandidates(
+			[rawBands[1], rawBands[2], rawBands[0]],
+			horizontalEvidence as any
+		);
+		expect(ranked).toEqual(rankedShuf);
+
+		const equal1 = makeHoriz('equal1', 10, 5.0);
+		const equal2 = makeHoriz('equal2', 10, 10.0);
+		const rawEqual = buildStoreyBands([equal1, equal2] as any);
+		const rankedEqual = rankStoreyBandCandidates(rawEqual, [equal1, equal2] as any);
+		expect(rankedEqual[0].id.localeCompare(rankedEqual[1].id)).toBeLessThan(0);
+
+		const upFace = makeHoriz('up_f', 10, 0.0, false);
+		const downFace = makeHoriz('down_f', 10, 0.05, true);
+		const rawConflicted = buildStoreyBands([upFace, downFace] as any);
+		const rankedConflicted = rankStoreyBandCandidates(rawConflicted, [upFace, downFace] as any);
+		expect(rankedConflicted[0].isAmbiguous).toBe(true);
+
+		const run1 = rankStoreyBandCandidates(rawBands, horizontalEvidence as any);
+		const run2 = rankStoreyBandCandidates(rawBands, horizontalEvidence as any);
+		expect(run1).toEqual(run2);
+
+		for (const r of ranked) {
+			expect(r.storeyName).toBeUndefined();
+		}
 	});
 });

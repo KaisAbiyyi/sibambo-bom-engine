@@ -434,7 +434,9 @@ export function calculateRoomEvidenceFingerprint(snapshot: RoomEvidenceSnapshot)
 			},
 			materialIds: e.materialIds ? [...e.materialIds].sort((a, b) => a - b) : [],
 			quality: e.quality,
-			isAmbiguous: e.isAmbiguous
+			isAmbiguous: e.isAmbiguous,
+			score: e.score !== undefined ? Number(e.score.toFixed(6)) : undefined,
+			status: e.status
 		}))
 	};
 
@@ -465,4 +467,81 @@ function simpleHash(str: string): string {
 		h2 = Math.imul(h2 ^ char, 33) >>> 0;
 	}
 	return h1.toString(16).padStart(8, '0') + h2.toString(16).padStart(8, '0');
+}
+
+export function rankStoreyBandCandidates(
+	bands: StoreyBandEvidence[],
+	horizontalEvidence: HorizontalSurfaceEvidence[]
+): StoreyBandEvidence[] {
+	const horizMap = new Map<string, HorizontalSurfaceEvidence>();
+	for (const h of horizontalEvidence) {
+		for (const id of h.classificationUnitIds) {
+			horizMap.set(id, h);
+		}
+	}
+
+	const ratedBands = bands.map(band => {
+		const members = band.classificationUnitIds
+			.map(id => horizMap.get(id))
+			.filter((h): h is HorizontalSurfaceEvidence => h !== undefined);
+
+		const memberCount = members.length;
+		const totalArea = members.reduce((sum, h) => sum + h.areaM2, 0);
+
+		const dx = band.planBounds.max.x - band.planBounds.min.x;
+		const dz = band.planBounds.max.z - band.planBounds.min.z;
+		const projectedPlanArea = dx * dz;
+
+		const upwardArea = members
+			.filter(h => h.surfaceType === 'floor')
+			.reduce((sum, h) => sum + h.areaM2, 0);
+
+		const downwardArea = members
+			.filter(h => h.surfaceType === 'ceiling')
+			.reduce((sum, h) => sum + h.areaM2, 0);
+
+		const compactness = projectedPlanArea > 0 ? Math.min(1.0, totalArea / projectedPlanArea) : 1.0;
+
+		return {
+			...band,
+			totalArea,
+			projectedPlanArea,
+			memberCount,
+			upwardArea,
+			downwardArea,
+			compactness
+		};
+	});
+
+	const maxArea = Math.max(...ratedBands.map(b => b.totalArea), 0);
+	const sumArea = ratedBands.reduce((sum, b) => sum + b.totalArea, 0);
+
+	const finalBands = ratedBands.map(band => {
+		const modelRelativeCoverage = sumArea > 0 ? band.totalArea / sumArea : 0.0;
+		const relativeArea = maxArea > 0 ? band.totalArea / maxArea : 0.0;
+
+		const ambFactor = band.isAmbiguous ? 0.8 : 1.0;
+		const score = band.totalArea * relativeArea * band.compactness * ambFactor;
+
+		let status: 'primary' | 'secondary' | 'noise' = 'noise';
+		if (band.totalArea >= 15.0 && relativeArea >= 0.15) {
+			status = 'primary';
+		} else if (band.totalArea >= 5.0 && relativeArea >= 0.05) {
+			status = 'secondary';
+		}
+
+		return {
+			...band,
+			modelRelativeCoverage,
+			score,
+			status
+		};
+	});
+
+	return finalBands.sort((a, b) => {
+		if (Math.abs(a.score - b.score) > 1e-7) {
+			return b.score - a.score;
+		}
+		return a.id.localeCompare(b.id);
+	});
 }

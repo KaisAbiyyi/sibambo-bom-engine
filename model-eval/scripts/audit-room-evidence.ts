@@ -65,6 +65,20 @@ try {
 	const geomDiagnostics = foundation.getDiagnostics();
 	const initialFaceRecordExpansion = 0; // Compact runtime does not expand faces
 
+	const rawStoreyBandCount = snapshot.storeyBands.length;
+	const primaryCandidates = snapshot.storeyBands.filter(b => b.status === 'primary');
+	const secondaryCandidates = snapshot.storeyBands.filter(b => b.status === 'secondary');
+	const noiseCandidates = snapshot.storeyBands.filter(b => b.status === 'noise');
+
+	const primaryCandidatesDetails = primaryCandidates.map(b => ({
+		id: b.id,
+		elevationRange: b.elevationRange,
+		score: Number((b.score ?? 0).toFixed(6)),
+		totalArea: Number((b.totalArea ?? 0).toFixed(3)),
+		modelRelativeCoverage: Number((b.modelRelativeCoverage ?? 0).toFixed(6)),
+		isAmbiguous: b.isAmbiguous
+	}));
+
 	const summary = {
 		inputPath: path,
 		inputSha256: sha256,
@@ -76,12 +90,16 @@ try {
 		fullEvidenceProcessingTimeMs: Number(fullEvidenceProcessingTime.toFixed(3)),
 		horizontalEvidenceCount: snapshot.horizontalSurfaces.length,
 		verticalEvidenceCount: snapshot.verticalBarriers.length,
-		storeyBandCount: snapshot.storeyBands.length,
+		rawStoreyBandCount,
+		primaryCandidateCount: primaryCandidates.length,
+		secondaryCandidateCount: secondaryCandidates.length,
+		noiseCount: noiseCandidates.length,
 		openingEvidenceCount: snapshot.boundaryOpenings.length,
 		rejectedEvidenceCount: processor.diagnostics().rejected,
 		duplicateUnitsSkipped: processor.diagnostics().duplicatesSkipped,
 		fingerprint,
-		initialFaceRecordExpansion
+		initialFaceRecordExpansion,
+		primaryCandidates: primaryCandidatesDetails
 	};
 
 	if (isJson) {
@@ -98,12 +116,24 @@ try {
 		console.log(`Full Evidence Processing Time: ${summary.fullEvidenceProcessingTimeMs.toFixed(3)} ms`);
 		console.log(`Horizontal Evidence Count:     ${summary.horizontalEvidenceCount}`);
 		console.log(`Vertical Evidence Count:       ${summary.verticalEvidenceCount}`);
-		console.log(`Storey Band Count:             ${summary.storeyBandCount}`);
+		console.log(`Raw Storey Band Count:         ${summary.rawStoreyBandCount}`);
+		console.log(`Primary Candidate Count:       ${summary.primaryCandidateCount}`);
+		console.log(`Secondary Candidate Count:     ${summary.secondaryCandidateCount}`);
+		console.log(`Noise Count:                   ${summary.noiseCount}`);
 		console.log(`Opening Evidence Count:        ${summary.openingEvidenceCount}`);
 		console.log(`Rejected Evidence Count:       ${summary.rejectedEvidenceCount}`);
 		console.log(`Duplicate Units Skipped:       ${summary.duplicateUnitsSkipped}`);
 		console.log(`Fingerprint:                   ${summary.fingerprint}`);
 		console.log(`Initial FaceRecord Expansion:  ${summary.initialFaceRecordExpansion}`);
+		console.log(`\n=== PRIMARY CANDIDATES DETAILS ===`);
+		for (const p of summary.primaryCandidates) {
+			console.log(`  - ID: ${p.id.length > 80 ? p.id.slice(0, 77) + '...' : p.id}`);
+			console.log(`    Elevation Range:  ${p.elevationRange.min.toFixed(3)} to ${p.elevationRange.max.toFixed(3)} m`);
+			console.log(`    Score:            ${p.score.toFixed(6)}`);
+			console.log(`    Total Area:       ${p.totalArea.toFixed(3)} m2`);
+			console.log(`    Coverage Ratio:   ${p.modelRelativeCoverage.toFixed(6)}`);
+			console.log(`    Ambiguous:        ${p.isAmbiguous}`);
+		}
 	}
 } catch (e: any) {
 	console.error(`Execution failed: ${e.message}`);

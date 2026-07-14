@@ -10,7 +10,8 @@ import {
 	extractHorizontalSurfaceEvidence,
 	extractVerticalBarrierEvidence,
 	buildStoreyBands,
-	createDeterministicSnapshot
+	createDeterministicSnapshot,
+	rankStoreyBandCandidates
 } from './helpers';
 
 export interface RoomEvidenceProcessor {
@@ -95,8 +96,9 @@ export function createRoomEvidenceProcessor(): RoomEvidenceProcessor {
 	}
 
 	function snapshot(): RoomEvidenceSnapshot {
+		const rankedBands = rankStoreyBandCandidates(storeyBands, horizontalSurfaces);
 		return createDeterministicSnapshot({
-			storeyBands,
+			storeyBands: rankedBands,
 			horizontalSurfaces,
 			verticalBarriers,
 			boundaryOpenings: [],
