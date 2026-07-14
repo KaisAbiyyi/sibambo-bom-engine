@@ -5,9 +5,87 @@ import { createRoomEvidenceProcessor } from '../src/lib/rooms/processor';
 import { calculateRoomEvidenceFingerprint, calculateBarrierGraphFingerprint, normalizeBarrierGraph } from '../src/lib/rooms/helpers';
 import { findBoundaryLoopCandidates, calculateBoundaryLoopFingerprint, rankBoundaryLoopCandidates } from '../src/lib/rooms/loops';
 import { assignHorizontalEvidenceToLoops, calculateLoopSurfaceAssignmentFingerprint, rankLoopSurfaceAssignments, calculateRankedLoopSurfaceAssignmentFingerprint } from '../src/lib/rooms/surfaces';
-import type { BoundaryLoopDiagnostics, LoopSurfaceAssignment, RankedBoundaryLoopCandidate, RankedLoopSurfaceAssignment, LoopSurfaceRoleSelection, RankedLoopSurfaceAssignmentDiagnostics, RankedLoopSurfaceAssignmentResult } from '../src/lib/rooms/types';
+import { buildVerticalEnvelopeCandidates, calculateVerticalEnvelopeCandidateFingerprint } from '../src/lib/rooms/envelopes';
+import type { BoundaryLoopDiagnostics, LoopSurfaceAssignment, RankedBoundaryLoopCandidate, RankedLoopSurfaceAssignment, LoopSurfaceRoleSelection, RankedLoopSurfaceAssignmentDiagnostics, RankedLoopSurfaceAssignmentResult, VerticalEnvelopeCandidateResult } from '../src/lib/rooms/types';
 import { createHash } from 'crypto';
 import { resolve } from 'path';
+
+function computeValueStats(valuesInput: number[]) {
+	if (valuesInput.length === 0) {
+		return { min: 0, median: 0, max: 0 };
+	}
+	const sorted = [...valuesInput].sort((a, b) => a - b);
+	const min = Number(sorted[0].toFixed(6));
+	const max = Number(sorted[sorted.length - 1].toFixed(6));
+	const mid = Math.floor(sorted.length / 2);
+	const median = Number((sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]).toFixed(6));
+	return { min, median, max };
+}
+
+function computeEnvelopeStats(result: VerticalEnvelopeCandidateResult, loopsOfStatus: RankedBoundaryLoopCandidate[]) {
+	const loopIds = new Set(loopsOfStatus.map(l => l.id));
+	const subsetCandidates = result.candidates.filter(c => loopIds.has(c.loopCandidateId));
+	
+	const loopsInspected = loopsOfStatus.length;
+	const primaryEnvelopeCount = subsetCandidates.filter(c => c.status === 'primary').length;
+	const secondaryEnvelopeCount = subsetCandidates.filter(c => c.status === 'secondary').length;
+	const noiseEnvelopeCount = subsetCandidates.filter(c => c.status === 'noise').length;
+
+	let loopsWithSingleEnvelope = 0;
+	let loopsWithMultipleEnvelopes = 0;
+	let loopsMissingLowerSupport = 0;
+	let loopsMissingUpperCover = 0;
+
+	for (const loop of loopsOfStatus) {
+		const loopCands = subsetCandidates.filter(c => c.loopCandidateId === loop.id);
+		const plausibleCount = loopCands.filter(c => c.status === 'primary' || c.status === 'secondary').length;
+		if (plausibleCount === 1) loopsWithSingleEnvelope++;
+		if (plausibleCount > 1) loopsWithMultipleEnvelopes++;
+		if (loopCands.some(c => c.qualityFlags.missingLower)) loopsMissingLowerSupport++;
+		if (loopCands.some(c => c.qualityFlags.missingUpper)) loopsMissingUpperCover++;
+	}
+
+	const rejectedNonPositiveHeights = subsetCandidates.filter(c => c.qualityFlags.nonPositiveHeight).length;
+	const plausibleCands = subsetCandidates.filter(c => c.status === 'primary' || c.status === 'secondary');
+	const heightStats = computeValueStats(plausibleCands.map(c => c.clearHeight));
+	const volumeStats = computeValueStats(plausibleCands.map(c => c.estimatedVolume));
+	const fingerprint = calculateVerticalEnvelopeCandidateFingerprint(subsetCandidates);
+
+	const topCandidates = subsetCandidates
+		.slice()
+		.sort((a, b) => {
+			const statusOrder = { primary: 0, secondary: 1, noise: 2 };
+			if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
+			if (b.score !== a.score) return b.score - a.score;
+			return a.id.localeCompare(b.id);
+		})
+		.slice(0, 5)
+		.map(c => ({
+			id: c.id,
+			loopCandidateId: c.loopCandidateId,
+			status: c.status,
+			score: Number(c.score.toFixed(6)),
+			clearHeight: Number(c.clearHeight.toFixed(6)),
+			estimatedVolume: Number(c.estimatedVolume.toFixed(6)),
+			qualityFlags: c.qualityFlags
+		}));
+
+	return {
+		loopsInspected,
+		primaryEnvelopeCount,
+		secondaryEnvelopeCount,
+		noiseEnvelopeCount,
+		loopsWithSingleEnvelope,
+		loopsWithMultipleEnvelopes,
+		loopsMissingLowerSupport,
+		loopsMissingUpperCover,
+		rejectedNonPositiveHeights,
+		heightStats,
+		volumeStats,
+		fingerprint,
+		topCandidates
+	};
+}
 
 function computeAreaStats(candidates: Array<{ area: number }>) {
 	if (candidates.length === 0) {
@@ -389,6 +467,8 @@ try {
 	const secondaryRankedSurfaceStats = computeRankedSurfaceStats(rankedSurfaceAssignmentsResult, allRankedCandidateList.filter(c => c.status === 'secondary'));
 	const aggregateRankedSurfaceStats = computeRankedSurfaceStats(rankedSurfaceAssignmentsResult, allRankedCandidateList);
 
+	const verticalEnvelopesResult = buildVerticalEnvelopeCandidates(allRankedCandidateList, rankedSurfaceAssignmentsResult.assignments);
+
 	const summary = {
 		inputPath: path,
 		inputSha256: sha256,
@@ -452,11 +532,20 @@ try {
 					secondary: secondaryRankedSurfaceStats,
 					aggregate: aggregateRankedSurfaceStats
 				}
+			},
+			envelopes: {
+				diagnostics: verticalEnvelopesResult.diagnostics,
+				stats: {
+					primary: computeEnvelopeStats(verticalEnvelopesResult, allRankedCandidateList.filter(c => c.status === 'primary')),
+					secondary: computeEnvelopeStats(verticalEnvelopesResult, allRankedCandidateList.filter(c => c.status === 'secondary')),
+					aggregate: computeEnvelopeStats(verticalEnvelopesResult, allRankedCandidateList)
+				}
 			}
 		},
 		primaryCandidates: primaryCandidatesDetails,
 		secondaryCandidates: secondaryCandidatesDetails
 	};
+
 
 	if (isJson) {
 		console.log(JSON.stringify(summary, null, 2));
@@ -698,9 +787,64 @@ try {
 				const flagsStr = Object.entries(topA.flags).filter(([_, val]) => val).map(([k]) => k).join(',');
 				console.log(`      - [${topA.role.toUpperCase()}] loop=${topA.loopId} score=${topA.score.toFixed(3)} loopCov=${topA.loopCoverage.toFixed(3)} evCov=${topA.evidenceCoverage.toFixed(3)} dist=${topA.verticalDistance.toFixed(3)} flags=[${flagsStr || 'none'}]`);
 			}
+
+			const ed = summary.surfaces.envelopes.diagnostics;
+			console.log(`\n=== VERTICAL ENVELOPE CANDIDATES SUMMARY ===`);
+			console.log(`Loops Inspected:               ${ed.loopsInspected}`);
+			console.log(`Primary Envelope Candidates:   ${ed.primaryEnvelopeCandidates}`);
+			console.log(`Secondary Envelope Candidates: ${ed.secondaryEnvelopeCandidates}`);
+			console.log(`Noise Envelope Candidates:     ${ed.noiseEnvelopeCandidates}`);
+			console.log(`Loops With Single Envelope:    ${ed.loopsWithSingleEnvelope}`);
+			console.log(`Loops With Multiple Envelopes: ${ed.loopsWithMultipleEnvelopes}`);
+			console.log(`Loops Missing Lower Support:   ${ed.loopsMissingLowerSupport}`);
+			console.log(`Loops Missing Upper Cover:     ${ed.loopsMissingUpperCover}`);
+			console.log(`Rejected Non-Positive Heights: ${ed.rejectedNonPositiveHeights}`);
+			console.log(`Aggregate Envelope FP:         ${ed.fingerprint}`);
+
+			const est = summary.surfaces.envelopes.stats;
+			console.log(`\n  [Primary Loops Envelope Stats]`);
+			console.log(`    Loops Inspected:           ${est.primary.loopsInspected}`);
+			console.log(`    Primary Envelopes:         ${est.primary.primaryEnvelopeCount}`);
+			console.log(`    Secondary Envelopes:       ${est.primary.secondaryEnvelopeCount}`);
+			console.log(`    Single Envelope Loops:     ${est.primary.loopsWithSingleEnvelope}`);
+			console.log(`    Multiple Envelope Loops:   ${est.primary.loopsWithMultipleEnvelopes}`);
+			console.log(`    Missing Lower Support:     ${est.primary.loopsMissingLowerSupport}`);
+			console.log(`    Missing Upper Cover:       ${est.primary.loopsMissingUpperCover}`);
+			console.log(`    Rejected Zero/Neg Heights: ${est.primary.rejectedNonPositiveHeights}`);
+			console.log(`    Clear Height Range:        min=${est.primary.heightStats.min} median=${est.primary.heightStats.median} max=${est.primary.heightStats.max} m`);
+			console.log(`    Estimated Volume Range:    min=${est.primary.volumeStats.min} median=${est.primary.volumeStats.median} max=${est.primary.volumeStats.max} m3`);
+			console.log(`    Envelope Fingerprint:      ${est.primary.fingerprint}`);
+
+			console.log(`\n  [Secondary Loops Envelope Stats]`);
+			console.log(`    Loops Inspected:           ${est.secondary.loopsInspected}`);
+			console.log(`    Primary Envelopes:         ${est.secondary.primaryEnvelopeCount}`);
+			console.log(`    Secondary Envelopes:       ${est.secondary.secondaryEnvelopeCount}`);
+			console.log(`    Single Envelope Loops:     ${est.secondary.loopsWithSingleEnvelope}`);
+			console.log(`    Multiple Envelope Loops:   ${est.secondary.loopsWithMultipleEnvelopes}`);
+			console.log(`    Missing Lower Support:     ${est.secondary.loopsMissingLowerSupport}`);
+			console.log(`    Missing Upper Cover:       ${est.secondary.loopsMissingUpperCover}`);
+			console.log(`    Rejected Zero/Neg Heights: ${est.secondary.rejectedNonPositiveHeights}`);
+			console.log(`    Clear Height Range:        min=${est.secondary.heightStats.min} median=${est.secondary.heightStats.median} max=${est.secondary.heightStats.max} m`);
+			console.log(`    Estimated Volume Range:    min=${est.secondary.volumeStats.min} median=${est.secondary.volumeStats.median} max=${est.secondary.volumeStats.max} m3`);
+			console.log(`    Envelope Fingerprint:      ${est.secondary.fingerprint}`);
+
+			console.log(`\n  [Aggregate Loops Envelope Stats]`);
+			console.log(`    Loops Inspected:           ${est.aggregate.loopsInspected}`);
+			console.log(`    Primary Envelopes:         ${est.aggregate.primaryEnvelopeCount}`);
+			console.log(`    Secondary Envelopes:       ${est.aggregate.secondaryEnvelopeCount}`);
+			console.log(`    Single Envelope Loops:     ${est.aggregate.loopsWithSingleEnvelope}`);
+			console.log(`    Multiple Envelope Loops:   ${est.aggregate.loopsWithMultipleEnvelopes}`);
+			console.log(`    Missing Lower Support:     ${est.aggregate.loopsMissingLowerSupport}`);
+			console.log(`    Missing Upper Cover:       ${est.aggregate.loopsMissingUpperCover}`);
+			console.log(`    Rejected Zero/Neg Heights: ${est.aggregate.rejectedNonPositiveHeights}`);
+			console.log(`    Clear Height Range:        min=${est.aggregate.heightStats.min} median=${est.aggregate.heightStats.median} max=${est.aggregate.heightStats.max} m`);
+			console.log(`    Estimated Volume Range:    min=${est.aggregate.volumeStats.min} median=${est.aggregate.volumeStats.median} max=${est.aggregate.volumeStats.max} m3`);
+			console.log(`    Envelope Fingerprint:      ${est.aggregate.fingerprint}`);
 		}
 	}
 } catch (e: any) {
-	console.error(`Execution failed: ${e.message}`);
+	console.error(e.stack || e.message);
 	process.exit(1);
 }
+
+

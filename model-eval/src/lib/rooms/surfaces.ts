@@ -306,9 +306,12 @@ export function assignHorizontalEvidenceToLoops(
 				storeyCandidateId: loop.storeyCandidateId,
 				horizontalEvidenceId: ev.id,
 				logicalObjectId: ev.logicalObjectId,
-				classificationUnitIds: [...ev.classificationUnitIds],
+				logicalObjectIds: [ev.logicalObjectId],
+				sourceEvidenceIds: [ev.id],
+				classificationUnitIds: [...(ev.classificationUnitIds || [])],
 				materialIds: [...(ev.materialIds || [])],
 				orientation,
+
 				elevation: ev.elevation,
 				loopArea: loop.area,
 				overlapArea,

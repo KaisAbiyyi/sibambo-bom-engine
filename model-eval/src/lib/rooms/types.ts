@@ -222,8 +222,11 @@ export interface LoopSurfaceAssignment {
 	storeyCandidateId: string;
 	horizontalEvidenceId: string;
 	logicalObjectId: string;
+	logicalObjectIds?: string[];
+	sourceEvidenceIds?: string[];
 	classificationUnitIds: string[];
 	materialIds: number[];
+
 	orientation: 'up' | 'down' | 'horizontal' | 'unknown';
 	elevation: number;
 	loopArea: number;
@@ -312,4 +315,59 @@ export interface RankedLoopSurfaceAssignmentResult {
 	selectionsByLoop: Map<string, LoopSurfaceRoleSelection>;
 	loopSelections: LoopSurfaceRoleSelection[];
 	diagnostics: RankedLoopSurfaceAssignmentDiagnostics;
+}
+
+export type VerticalEnvelopeStatus = 'primary' | 'secondary' | 'noise';
+
+export interface VerticalEnvelopeQualityFlags {
+	missingLower: boolean;
+	missingUpper: boolean;
+	nonPositiveHeight: boolean;
+	unusuallyLowHeight: boolean;
+	unusuallyHighHeight: boolean;
+	approximateOverlap: boolean;
+	multipleEnvelopeCandidates: boolean;
+	weakLowerSupport: boolean;
+	weakUpperCover: boolean;
+	geometricallyPlausible: boolean;
+}
+
+export interface VerticalEnvelopeCandidate {
+	id: string;
+	loopCandidateId: string;
+	storeyCandidateId: string;
+	lowerAssignmentId: string;
+	upperAssignmentId: string;
+	lowerHorizontalEvidenceId: string;
+	upperHorizontalEvidenceId: string;
+	logicalObjectIds: string[];
+	classificationUnitIds: string[];
+	materialIds: number[];
+	lowerElevation: number;
+	upperElevation: number;
+	clearHeight: number;
+	loopArea: number;
+	estimatedVolume: number;
+	score: number;
+	status: VerticalEnvelopeStatus;
+	rank: number;
+	qualityFlags: VerticalEnvelopeQualityFlags;
+}
+
+export interface VerticalEnvelopeDiagnostics {
+	loopsInspected: number;
+	primaryEnvelopeCandidates: number;
+	secondaryEnvelopeCandidates: number;
+	noiseEnvelopeCandidates: number;
+	loopsWithSingleEnvelope: number;
+	loopsWithMultipleEnvelopes: number;
+	loopsMissingLowerSupport: number;
+	loopsMissingUpperCover: number;
+	rejectedNonPositiveHeights: number;
+	fingerprint: string;
+}
+
+export interface VerticalEnvelopeCandidateResult {
+	candidates: VerticalEnvelopeCandidate[];
+	diagnostics: VerticalEnvelopeDiagnostics;
 }
