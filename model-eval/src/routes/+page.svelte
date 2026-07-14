@@ -167,6 +167,7 @@
 	let roomCandidates = $state<RoomCandidate[]>([]);
 	let roomCandidateTraces = $state<RoomCandidateTrace[]>([]);
 	let roomDebugDurationMs = $state(0);
+	let roomDebugDiagnostics = $state<import('$lib/rooms/types').RoomCandidateDiagnostics | undefined>(undefined);
 	let roomDebugError = $state('');
 	let roomDebugRunning = $state(false);
 	let selectedRoomCandidateId = $state<string | null>(null);
@@ -463,7 +464,8 @@
 		roomCandidateTraces = res.traces;
 		selectedRoomCandidateId = resolveRoomCandidateSelection(res.candidates, selectedRoomCandidateId);
 		roomDebugDurationMs = res.durationMs;
-			if (res.error) roomDebugError = res.error;
+		roomDebugDiagnostics = res.diagnostics;
+		if (res.error) roomDebugError = res.error;
 		} catch (err) {
 			roomDebugError = err instanceof Error ? err.message : String(err);
 		} finally {
@@ -1269,6 +1271,16 @@
 				<button class:room-debug-hud__control--active={showSelectedRoomEvidence} class="room-debug-hud__control room-debug-hud__evidence-toggle" type="button" aria-pressed={showSelectedRoomEvidence} disabled={!selectedRoomCandidateTrace} onclick={() => showSelectedRoomEvidence = !showSelectedRoomEvidence}>Show selected evidence</button>
 				{#if visibleRoomCandidates.length > 0}
 					<div class="room-debug-hud__timing">{roomDebugDurationMs.toFixed(0)} ms</div>
+					{#if roomDebugDiagnostics?.hasQuarantinedEnvelopeInputs}
+						<div class="room-debug-hud__warning">
+							{roomDebugDiagnostics.envelopeValidation.quarantined} malformed envelope candidates were excluded:
+							<ul style="margin: 2px 0 0; padding-left: 16px;">
+								{#each Object.entries(roomDebugDiagnostics.envelopeValidation.reasons) as [reason, count]}
+									<li>{reason.replace(/_/g, ' ')}: {count}</li>
+								{/each}
+							</ul>
+						</div>
+					{/if}
 					<ul class="room-debug-hud__list">
 						{#each visibleRoomCandidates.slice(0, 12) as c (c.id)}
 							<li>
@@ -2192,6 +2204,16 @@
 		color: #64748b;
 		font-size: 0.68rem;
 		margin-bottom: 6px;
+	}
+
+	.room-debug-hud__warning {
+		background: rgba(245, 158, 11, 0.1);
+		border-left: 2px solid #f59e0b;
+		padding: 6px 8px;
+		margin-bottom: 8px;
+		color: #fcd34d;
+		font-size: 0.72rem;
+		line-height: 1.4;
 	}
 
 	.room-debug-hud__controls {

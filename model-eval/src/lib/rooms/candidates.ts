@@ -73,7 +73,111 @@ export function calculateRoomCandidateFingerprint(
 		hash.update(parts.join('|'));
 	}
 
-	return hash.digest('hex');
+	return `${candidates.length}:${hash.digest('hex').substring(0, 8)}`;
+}
+
+export function mergeRoomCandidateResults(results: RoomCandidateResult[]): RoomCandidateResult {
+	if (results.length === 0) {
+		return {
+			candidates: [],
+			diagnostics: {
+				loopsInspected: 0,
+				noiseLoopsSkipped: 0,
+				primaryRoomCandidates: 0,
+				secondaryRoomCandidates: 0,
+				ambiguousRoomCandidates: 0,
+				loopsWithoutValidEnvelopes: 0,
+				invalidAreaCandidatesRejected: 0,
+				invalidHeightCandidatesRejected: 0,
+				alternativeEnvelopesPreserved: 0,
+				totalCandidateArea: 0,
+				totalEstimatedVolume: 0,
+				envelopeValidation: {
+					inspected: 0,
+					valid: 0,
+					eligible: 0,
+					ineligible: 0,
+					quarantined: 0,
+					reasons: {}
+				},
+				hasQuarantinedEnvelopeInputs: false,
+				fingerprint: ''
+			}
+		};
+	}
+
+	if (results.length === 1) {
+		// Deep clone diagnostics to ensure source remains unchanged
+		return {
+			candidates: [...results[0].candidates],
+			diagnostics: {
+				...results[0].diagnostics,
+				envelopeValidation: {
+					...results[0].diagnostics.envelopeValidation,
+					reasons: { ...results[0].diagnostics.envelopeValidation.reasons }
+				}
+			}
+		};
+	}
+
+	const candidates = results.flatMap((r) => r.candidates);
+	const mergedDiag: RoomCandidateDiagnostics = {
+		loopsInspected: 0,
+		noiseLoopsSkipped: 0,
+		primaryRoomCandidates: 0,
+		secondaryRoomCandidates: 0,
+		ambiguousRoomCandidates: 0,
+		loopsWithoutValidEnvelopes: 0,
+		invalidAreaCandidatesRejected: 0,
+		invalidHeightCandidatesRejected: 0,
+		alternativeEnvelopesPreserved: 0,
+		totalCandidateArea: 0,
+		totalEstimatedVolume: 0,
+		envelopeValidation: {
+			inspected: 0,
+			valid: 0,
+			eligible: 0,
+			ineligible: 0,
+			quarantined: 0,
+			reasons: {}
+		},
+		hasQuarantinedEnvelopeInputs: false,
+		fingerprint: ''
+	};
+
+	for (const r of results) {
+		const d = r.diagnostics;
+		mergedDiag.loopsInspected += d.loopsInspected;
+		mergedDiag.noiseLoopsSkipped += d.noiseLoopsSkipped;
+		mergedDiag.primaryRoomCandidates += d.primaryRoomCandidates;
+		mergedDiag.secondaryRoomCandidates += d.secondaryRoomCandidates;
+		mergedDiag.ambiguousRoomCandidates += d.ambiguousRoomCandidates;
+		mergedDiag.loopsWithoutValidEnvelopes += d.loopsWithoutValidEnvelopes;
+		mergedDiag.invalidAreaCandidatesRejected += d.invalidAreaCandidatesRejected;
+		mergedDiag.invalidHeightCandidatesRejected += d.invalidHeightCandidatesRejected;
+		mergedDiag.alternativeEnvelopesPreserved += d.alternativeEnvelopesPreserved;
+		mergedDiag.totalCandidateArea += d.totalCandidateArea;
+		mergedDiag.totalEstimatedVolume += d.totalEstimatedVolume;
+
+		const ev = d.envelopeValidation;
+		mergedDiag.envelopeValidation.inspected += ev.inspected;
+		mergedDiag.envelopeValidation.valid += ev.valid;
+		mergedDiag.envelopeValidation.eligible += ev.eligible;
+		mergedDiag.envelopeValidation.ineligible += ev.ineligible;
+		mergedDiag.envelopeValidation.quarantined += ev.quarantined;
+
+		for (const [reason, count] of Object.entries(ev.reasons)) {
+			mergedDiag.envelopeValidation.reasons[reason as any] = 
+				(mergedDiag.envelopeValidation.reasons[reason as any] || 0) + (count as number);
+		}
+		
+		if (d.hasQuarantinedEnvelopeInputs) {
+			mergedDiag.hasQuarantinedEnvelopeInputs = true;
+		}
+	}
+
+	mergedDiag.fingerprint = calculateRoomCandidateFingerprint(candidates, mergedDiag);
+	return { candidates, diagnostics: mergedDiag };
 }
 
 export function assembleRoomCandidates(
@@ -108,8 +212,37 @@ export function assembleRoomCandidates(
 		alternativeEnvelopesPreserved: 0,
 		totalCandidateArea: 0,
 		totalEstimatedVolume: 0,
+		envelopeValidation: {
+			inspected: 0,
+			valid: 0,
+			eligible: 0,
+			ineligible: 0,
+			quarantined: 0,
+			reasons: {}
+		},
+		hasQuarantinedEnvelopeInputs: false,
 		fingerprint: ''
 	};
+
+	const validEnvelopes: VerticalEnvelopeCandidate[] = [];
+	for (const e of envelopes) {
+		diagnostics.envelopeValidation.inspected++;
+		const parseResult = parseRefinedVerticalEnvelopeCandidate(e);
+		if (parseResult.ok) {
+			diagnostics.envelopeValidation.valid++;
+			if (parseResult.value.eligibleForRoomAssembly) {
+				diagnostics.envelopeValidation.eligible++;
+			} else {
+				diagnostics.envelopeValidation.ineligible++;
+			}
+			validEnvelopes.push(e); 
+		} else {
+			diagnostics.envelopeValidation.quarantined++;
+			diagnostics.hasQuarantinedEnvelopeInputs = true;
+			const reason = parseResult.reason;
+			diagnostics.envelopeValidation.reasons[reason] = (diagnostics.envelopeValidation.reasons[reason] || 0) + 1;
+		}
+	}
 
 	const sortedLoops = [...loops].sort((a, b) => a.id.localeCompare(b.id));
 	const candidates: RoomCandidate[] = [];
@@ -124,19 +257,13 @@ export function assembleRoomCandidates(
 
 		// Find all non-noise envelopes for this loop.
 		// Respect the newer refinement contract if present.
-		const loopEnvelopes = envelopes.filter((e) => {
+		const loopEnvelopes = validEnvelopes.filter((e) => {
 			if (e.loopCandidateId !== loop.id) return false;
 			if (e.status === 'noise') return false;
 			
-			const parseResult = parseRefinedVerticalEnvelopeCandidate(e);
-			if (!parseResult.ok) {
-				diagnostics.invalidEnvelopesQuarantined = (diagnostics.invalidEnvelopesQuarantined || 0) + 1;
-				if (!diagnostics.invalidEnvelopeReasons) diagnostics.invalidEnvelopeReasons = {};
-				const reasonKey = parseResult.reason;
-				diagnostics.invalidEnvelopeReasons[reasonKey] = (diagnostics.invalidEnvelopeReasons[reasonKey] || 0) + 1;
-				return false;
-			}
-			if (parseResult.value.eligibleForRoomAssembly !== true) return false;
+			// We already parsed and pushed only schema-valid candidates into validEnvelopes.
+			// Safe to cast and read eligibility.
+			if ((e as any).eligibleForRoomAssembly !== true) return false;
 			return true;
 		});
 

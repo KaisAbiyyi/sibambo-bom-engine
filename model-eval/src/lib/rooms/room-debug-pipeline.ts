@@ -17,11 +17,13 @@ import { assignHorizontalEvidenceToLoops, rankLoopSurfaceAssignments } from './s
 import { buildVerticalEnvelopeCandidates, refineVerticalEnvelopeCandidates } from './envelopes';
 import { assembleRoomCandidates } from './candidates';
 import { buildRoomCandidateTraces, type RoomCandidateTrace } from './room-provenance';
-import type { RoomCandidate } from './types';
+import type { RoomCandidate, RoomCandidateDiagnostics } from './types';
 
 export type RoomDebugResult = {
 	candidates: RoomCandidate[];
 	traces: RoomCandidateTrace[];
+	diagnostics?: RoomCandidateDiagnostics;
+	dataQuality?: 'complete' | 'degraded';
 	durationMs: number;
 	error?: string;
 };
@@ -101,9 +103,13 @@ export async function runRoomDebugPipeline(scene: RuntimeScene): Promise<RoomDeb
 			horizontalEvidence: snapshot.horizontalSurfaces
 		});
 
+		const dataQuality = roomsResult.diagnostics.hasQuarantinedEnvelopeInputs ? 'degraded' : 'complete';
+
 		return {
 			candidates: roomsResult.candidates,
 			traces,
+			diagnostics: roomsResult.diagnostics,
+			dataQuality,
 			durationMs: performance.now() - t0
 		};
 	} catch (err) {

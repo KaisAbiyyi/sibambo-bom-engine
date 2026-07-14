@@ -484,6 +484,26 @@ export interface RoomCandidate {
 	qualityFlags: RoomCandidateQualityFlags;
 }
 
+export type RefinedCandidateValidationReason =
+	| 'missing_eligibility'
+	| 'invalid_eligibility_type'
+	| 'missing_source_evidence'
+	| 'invalid_source_evidence_shape'
+	| 'non_finite_score'
+	| 'invalid_status'
+	| 'invalid_tolerance'
+	| 'invalid_candidate_shape'
+	| 'prototype_pollution';
+
+export interface EnvelopeValidationDiagnostics {
+	inspected: number;
+	valid: number;
+	eligible: number;
+	ineligible: number;
+	quarantined: number;
+	reasons: Partial<Record<RefinedCandidateValidationReason, number>>;
+}
+
 export interface RoomCandidateDiagnostics {
 	loopsInspected: number;
 	noiseLoopsSkipped: number;
@@ -496,8 +516,8 @@ export interface RoomCandidateDiagnostics {
 	alternativeEnvelopesPreserved: number;
 	totalCandidateArea: number;
 	totalEstimatedVolume: number;
-	invalidEnvelopesQuarantined?: number;
-	invalidEnvelopeReasons?: Record<string, number>;
+	envelopeValidation: EnvelopeValidationDiagnostics;
+	hasQuarantinedEnvelopeInputs: boolean;
 	fingerprint: string;
 }
 

@@ -1,15 +1,4 @@
-import type { RefinedVerticalEnvelopeCandidate } from './types';
-
-export type RefinedCandidateValidationReason =
-	| 'missing_eligibility'
-	| 'invalid_eligibility_type'
-	| 'missing_source_evidence'
-	| 'invalid_source_evidence_shape'
-	| 'non_finite_score'
-	| 'invalid_status'
-	| 'invalid_tolerance'
-	| 'invalid_candidate_shape'
-	| 'prototype_pollution';
+import type { RefinedVerticalEnvelopeCandidate, RefinedCandidateValidationReason } from './types';
 
 export type CandidateParseResult =
 	| { ok: true; value: RefinedVerticalEnvelopeCandidate }
