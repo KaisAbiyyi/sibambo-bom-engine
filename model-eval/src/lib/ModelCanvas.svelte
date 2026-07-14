@@ -39,6 +39,8 @@
 	import type { QACameraSpec } from './render/qa-camera';
 	import { buildClassificationUnitHighlight } from './annotation/highlight';
 	import type { ClassificationUnitRecord } from './annotation';
+	import type { RoomCandidate } from './rooms/types';
+
 
 	let {
 		model = null,
@@ -49,7 +51,8 @@
 		qaMode = false,
 		qaCamera = null,
 		onQaReady = undefined,
-		annotationUnit = null
+		annotationUnit = null,
+		roomCandidates = []
 	}: {
 		model: ParsedBuildingModel | null;
 		activeAnalysis: AnalysisKind;
@@ -59,6 +62,7 @@
 		qaMode?: boolean;
 		qaCamera?: QACameraSpec | null;
 		annotationUnit?: Pick<ClassificationUnitRecord, 'sourceNodeIds' | 'sourcePrimitiveIds'> | null;
+		roomCandidates?: RoomCandidate[];
 		onQaReady?: (payload: {
 			viewName: string;
 			width: number;
@@ -69,6 +73,7 @@
 			renderedBounds: { min: { x: number; y: number; z: number }; max: { x: number; y: number; z: number } } | null;
 		}) => void;
 	} = $props();
+
 
 	type PartRuntime = {
 		key: PartKey;
@@ -99,7 +104,8 @@
 	let mounted = false;
 	let currentModel: ParsedBuildingModel | null = null;
 	let runtimes: PartRuntime[] = [];
-	let overlayObjects: Array<Mesh | ArrowHelper | Sprite | Group> = [];
+	let overlayObjects: Array<Mesh | ArrowHelper | Sprite | Group | LineSegments> = [];
+
 	let annotationHighlightMesh: Mesh | null = null;
 	const patternTextures = new Map<string, CanvasTexture>();
 
@@ -258,6 +264,10 @@
 					child.geometry.dispose();
 					const materials = Array.isArray(child.material) ? child.material : [child.material];
 					materials.forEach((material) => material.dispose());
+				}
+				if (child instanceof LineSegments) {
+					child.geometry.dispose();
+					(child.material as LineBasicMaterial).dispose();
 				}
 				if (child instanceof Sprite) {
 					child.material.map?.dispose();
@@ -763,6 +773,161 @@
 		});
 	}
 
+	// Status colour palette for room candidates
+	const ROOM_STATUS_COLOR: Record<string, string> = {
+		primary: '#22d3ee',
+		secondary: '#a78bfa',
+		ambiguous: '#f59e0b'
+	};
+
+	function buildRoomDebugOverlays() {
+		// Remove previous room overlays (tracked in a separate array so they don't
+		// conflict with the analysis-result overlays).
+		if (!model || roomCandidates.length === 0) return;
+
+		const span = Math.max(
+			model.bounds.size.x || 8,
+			model.bounds.size.y || 8,
+			model.bounds.size.z || 8,
+			8
+		);
+
+		for (const candidate of roomCandidates) {
+			const polygon = candidate.planPolygon;
+			if (!polygon || polygon.length < 3) continue;
+
+			const hex = ROOM_STATUS_COLOR[candidate.status] ?? '#22d3ee';
+			const color = new Color(hex);
+
+			// ------------------------------------------------------------------
+			// Floor cap (at lowerElevation)
+			// ------------------------------------------------------------------
+			const shape2D = polygon.map((p) => new Vector2(p.x, p.z));
+			let tris: number[][];
+			try {
+				tris = ShapeUtils.triangulateShape(shape2D, []);
+			} catch {
+				continue;
+			}
+
+			const floorY = candidate.lowerElevation;
+			const ceilY = candidate.upperElevation;
+
+			// Build floor face geometry
+			const floorGeo = new BufferGeometry();
+			const positions: number[] = [];
+			for (const tri of tris) {
+				const [ia, ib, ic] = tri;
+				const pa = shape2D[ia], pb = shape2D[ib], pc = shape2D[ic];
+				positions.push(pa.x, floorY, pa.y, pb.x, floorY, pb.y, pc.x, floorY, pc.y);
+			}
+			floorGeo.setAttribute('position', new Float32BufferAttribute(positions, 3));
+			floorGeo.computeVertexNormals();
+
+			const floorMat = new MeshStandardMaterial({
+				color,
+				transparent: true,
+				opacity: 0.18,
+				side: DoubleSide,
+				depthWrite: false,
+				roughness: 0.8,
+				metalness: 0
+			});
+			const floorMesh = new Mesh(floorGeo, floorMat);
+			floorMesh.renderOrder = 10;
+			overlayRoot.add(floorMesh);
+			overlayObjects.push(floorMesh);
+
+			// ------------------------------------------------------------------
+			// Ceiling cap (at upperElevation)
+			// ------------------------------------------------------------------
+			const ceilGeo = new BufferGeometry();
+			const ceilPositions: number[] = [];
+			for (const tri of tris) {
+				const [ia, ib, ic] = tri;
+				const pa = shape2D[ia], pb = shape2D[ib], pc = shape2D[ic];
+				ceilPositions.push(pa.x, ceilY, pa.y, pb.x, ceilY, pb.y, pc.x, ceilY, pc.y);
+			}
+			ceilGeo.setAttribute('position', new Float32BufferAttribute(ceilPositions, 3));
+			ceilGeo.computeVertexNormals();
+
+			const ceilMat = new MeshStandardMaterial({
+				color,
+				transparent: true,
+				opacity: 0.10,
+				side: DoubleSide,
+				depthWrite: false,
+				roughness: 0.8,
+				metalness: 0
+			});
+			const ceilMesh = new Mesh(ceilGeo, ceilMat);
+			ceilMesh.renderOrder = 10;
+			overlayRoot.add(ceilMesh);
+			overlayObjects.push(ceilMesh);
+
+			// ------------------------------------------------------------------
+			// Perimeter wireframe at floor level
+			// ------------------------------------------------------------------
+			const edgePositions: number[] = [];
+			for (let i = 0; i < polygon.length; i++) {
+				const a = polygon[i];
+				const b = polygon[(i + 1) % polygon.length];
+				edgePositions.push(
+					a.x, floorY + 0.01, a.z,
+					b.x, floorY + 0.01, b.z
+				);
+			}
+			const edgeGeo = new BufferGeometry();
+			edgeGeo.setAttribute('position', new Float32BufferAttribute(edgePositions, 3));
+			const edgeMat = new LineBasicMaterial({ color, linewidth: 1 });
+			const wire = new LineSegments(edgeGeo, edgeMat);
+			wire.renderOrder = 11;
+			overlayRoot.add(wire);
+			overlayObjects.push(wire);
+
+			// ------------------------------------------------------------------
+			// Label at centroid, midway between floor and ceiling
+			// ------------------------------------------------------------------
+			const cx = polygon.reduce((s, p) => s + p.x, 0) / polygon.length;
+			const cz = polygon.reduce((s, p) => s + p.z, 0) / polygon.length;
+			const midY = (floorY + ceilY) / 2;
+			const shortId = candidate.id.slice(-8);
+			const labelText = `${candidate.status[0].toUpperCase()} ${candidate.planArea.toFixed(1)}m² h${candidate.clearHeight.toFixed(2)}`;
+			const labelPos = new Vector3(cx, midY + span * 0.015, cz);
+			const lbl = makeRoomLabel(labelText, shortId, hex, labelPos, span);
+			overlayRoot.add(lbl);
+			overlayObjects.push(lbl);
+		}
+	}
+
+	function makeRoomLabel(line1: string, line2: string, color: string, position: Vector3, span: number) {
+		const canvas = document.createElement('canvas');
+		canvas.width = 512;
+		canvas.height = 176;
+		const ctx = canvas.getContext('2d')!;
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		ctx.fillStyle = 'rgba(10, 15, 20, 0.80)';
+		roundRect(ctx, 16, 20, 480, 140, 16);
+		ctx.fill();
+		ctx.strokeStyle = color;
+		ctx.lineWidth = 4;
+		roundRect(ctx, 16, 20, 480, 140, 16);
+		ctx.stroke();
+		ctx.fillStyle = '#e2e8f0';
+		ctx.font = '600 34px Inter, Arial, sans-serif';
+		ctx.fillText(line1.slice(0, 28), 36, 76);
+		ctx.fillStyle = color;
+		ctx.font = '400 28px Inter, Arial, sans-serif';
+		ctx.fillText(line2, 36, 128);
+		const texture = new CanvasTexture(canvas);
+		const sprite = new Sprite(new SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
+		const scale = Math.max(span * 0.14, 1.5);
+		sprite.scale.set(scale * 2.8, scale * 0.95, 1);
+		sprite.position.copy(position);
+		sprite.renderOrder = 100;
+		return sprite;
+	}
+
 	function objectFromMarker(marker: OverlayMarker) {
 		const group = new Group();
 		const span = Math.max(model?.bounds.size.x || 8, model?.bounds.size.z || 8, 8);
@@ -865,12 +1030,15 @@
 		result;
 		visiblePartKeys;
 		annotationUnit;
+		roomCandidates;
 		if (mounted) {
 			refreshSurfaceMaterials();
 			rebuildAnnotationHighlight();
 			buildOverlays();
+			buildRoomDebugOverlays();
 		}
 	});
+
 
 	$effect(() => {
 		spaces;

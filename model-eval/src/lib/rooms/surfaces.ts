@@ -1,4 +1,3 @@
-import { createHash } from 'crypto';
 import type {
 	RankedBoundaryLoopCandidate,
 	HorizontalSurfaceEvidence,
@@ -16,6 +15,32 @@ import type {
 	RankedLoopSurfaceAssignmentDiagnostics,
 	RankedLoopSurfaceAssignmentResult
 } from './types';
+
+function getCreateHash(): (algorithm: string) => { update(v: string): any; digest(enc: string): string } {
+	if (typeof window === 'undefined') {
+		try {
+			// eslint-disable-next-line @typescript-eslint/no-require-imports
+			return (require('crypto') as typeof import('crypto')).createHash;
+		} catch { /* fall through */ }
+	}
+	return ((_algorithm: string) => new BrowserHasher()) as any;
+}
+class BrowserHasher {
+	private _buf = '';
+	update(v: string) { this._buf += v; return this; }
+	digest(_enc: string): string { return simpleHashStr(this._buf); }
+}
+function simpleHashStr(str: string): string {
+	let h1 = 2166136261;
+	let h2 = 5381;
+	for (let i = 0; i < str.length; i++) {
+		const char = str.charCodeAt(i);
+		h1 = Math.imul(h1 ^ char, 16777619) >>> 0;
+		h2 = Math.imul(h2 ^ char, 33) >>> 0;
+	}
+	return h1.toString(16).padStart(8, '0') + h2.toString(16).padStart(8, '0');
+}
+const createHash = getCreateHash();
 
 function computeBoundsOverlapArea(a: PlanBounds, b: PlanBounds): number {
 	const minX = Math.max(a.min.x, b.min.x);

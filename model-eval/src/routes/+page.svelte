@@ -53,6 +53,9 @@
 		type Tier1AnnotationRecord
 	} from '$lib/annotation';
 	import { createGeometryFoundation } from '$lib/geometry';
+	import type { RoomCandidate } from '$lib/rooms/types';
+	import { runRoomDebugPipeline } from '$lib/rooms/room-debug-pipeline';
+
 
 	type NumberInputKey = 'peopleCount' | 'operationHours' | 'setPointC' | 'orientationDeg' | 'glassRatio' | 'roomHeightM';
 	type ModelCanvasProps = {
@@ -64,6 +67,7 @@
 		qaMode?: boolean;
 		qaCamera?: QACameraSpec | null;
 		annotationUnit?: Pick<ClassificationUnitRecord, 'sourceNodeIds' | 'sourcePrimitiveIds'> | null;
+		roomCandidates?: RoomCandidate[];
 		onQaReady?: (payload: {
 			viewName: string;
 			width: number;
@@ -74,6 +78,7 @@
 			renderedBounds: { min: { x: number; y: number; z: number }; max: { x: number; y: number; z: number } } | null;
 		}) => void;
 	};
+
 
 	const SAMPLE_URL = `${import.meta.env.BASE_URL}Model_SBMBOOST_bom_visual_nonPretty-print.json`;
 	const TEMPLATE_KEY = 'model-eval-analysis-template-v1';
@@ -150,6 +155,12 @@
 	let annotationNote = $state('');
 	let annotationMessage = $state('');
 	let annotationJsonText = $state('');
+	let roomDebug = $state(false);
+	let roomCandidates = $state<RoomCandidate[]>([]);
+	let roomDebugDurationMs = $state(0);
+	let roomDebugError = $state('');
+	let roomDebugRunning = $state(false);
+
 	let annotationQueue = $derived(buildAnnotationReviewQueue(annotationUnits, annotationRecords, annotationFilters, annotationSort));
 	let selectedAnnotationUnit = $derived(annotationQueue.find((unit) => unit.id === selectedAnnotationUnitId) || annotationQueue[0] || null);
 	let readiness = $derived<ReadinessItem[]>(getReadiness(model, inputs, touched));
@@ -199,6 +210,8 @@
 		const format = params.get('format') || 'bome2';
 		qaMode = params.get('qa') === '1';
 		annotationMode = params.get('annotate') === 'tier1';
+		roomDebug = params.get('roomDebug') === '1';
+
 		qaSlug = corpus || '';
 		const view = params.get('view') || 'isometric';
 		if (corpus) {
@@ -380,7 +393,27 @@
 		result = null;
 		parseMessage = `${format(model.faceCount)} face terbaca dari ${name}`;
 		setupAnnotationMode();
+		if (roomDebug && model.runtimeScene) {
+			void runRoomDebug(model.runtimeScene);
+		}
 	}
+
+	async function runRoomDebug(scene: NonNullable<ParsedBuildingModel['runtimeScene']>) {
+		roomDebugRunning = true;
+		roomDebugError = '';
+		roomCandidates = [];
+		try {
+			const res = await runRoomDebugPipeline(scene);
+			roomCandidates = res.candidates;
+			roomDebugDurationMs = res.durationMs;
+			if (res.error) roomDebugError = res.error;
+		} catch (err) {
+			roomDebugError = err instanceof Error ? err.message : String(err);
+		} finally {
+			roomDebugRunning = false;
+		}
+	}
+
 
 	function setupAnnotationMode() {
 		annotationRun += 1;
@@ -1108,7 +1141,8 @@
 
 	<section class="stage-panel">
 		{#if ModelCanvasComponent}
-			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} activeAnalysis={selectedAnalysis} {result} {qaMode} {qaCamera} annotationUnit={annotationMode ? selectedAnnotationUnit : null} onQaReady={handleQaReady} />
+			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} activeAnalysis={selectedAnalysis} {result} {qaMode} {qaCamera} annotationUnit={annotationMode ? selectedAnnotationUnit : null} roomCandidates={roomDebug ? roomCandidates : []} onQaReady={handleQaReady} />
+
 		{:else}
 			<div class="model-stage-placeholder">
 				<strong>JSON belum dimuat</strong>
@@ -1127,7 +1161,41 @@
 				</div>
 			{/if}
 		</div>
+		{#if roomDebug}
+			<div class="room-debug-hud">
+				<div class="room-debug-hud__title">
+					<span>Room Debug</span>
+					{#if roomDebugRunning}
+						<span class="room-debug-hud__badge room-debug-hud__badge--running">running…</span>
+					{:else if roomDebugError}
+						<span class="room-debug-hud__badge room-debug-hud__badge--error">error</span>
+					{:else}
+						<span class="room-debug-hud__badge room-debug-hud__badge--ok">{roomCandidates.length} candidates</span>
+					{/if}
+				</div>
+				{#if roomDebugError}
+					<p class="room-debug-hud__error">{roomDebugError}</p>
+				{/if}
+				{#if roomCandidates.length > 0}
+					<div class="room-debug-hud__timing">{roomDebugDurationMs.toFixed(0)} ms</div>
+					<ul class="room-debug-hud__list">
+						{#each roomCandidates.slice(0, 12) as c (c.id)}
+							<li class="room-debug-hud__item room-debug-hud__item--{c.status}">
+								<span class="room-debug-hud__status">{c.status[0].toUpperCase()}</span>
+								<span class="room-debug-hud__area">{c.planArea.toFixed(1)} m²</span>
+								<span class="room-debug-hud__elev">{c.lowerElevation.toFixed(2)}–{c.upperElevation.toFixed(2)} m</span>
+								<span class="room-debug-hud__id">{c.id.slice(-8)}</span>
+							</li>
+						{/each}
+						{#if roomCandidates.length > 12}
+							<li class="room-debug-hud__more">+{roomCandidates.length - 12} more</li>
+						{/if}
+					</ul>
+				{/if}
+			</div>
+		{/if}
 	</section>
+
 
 	<aside class="right-panel">
 		<section class="panel-block">
@@ -1931,6 +1999,94 @@
 
 	.stage-hud strong {
 		font-size: 0.9rem;
+	}
+
+	/* ─── Room Debug HUD ──────────────────────────────────────────── */
+	.room-debug-hud {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		z-index: 20;
+		min-width: 220px;
+		max-width: 300px;
+		max-height: calc(100% - 20px);
+		overflow-y: auto;
+		background: rgba(10, 16, 22, 0.88);
+		border: 1px solid rgba(34, 211, 238, 0.35);
+		border-radius: 10px;
+		padding: 10px 12px;
+		font-size: 0.75rem;
+		color: #cbd5e1;
+		backdrop-filter: blur(6px);
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+	}
+
+	.room-debug-hud__title {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		font-weight: 700;
+		font-size: 0.78rem;
+		color: #e2e8f0;
+		margin-bottom: 6px;
+	}
+
+	.room-debug-hud__badge {
+		padding: 1px 7px;
+		border-radius: 20px;
+		font-size: 0.68rem;
+		font-weight: 600;
+	}
+	.room-debug-hud__badge--ok { background: rgba(34, 211, 238, 0.18); color: #22d3ee; }
+	.room-debug-hud__badge--running { background: rgba(245, 158, 11, 0.18); color: #f59e0b; }
+	.room-debug-hud__badge--error { background: rgba(239, 68, 68, 0.18); color: #f87171; }
+
+	.room-debug-hud__timing {
+		color: #64748b;
+		font-size: 0.68rem;
+		margin-bottom: 6px;
+	}
+
+	.room-debug-hud__error {
+		color: #f87171;
+		font-size: 0.72rem;
+		word-break: break-all;
+		margin: 4px 0 6px;
+	}
+
+	.room-debug-hud__list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+	}
+
+	.room-debug-hud__item {
+		display: grid;
+		grid-template-columns: 16px 56px 1fr 56px;
+		gap: 4px;
+		align-items: center;
+		padding: 3px 6px;
+		border-radius: 5px;
+		background: rgba(255, 255, 255, 0.04);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.room-debug-hud__item--primary { border-left: 2px solid #22d3ee; }
+	.room-debug-hud__item--secondary { border-left: 2px solid #a78bfa; }
+	.room-debug-hud__item--ambiguous { border-left: 2px solid #f59e0b; }
+
+	.room-debug-hud__status { font-weight: 700; }
+	.room-debug-hud__area { color: #94a3b8; }
+	.room-debug-hud__elev { color: #64748b; font-size: 0.68rem; }
+	.room-debug-hud__id { color: #475569; font-family: monospace; font-size: 0.66rem; text-align: right; }
+
+	.room-debug-hud__more {
+		padding: 2px 6px;
+		color: #475569;
+		font-style: italic;
 	}
 
 	.field {
