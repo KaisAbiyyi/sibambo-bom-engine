@@ -14,7 +14,7 @@ import { createRoomEvidenceProcessor } from './processor';
 import { normalizeBarrierGraph } from './helpers';
 import { findBoundaryLoopCandidates, rankBoundaryLoopCandidates } from './loops';
 import { assignHorizontalEvidenceToLoops, rankLoopSurfaceAssignments } from './surfaces';
-import { buildVerticalEnvelopeCandidates } from './envelopes';
+import { buildVerticalEnvelopeCandidates, refineVerticalEnvelopeCandidates } from './envelopes';
 import { assembleRoomCandidates } from './candidates';
 import { buildRoomCandidateTraces, type RoomCandidateTrace } from './room-provenance';
 import type { RoomCandidate } from './types';
@@ -81,16 +81,22 @@ export async function runRoomDebugPipeline(scene: RuntimeScene): Promise<RoomDeb
 			allRankedCandidates,
 			rankedSurfaces.assignments
 		);
+		const refinementResult = refineVerticalEnvelopeCandidates(
+			envelopes.candidates,
+			allRankedCandidates,
+			snapshot.verticalBarriers,
+			snapshot.storeyBands
+		);
 		const roomsResult = assembleRoomCandidates(
 			allRankedCandidates,
 			rankedSurfaces.assignments,
-			envelopes.candidates,
+			refinementResult.candidates,
 			allNormalizedGraphs
 		);
 		const traces = buildRoomCandidateTraces({
 			candidates: roomsResult.candidates,
 			loops: allRankedCandidates,
-			envelopes: envelopes.candidates,
+			envelopes: refinementResult.candidates,
 			assignments: rankedSurfaces.assignments,
 			horizontalEvidence: snapshot.horizontalSurfaces
 		});

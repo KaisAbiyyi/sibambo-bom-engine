@@ -372,6 +372,67 @@ export interface VerticalEnvelopeCandidateResult {
 	diagnostics: VerticalEnvelopeDiagnostics;
 }
 
+export interface LoopVerticalExtentProfile {
+	loopId: string;
+	evidenceIds: string[];
+	evidenceCount: number;
+	minObservedBase: number;
+	maxObservedTop: number;
+	robustBase: number;
+	robustTop: number;
+	robustSpan: number;
+	dispersion: number;
+	consistency: number;
+	confidence: number;
+	flags: {
+		insufficientEvidence: boolean;
+		inconsistentBases: boolean;
+		inconsistentTops: boolean;
+		fragmentedVerticalEvidence: boolean;
+		approximateExtent: boolean;
+	};
+}
+
+export interface RefinedVerticalEnvelopeCandidate extends VerticalEnvelopeCandidate {
+	rawScore: number;
+	rawStatus: VerticalEnvelopeStatus;
+	refinedScore: number;
+	refinedStatus: VerticalEnvelopeStatus;
+	refinedRank: number;
+	baseAlignment: number;
+	topAlignment: number;
+	barrierSpanCoverage: number;
+	refinementReasons: string[];
+	verticalExtentProfile: LoopVerticalExtentProfile;
+}
+
+export interface VerticalEnvelopeRefinementDiagnostics {
+	loopsInspected: number;
+	loopsWithUsableProfiles: number;
+	loopsWithInsufficientEvidence: number;
+	rawPrimaryCount: number;
+	rawSecondaryCount: number;
+	rawNoiseCount: number;
+	refinedPrimaryCount: number;
+	refinedSecondaryCount: number;
+	refinedNoiseCount: number;
+	envelopesPromoted: number;
+	envelopesDemoted: number;
+	selectedEnvelopeChangedCount: number;
+	selectedLowHeightBefore: number;
+	selectedLowHeightAfter: number;
+	weakUpperSelectionsBefore: number;
+	weakUpperSelectionsAfter: number;
+	barrierAlignedSelections: number;
+	refinementFingerprint: string;
+}
+
+export interface RefinedVerticalEnvelopeResult {
+	candidates: RefinedVerticalEnvelopeCandidate[];
+	profiles: LoopVerticalExtentProfile[];
+	diagnostics: VerticalEnvelopeRefinementDiagnostics;
+}
+
 export type RoomCandidateStatus = 'primary' | 'secondary' | 'ambiguous';
 
 export interface RoomCandidateQualityFlags {

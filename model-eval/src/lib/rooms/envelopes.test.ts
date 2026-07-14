@@ -1,12 +1,15 @@
 import { describe, test, expect } from 'bun:test';
 import {
 	buildVerticalEnvelopeCandidates,
-	calculateVerticalEnvelopeCandidateFingerprint
+	calculateVerticalEnvelopeCandidateFingerprint,
+	refineVerticalEnvelopeCandidates
 } from './envelopes';
 import type {
 	RankedBoundaryLoopCandidate,
 	LoopSurfaceAssignment,
-	RankedLoopSurfaceAssignment
+	RankedLoopSurfaceAssignment,
+	VerticalBarrierEvidence,
+	StoreyBandEvidence
 } from './types';
 
 function createMockLoop(
@@ -288,5 +291,136 @@ describe('buildVerticalEnvelopeCandidates synthetic tests', () => {
 		expect(cand).not.toHaveProperty('roomName');
 		expect(cand).not.toHaveProperty('openings');
 		expect(cand).not.toHaveProperty('isFinalRoom');
+	});
+});
+
+describe('refineVerticalEnvelopeCandidates tests', () => {
+	function createMockBarrier(
+		id: string,
+		minZ: number,
+		maxZ: number,
+		len = 1.0,
+		quality = 1.0
+	): VerticalBarrierEvidence {
+		return {
+			id,
+			logicalObjectId: 'obj-barrier',
+			classificationUnitIds: ['unit-barrier'],
+			elevationRange: { min: minZ, max: maxZ },
+			segment: { start: { x: 0, z: 0 }, end: { x: len, z: 0 } },
+			materialIds: [300],
+			thickness: 0.15,
+			isExterior: false,
+			quality,
+			isAmbiguous: false
+		};
+	}
+
+	function createMockStorey(id: string, minZ: number, maxZ: number): StoreyBandEvidence {
+		return {
+			id,
+			logicalObjectId: 'obj-storey',
+			classificationUnitIds: ['unit-storey'],
+			elevationRange: { min: minZ, max: maxZ },
+			planBounds: { min: { x: 0, z: 0 }, max: { x: 10, z: 10 } },
+			materialIds: [400],
+			quality: 1.0,
+			isAmbiguous: false,
+			status: 'primary',
+			score: 90
+		};
+	}
+
+	test('1. fallback to raw when no barriers are present', () => {
+		const loop = createMockLoop('loop1');
+		const lower = createMockAssignment('lower1', 'loop1', 'lower-support', 0.0);
+		const upper = createMockAssignment('upper1', 'loop1', 'upper-cover', 3.0);
+		const rawEnvs = buildVerticalEnvelopeCandidates([loop], [lower, upper]).candidates;
+		const storey = createMockStorey('storey:test', 0.0, 0.5);
+
+		const result = refineVerticalEnvelopeCandidates(rawEnvs, [loop], [], [storey]);
+		expect(result.diagnostics.loopsWithInsufficientEvidence).toBe(1);
+		expect(result.candidates[0].refinedScore).toBe(rawEnvs[0].score);
+		expect(result.candidates[0].refinementReasons).toContain('insufficient-evidence');
+	});
+
+	test('2. barrier span coverage penalty applies for short envelopes', () => {
+		const loop = createMockLoop('loop1');
+		const lower = createMockAssignment('lower1', 'loop1', 'lower-support', 0.0);
+		const upper = createMockAssignment('upper1', 'loop1', 'upper-cover', 0.8);
+		const rawEnvs = buildVerticalEnvelopeCandidates([loop], [lower, upper]).candidates;
+		const storey = createMockStorey('storey:test', 0.0, 0.5);
+		const barrier = createMockBarrier('v1', 0.0, 3.0); // Robust span = 3.0m
+
+		const result = refineVerticalEnvelopeCandidates(rawEnvs, [loop], [barrier], [storey]);
+		const candidate = result.candidates[0];
+		expect(candidate.barrierSpanCoverage).toBeCloseTo(0.8 / 3.0, 3);
+		expect(candidate.refinementReasons.some((r) => r.startsWith('insufficient-span-coverage'))).toBe(true);
+		expect(candidate.refinedScore).toBeLessThan(rawEnvs[0].score);
+	});
+
+	test('3. alignment bonuses/penalties apply correctly', () => {
+		const loop = createMockLoop('loop1');
+		const lower = createMockAssignment('lower1', 'loop1', 'lower-support', 0.5); // displaced base
+		const upper = createMockAssignment('upper1', 'loop1', 'upper-cover', 2.4); // displaced top
+		const rawEnvs = buildVerticalEnvelopeCandidates([loop], [lower, upper]).candidates;
+		const storey = createMockStorey('storey:test', 0.0, 0.5);
+		const barrier = createMockBarrier('v1', 0.0, 3.0); // Robust span = 3.0m
+
+		const result = refineVerticalEnvelopeCandidates(rawEnvs, [loop], [barrier], [storey]);
+		const candidate = result.candidates[0];
+		expect(candidate.baseAlignment).toBeCloseTo(0.5, 5);
+		expect(candidate.topAlignment).toBeCloseTo(0.6, 5);
+		expect(candidate.refinementReasons.some((r) => r.startsWith('base-displaced'))).toBe(true);
+		expect(candidate.refinementReasons.some((r) => r.startsWith('top-displaced'))).toBe(true);
+	});
+
+	test('4. weak upper support penalty applies', () => {
+		const loop = createMockLoop('loop1');
+		const lower = createMockAssignment('lower1', 'loop1', 'lower-support', 0.0);
+		const upper = createMockAssignment('upper1', 'loop1', 'upper-cover', 3.0, 'primary', 90, 1.0);
+		upper.evidenceCoverageRatio = 0.4; // Triggers weakUpperCover = true
+		const rawEnvs = buildVerticalEnvelopeCandidates([loop], [lower, upper]).candidates;
+		const storey = createMockStorey('storey:test', 0.0, 0.5);
+		const barrier = createMockBarrier('v1', 0.0, 3.0);
+
+		const result = refineVerticalEnvelopeCandidates(rawEnvs, [loop], [barrier], [storey]);
+		expect(result.candidates[0].refinementReasons).toContain('weak-upper-support');
+		expect(result.candidates[0].refinedScore).toBeLessThan(rawEnvs[0].score);
+	});
+
+	test('5. barrier-aligned outranks short envelope', () => {
+		const loop = createMockLoop('loop1');
+		const lower = createMockAssignment('lower1', 'loop1', 'lower-support', 0.0);
+		// Set upperShort score very high and upperTall score low so raw short envelope outranks tall one.
+		const upperShort = createMockAssignment('upperShort', 'loop1', 'upper-cover', 0.8, 'primary', 120);
+		const upperTall = createMockAssignment('upperTall', 'loop1', 'upper-cover', 3.0, 'primary', 60);
+
+		const rawEnvs = buildVerticalEnvelopeCandidates([loop], [lower, upperShort, upperTall]).candidates;
+
+		const storey = createMockStorey('storey:test', 0.0, 0.5);
+		const barrier = createMockBarrier('v1', 0.0, 3.0); // robust span = 3.0
+
+		const result = refineVerticalEnvelopeCandidates(rawEnvs, [loop], [barrier], [storey]);
+		
+		const best = result.candidates.find(c => c.refinedRank === 1);
+		expect(best).toBeDefined();
+		expect(best!.clearHeight).toBe(3.0);
+	});
+
+	test('6. shuffled inputs produce identical results', () => {
+		const loop = createMockLoop('loop1');
+		const lower = createMockAssignment('lower1', 'loop1', 'lower-support', 0.0);
+		const upper1 = createMockAssignment('upper1', 'loop1', 'upper-cover', 0.8);
+		const upper2 = createMockAssignment('upper2', 'loop1', 'upper-cover', 3.0);
+		const rawEnvs = buildVerticalEnvelopeCandidates([loop], [lower, upper1, upper2]).candidates;
+		const storey = createMockStorey('storey:test', 0.0, 0.5);
+		const barrier1 = createMockBarrier('v1', 0.0, 3.0);
+		const barrier2 = createMockBarrier('v2', 0.0, 3.0);
+
+		const res1 = refineVerticalEnvelopeCandidates(rawEnvs, [loop], [barrier1, barrier2], [storey]);
+		const res2 = refineVerticalEnvelopeCandidates([rawEnvs[1], rawEnvs[0]], [loop], [barrier2, barrier1], [storey]);
+
+		expect(res1.diagnostics.refinementFingerprint).toBe(res2.diagnostics.refinementFingerprint);
 	});
 });

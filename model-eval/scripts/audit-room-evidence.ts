@@ -5,9 +5,9 @@ import { createRoomEvidenceProcessor } from '../src/lib/rooms/processor';
 import { calculateRoomEvidenceFingerprint, calculateBarrierGraphFingerprint, normalizeBarrierGraph } from '../src/lib/rooms/helpers';
 import { findBoundaryLoopCandidates, calculateBoundaryLoopFingerprint, rankBoundaryLoopCandidates } from '../src/lib/rooms/loops';
 import { assignHorizontalEvidenceToLoops, calculateLoopSurfaceAssignmentFingerprint, rankLoopSurfaceAssignments, calculateRankedLoopSurfaceAssignmentFingerprint } from '../src/lib/rooms/surfaces';
-import { buildVerticalEnvelopeCandidates, calculateVerticalEnvelopeCandidateFingerprint } from '../src/lib/rooms/envelopes';
+import { buildVerticalEnvelopeCandidates, calculateVerticalEnvelopeCandidateFingerprint, refineVerticalEnvelopeCandidates } from '../src/lib/rooms/envelopes';
 import { assembleRoomCandidates, calculateRoomCandidateFingerprint } from '../src/lib/rooms/candidates';
-import type { BoundaryLoopDiagnostics, LoopSurfaceAssignment, RankedBoundaryLoopCandidate, RankedLoopSurfaceAssignment, LoopSurfaceRoleSelection, RankedLoopSurfaceAssignmentDiagnostics, RankedLoopSurfaceAssignmentResult, VerticalEnvelopeCandidateResult, RoomCandidateResult, RoomCandidate } from '../src/lib/rooms/types';
+import type { BoundaryLoopDiagnostics, LoopSurfaceAssignment, RankedBoundaryLoopCandidate, RankedLoopSurfaceAssignment, LoopSurfaceRoleSelection, RankedLoopSurfaceAssignmentDiagnostics, RankedLoopSurfaceAssignmentResult, VerticalEnvelopeCandidateResult, RoomCandidateResult, RoomCandidate, RefinedVerticalEnvelopeCandidate, RefinedVerticalEnvelopeResult } from '../src/lib/rooms/types';
 import { createHash } from 'crypto';
 import { resolve } from 'path';
 
@@ -517,7 +517,21 @@ try {
 	const aggregateRankedSurfaceStats = computeRankedSurfaceStats(rankedSurfaceAssignmentsResult, allRankedCandidateList);
 
 	const verticalEnvelopesResult = buildVerticalEnvelopeCandidates(allRankedCandidateList, rankedSurfaceAssignmentsResult.assignments);
-	const roomsResult = assembleRoomCandidates(allRankedCandidateList, rankedSurfaceAssignmentsResult.assignments, verticalEnvelopesResult.candidates, allNormalizedGraphs);
+	const rawRoomsResult = assembleRoomCandidates(allRankedCandidateList, rankedSurfaceAssignmentsResult.assignments, verticalEnvelopesResult.candidates, allNormalizedGraphs);
+
+	const refinementResult = refineVerticalEnvelopeCandidates(
+		verticalEnvelopesResult.candidates,
+		allRankedCandidateList,
+		snapshot.verticalBarriers,
+		snapshot.storeyBands
+	);
+
+	const roomsResult = assembleRoomCandidates(
+		allRankedCandidateList,
+		rankedSurfaceAssignmentsResult.assignments,
+		refinementResult.candidates,
+		allNormalizedGraphs
+	);
 
 	const summary = {
 		inputPath: path,
@@ -602,8 +616,32 @@ try {
 			}
 		},
 		primaryCandidates: primaryCandidatesDetails,
-		secondaryCandidates: secondaryCandidatesDetails
-
+		secondaryCandidates: secondaryCandidatesDetails,
+		refinement: {
+			diagnostics: refinementResult.diagnostics,
+			candidates: allRankedCandidateList.map(loop => {
+				const oldSelId = rawRoomsResult.candidates.find(r => r.loopCandidateId === loop.id)?.selectedEnvelopeId;
+				const newSelId = roomsResult.candidates.find(r => r.loopCandidateId === loop.id)?.selectedEnvelopeId;
+				const oldEnv = verticalEnvelopesResult.candidates.find(e => e.id === oldSelId);
+				const newEnv = refinementResult.candidates.find(e => e.id === newSelId);
+				const profile = refinementResult.profiles.find(p => p.loopId === loop.id);
+				return {
+					loopId: loop.id,
+					oldSelectedEnvelopeId: oldSelId ?? null,
+					newSelectedEnvelopeId: newSelId ?? null,
+					oldHeight: oldEnv?.clearHeight ?? null,
+					newHeight: newEnv?.clearHeight ?? null,
+					barrierRobustBase: profile?.robustBase ?? null,
+					barrierRobustTop: profile?.robustTop ?? null,
+					barrierRobustSpan: profile?.robustSpan ?? null,
+					baseAlignment: newEnv?.baseAlignment ?? null,
+					topAlignment: newEnv?.topAlignment ?? null,
+					spanCoverage: newEnv?.barrierSpanCoverage ?? null,
+					refinedScore: newEnv?.refinedScore ?? null,
+					reasons: newEnv?.refinementReasons ?? []
+				};
+			})
+		}
 	};
 
 
@@ -904,7 +942,40 @@ try {
 			console.log(`    Rejected Zero/Neg Heights: ${est.aggregate.rejectedNonPositiveHeights}`);
 			console.log(`    Clear Height Range:        min=${est.aggregate.heightStats.min} median=${est.aggregate.heightStats.median} max=${est.aggregate.heightStats.max} m`);
 			console.log(`    Estimated Volume Range:    min=${est.aggregate.volumeStats.min} median=${est.aggregate.volumeStats.median} max=${est.aggregate.volumeStats.max} m3`);
-			console.log(`    Envelope Fingerprint:      ${est.aggregate.fingerprint}`);
+		}
+
+		if (showAll || options.envelopes) {
+			console.log(`\n=== VERTICAL ENVELOPE REFINEMENT SUMMARY ===`);
+			const rd = summary.refinement.diagnostics;
+			console.log(`Loops Inspected:               ${rd.loopsInspected}`);
+			console.log(`Loops With Usable Profiles:    ${rd.loopsWithUsableProfiles}`);
+			console.log(`Loops With Insufficient Evid.: ${rd.loopsWithInsufficientEvidence}`);
+			console.log(`Raw Envelope Counts:           primary=${rd.rawPrimaryCount} secondary=${rd.rawSecondaryCount} noise=${rd.rawNoiseCount}`);
+			console.log(`Refined Envelope Counts:       primary=${rd.refinedPrimaryCount} secondary=${rd.refinedSecondaryCount} noise=${rd.refinedNoiseCount}`);
+			console.log(`Envelopes Promoted:            ${rd.envelopesPromoted}`);
+			console.log(`Envelopes Demoted:             ${rd.envelopesDemoted}`);
+			console.log(`Selected Envelope Changed:     ${rd.selectedEnvelopeChangedCount}`);
+			console.log(`Low-Height Selections Before:  ${rd.selectedLowHeightBefore}`);
+			console.log(`Low-Height Selections After:   ${rd.selectedLowHeightAfter}`);
+			console.log(`Weak-Upper Selections Before:  ${rd.weakUpperSelectionsBefore}`);
+			console.log(`Weak-Upper Selections After:   ${rd.weakUpperSelectionsAfter}`);
+			console.log(`Barrier-Aligned Selections:    ${rd.barrierAlignedSelections}`);
+			console.log(`Refinement Fingerprint:        ${rd.refinementFingerprint}`);
+
+			console.log(`\n=== REFINEMENT COMPARISON BY CANDIDATE ===`);
+			for (const c of summary.refinement.candidates) {
+				console.log(`  - Loop ID: ${c.loopId.length > 80 ? c.loopId.slice(0, 77) + '...' : c.loopId}`);
+				console.log(`    Old Selected Env: ${c.oldSelectedEnvelopeId?.slice(0, 60) ?? 'none'} (height: ${c.oldHeight?.toFixed(3) ?? 'n/a'} m)`);
+				console.log(`    New Selected Env: ${c.newSelectedEnvelopeId?.slice(0, 60) ?? 'none'} (height: ${c.newHeight?.toFixed(3) ?? 'n/a'} m)`);
+				if (c.barrierRobustSpan !== null) {
+					console.log(`    Robust Barrier:   span=${c.barrierRobustSpan.toFixed(3)} m [${c.barrierRobustBase?.toFixed(3)} to ${c.barrierRobustTop?.toFixed(3)} m]`);
+					console.log(`    Alignments:       baseDiff=${c.baseAlignment?.toFixed(3)} m topDiff=${c.topAlignment?.toFixed(3)} m coverage=${c.spanCoverage?.toFixed(3)}`);
+					console.log(`    Refined Score:    ${c.refinedScore?.toFixed(3)}`);
+					console.log(`    Reasons:          ${c.reasons.join(', ')}`);
+				} else {
+					console.log(`    Robust Barrier:   insufficient-evidence`);
+				}
+			}
 		}
 
 		if (showAll || options.rooms) {

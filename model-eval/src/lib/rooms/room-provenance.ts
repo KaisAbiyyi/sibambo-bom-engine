@@ -34,6 +34,16 @@ export type RoomCandidateTrace = {
 	upperAssignment: ReturnType<typeof toAssignmentTrace> | null;
 	lowerEvidence: ReturnType<typeof toEvidenceTrace> | null;
 	upperEvidence: ReturnType<typeof toEvidenceTrace> | null;
+	verticalExtentProfile?: import('./types').LoopVerticalExtentProfile | null;
+	rawEnvelopeScore?: number;
+	rawEnvelopeStatus?: string;
+	refinedEnvelopeScore?: number;
+	refinedEnvelopeStatus?: string;
+	refinedEnvelopeRank?: number;
+	baseAlignment?: number;
+	topAlignment?: number;
+	barrierSpanCoverage?: number;
+	refinementReasons?: string[];
 };
 
 type TraceInputs = {
@@ -90,6 +100,7 @@ function toAssignmentTrace(assignment: LoopSurfaceAssignment) {
 }
 
 function toEnvelopeTrace(envelope: VerticalEnvelopeCandidate) {
+	const ref = envelope as any;
 	return {
 		id: envelope.id,
 		status: envelope.status,
@@ -105,7 +116,17 @@ function toEnvelopeTrace(envelope: VerticalEnvelopeCandidate) {
 		qualityFlags: { ...envelope.qualityFlags },
 		logicalObjectIds: strings(envelope.logicalObjectIds),
 		classificationUnitIds: strings(envelope.classificationUnitIds),
-		materialIds: numbers(envelope.materialIds)
+		materialIds: numbers(envelope.materialIds),
+		rawScore: ref.rawScore,
+		rawStatus: ref.rawStatus,
+		refinedScore: ref.refinedScore,
+		refinedStatus: ref.refinedStatus,
+		refinedRank: ref.refinedRank,
+		baseAlignment: ref.baseAlignment,
+		topAlignment: ref.topAlignment,
+		barrierSpanCoverage: ref.barrierSpanCoverage,
+		refinementReasons: ref.refinementReasons,
+		verticalExtentProfile: ref.verticalExtentProfile
 	};
 }
 
@@ -137,6 +158,7 @@ export function buildRoomCandidateTraces(input: TraceInputs): RoomCandidateTrace
 			const loopId = candidate.loopCandidateId || candidate.loopId;
 			const loop = loops.get(loopId);
 			const selectedEnvelope = envelopes.get(candidate.selectedEnvelopeId);
+			const sEnvRef = selectedEnvelope as any;
 			const lowerAssignment = selectedEnvelope?.lowerAssignmentId ? assignments.get(selectedEnvelope.lowerAssignmentId) : undefined;
 			const upperAssignment = selectedEnvelope?.upperAssignmentId ? assignments.get(selectedEnvelope.upperAssignmentId) : undefined;
 			return {
@@ -167,7 +189,17 @@ export function buildRoomCandidateTraces(input: TraceInputs): RoomCandidateTrace
 				lowerAssignment: lowerAssignment ? toAssignmentTrace(lowerAssignment) : null,
 				upperAssignment: upperAssignment ? toAssignmentTrace(upperAssignment) : null,
 				lowerEvidence: candidate.lowerHorizontalEvidenceId && evidence.get(candidate.lowerHorizontalEvidenceId) ? toEvidenceTrace(evidence.get(candidate.lowerHorizontalEvidenceId)!) : null,
-				upperEvidence: candidate.upperHorizontalEvidenceId && evidence.get(candidate.upperHorizontalEvidenceId) ? toEvidenceTrace(evidence.get(candidate.upperHorizontalEvidenceId)!) : null
+				upperEvidence: candidate.upperHorizontalEvidenceId && evidence.get(candidate.upperHorizontalEvidenceId) ? toEvidenceTrace(evidence.get(candidate.upperHorizontalEvidenceId)!) : null,
+				verticalExtentProfile: sEnvRef?.verticalExtentProfile || null,
+				rawEnvelopeScore: sEnvRef?.rawScore,
+				rawEnvelopeStatus: sEnvRef?.rawStatus,
+				refinedEnvelopeScore: sEnvRef?.refinedScore,
+				refinedEnvelopeStatus: sEnvRef?.refinedStatus,
+				refinedEnvelopeRank: sEnvRef?.refinedRank,
+				baseAlignment: sEnvRef?.baseAlignment,
+				topAlignment: sEnvRef?.topAlignment,
+				barrierSpanCoverage: sEnvRef?.barrierSpanCoverage,
+				refinementReasons: sEnvRef?.refinementReasons
 			};
 		});
 }

@@ -1309,6 +1309,28 @@
 										<dt>Upper</dt><dd>{selectedRoomCandidateTrace.upperAssignment ? `${selectedRoomCandidateTrace.upperAssignment.id} · ${selectedRoomCandidateTrace.upperAssignment.elevation.toFixed(6)} m · ${selectedRoomCandidateTrace.upperAssignment.loopCoverageRatio.toFixed(3)}/${selectedRoomCandidateTrace.upperAssignment.evidenceCoverageRatio.toFixed(3)}` : 'missing'}</dd>
 										<dt>Alternatives</dt><dd>{selectedRoomCandidateTrace.alternativeEnvelopes.map((item) => `${item.id} (${item.score.toFixed(2)})`).join(', ') || 'none'}</dd>
 										<dt>Flags</dt><dd>{Object.entries(selectedRoomCandidateTrace.selectedEnvelope?.qualityFlags || {}).filter(([, value]) => value).map(([key]) => key).join(', ') || 'none'}</dd>
+										{#if selectedRoomCandidateTrace.verticalExtentProfile}
+											<dt>Vertical Profile</dt>
+											<dd>
+												Span: {selectedRoomCandidateTrace.verticalExtentProfile.robustSpan.toFixed(3)} m 
+												[{selectedRoomCandidateTrace.verticalExtentProfile.robustBase.toFixed(3)} to {selectedRoomCandidateTrace.verticalExtentProfile.robustTop.toFixed(3)} m]
+											</dd>
+											<dt>Refinement Score</dt>
+											<dd>
+												Raw: {selectedRoomCandidateTrace.rawEnvelopeScore?.toFixed(2) ?? 'n/a'} 
+												({selectedRoomCandidateTrace.rawEnvelopeStatus ?? 'n/a'}) · 
+												Refined: {selectedRoomCandidateTrace.refinedEnvelopeScore?.toFixed(2) ?? 'n/a'} 
+												({selectedRoomCandidateTrace.refinedEnvelopeStatus ?? 'n/a'}, rank {selectedRoomCandidateTrace.refinedEnvelopeRank ?? 'n/a'})
+											</dd>
+											<dt>Refinement Alignment</dt>
+											<dd>
+												Base: {selectedRoomCandidateTrace.baseAlignment?.toFixed(3) ?? 'n/a'} m · 
+												Top: {selectedRoomCandidateTrace.topAlignment?.toFixed(3) ?? 'n/a'} m · 
+												Span Coverage: {selectedRoomCandidateTrace.barrierSpanCoverage?.toFixed(3) ?? 'n/a'}
+											</dd>
+											<dt>Refinement Reasons</dt>
+											<dd>{selectedRoomCandidateTrace.refinementReasons?.join(', ') || 'none'}</dd>
+										{/if}
 									</dl>
 									<button class="room-debug-hud__copy" type="button" onclick={copySelectedRoomTrace}>Copy trace JSON</button>
 									{#if roomTraceCopyMessage}<p class="room-debug-hud__copy-message">{roomTraceCopyMessage}</p>{/if}
