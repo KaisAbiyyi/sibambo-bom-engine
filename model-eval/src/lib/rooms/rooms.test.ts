@@ -13,6 +13,7 @@ import {
 	buildStoreyBands,
 	extractVerticalBarrierEvidence
 } from './helpers';
+import { createRoomEvidenceProcessor } from './processor';
 import type {
 	PlanCoord,
 	PlanBounds,
@@ -368,5 +369,118 @@ describe('Room evidence types and deterministic IDs', () => {
 		const run1 = extractVerticalBarrierEvidence([w1, w2] as any);
 		const run2 = extractVerticalBarrierEvidence([w1, w2] as any);
 		expect(run1).toEqual(run2);
+	});
+
+	test('10. incremental room-evidence processor', () => {
+		const makeFace = (id: string, nx: number, ny: number, nz: number, area: number, y: number, minX = 0, maxX = 2, minZ = 0, maxZ = 3) => ({
+			id,
+			logicalObjectId: logObjA,
+			dominantNormal: { x: nx, y: ny, z: nz },
+			areaM2: area,
+			worldBounds: {
+				min: { x: minX, y: y, z: minZ },
+				max: { x: maxX, y: y + 3, z: maxZ },
+				size: { x: maxX - minX, y: 3, z: maxZ - minZ },
+				center: { x: (minX+maxX)/2, y: y+1.5, z: (minZ+maxZ)/2 }
+			},
+			centroid: { x: (minX+maxX)/2, y: y+1.5, z: (minZ+maxZ)/2 },
+			materialIds: [42]
+		});
+
+		const f1 = makeFace('f1', 0, 1, 0, 10, 1.0); // horizontal
+		const w1 = makeFace('w1', 1, 0, 0, 10, 0.0, 0, 0.2); // vertical
+		const r1 = makeFace('r1', 0.5, 0.5, 0.5, 10, 1.0); // sloped/rejected
+
+		// 1. One unit can be processed
+		const proc = createRoomEvidenceProcessor();
+		proc.processOne(f1 as any);
+		let snap = proc.snapshot();
+		expect(snap.horizontalSurfaces.length).toBe(1);
+		expect(snap.verticalBarriers.length).toBe(0);
+
+		// 2. Batch processing works
+		proc.reset();
+		proc.processBatch([f1, w1] as any);
+		snap = proc.snapshot();
+		expect(snap.horizontalSurfaces.length).toBe(1);
+		expect(snap.verticalBarriers.length).toBe(1);
+
+		// 3. Incremental result equals processAll
+		const procInc = createRoomEvidenceProcessor();
+		procInc.processOne(f1 as any);
+		procInc.processOne(w1 as any);
+		const snapInc = procInc.snapshot();
+
+		const procAll = createRoomEvidenceProcessor();
+		procAll.processAll([f1, w1] as any);
+		const snapAll = procAll.snapshot();
+
+		expect(snapInc.horizontalSurfaces).toEqual(snapAll.horizontalSurfaces);
+		expect(snapInc.verticalBarriers).toEqual(snapAll.verticalBarriers);
+
+		// 4. Forward order equals reverse order
+		const procFwd = createRoomEvidenceProcessor();
+		procFwd.processAll([f1, w1] as any);
+		const snapFwd = procFwd.snapshot();
+
+		const procRev = createRoomEvidenceProcessor();
+		procRev.processAll([w1, f1] as any);
+		const snapRev = procRev.snapshot();
+
+		expect(snapFwd.horizontalSurfaces).toEqual(snapRev.horizontalSurfaces);
+		expect(snapFwd.verticalBarriers).toEqual(snapRev.verticalBarriers);
+
+		// 5. Duplicate input is idempotent
+		const procDup = createRoomEvidenceProcessor();
+		procDup.processOne(f1 as any);
+		procDup.processOne(f1 as any);
+		const snapDup = procDup.snapshot();
+		expect(snapDup.horizontalSurfaces.length).toBe(1);
+		expect(procDup.diagnostics().duplicatesSkipped).toBe(1);
+
+		// 6. Snapshot ordering is deterministic
+		// snapshot() sorts lists internally via createDeterministicSnapshot.
+		// Handled by helpers.test, but verified here too.
+		expect(snapFwd.horizontalSurfaces[0].id).toBe(snapRev.horizontalSurfaces[0].id);
+
+		// 7. Storey bands update correctly
+		const f2 = makeFace('f2', 0, 1, 0, 10, 1.05);
+		const procStorey = createRoomEvidenceProcessor();
+		procStorey.processOne(f1 as any);
+		expect(procStorey.snapshot().storeyBands.length).toBe(1);
+		procStorey.processOne(f2 as any);
+		expect(procStorey.snapshot().storeyBands.length).toBe(1); // joins f1 group within 0.15 tolerance
+
+		// 8. Cancellation prevents later processing
+		const procCancel = createRoomEvidenceProcessor();
+		procCancel.processOne(f1 as any);
+		procCancel.cancel();
+		procCancel.processOne(w1 as any);
+		expect(procCancel.snapshot().verticalBarriers.length).toBe(0);
+
+		// 9. Reset and restart equal uninterrupted processing
+		const procReset = createRoomEvidenceProcessor();
+		procReset.processAll([f1, w1] as any);
+		procReset.reset();
+		procReset.processAll([f1, w1] as any);
+		const snapReset = procReset.snapshot();
+		expect(snapReset.horizontalSurfaces.length).toBe(1);
+		expect(snapReset.verticalBarriers.length).toBe(1);
+
+		// 10. Diagnostics counts are correct
+		const procDiag = createRoomEvidenceProcessor();
+		procDiag.processAll([f1, w1, r1, f1] as any);
+		const diag = procDiag.diagnostics();
+		expect(diag.unitsInspected).toBe(3); // f1, w1, r1 (unique)
+		expect(diag.horizontalAccepted).toBe(1);
+		expect(diag.verticalAccepted).toBe(1);
+		expect(diag.rejected).toBe(1); // r1
+		expect(diag.duplicatesSkipped).toBe(1); // f1 duplicate
+
+		// 11. Source ownership remains unchanged
+		expect(snapReset.horizontalSurfaces[0].logicalObjectId).toBe(logObjA);
+
+		// 12. No opening evidence is fabricated
+		expect(snapReset.boundaryOpenings.length).toBe(0);
 	});
 });

@@ -65,6 +65,10 @@ export interface RoomEvidenceDiagnostics {
 	rejectedHorizontalCount?: number;
 	acceptedVerticalCount?: number;
 	rejectedVerticalCount?: number;
+	unitsInspected?: number;
+	duplicatesSkipped?: number;
+	batchesProcessed?: number;
+	cancelled?: boolean;
 }
 
 export interface RoomEvidenceSnapshot {
