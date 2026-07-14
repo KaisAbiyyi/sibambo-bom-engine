@@ -80,10 +80,48 @@ export interface RoomEvidenceDiagnostics {
 	cancelled?: boolean;
 }
 
+export interface BarrierGraphNode {
+	id: string;
+	coord: PlanCoord;
+}
+
+export interface BarrierGraphEdge {
+	id: string;
+	nodeAId: string;
+	nodeBId: string;
+	start: PlanCoord;
+	end: PlanCoord;
+	originalStart: PlanCoord;
+	originalEnd: PlanCoord;
+	verticalEvidenceIds: string[];
+	logicalObjectId: string;
+	classificationUnitIds: string[];
+	materialIds: number[];
+	storeyCandidateId: string;
+}
+
+export interface BarrierGraph {
+	storeyCandidateId: string;
+	nodes: BarrierGraphNode[];
+	edges: BarrierGraphEdge[];
+	components: string[][];
+	diagnostics: {
+		inputBarriers: number;
+		acceptedEdges: number;
+		rejectedEdges: number;
+		snappedEndpoints: number;
+		duplicateEdgesMerged: number;
+		graphNodes: number;
+		graphEdges: number;
+		connectedComponents: number;
+	};
+}
+
 export interface RoomEvidenceSnapshot {
 	storeyBands: StoreyBandEvidence[];
 	horizontalSurfaces: HorizontalSurfaceEvidence[];
 	verticalBarriers: VerticalBarrierEvidence[];
 	boundaryOpenings: BoundaryOpeningEvidence[];
 	diagnostics: RoomEvidenceDiagnostics;
+	barrierGraphs?: BarrierGraph[];
 }

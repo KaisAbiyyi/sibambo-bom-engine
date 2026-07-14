@@ -7,7 +7,10 @@ import type {
 	VerticalBarrierEvidence,
 	BoundaryOpeningEvidence,
 	RoomEvidenceSnapshot,
-	RoomEvidenceDiagnostics
+	RoomEvidenceDiagnostics,
+	BarrierGraph,
+	BarrierGraphNode,
+	BarrierGraphEdge
 } from './types';
 import { GEOMETRY_TOLERANCES, type SurfaceClusterRecord } from '../geometry';
 import type { ClassificationUnitRecord } from '../annotation';
@@ -150,7 +153,8 @@ export function createDeterministicSnapshot(
 		horizontalSurfaces,
 		verticalBarriers,
 		boundaryOpenings,
-		diagnostics
+		diagnostics,
+		barrierGraphs: input.barrierGraphs
 	};
 }
 
@@ -544,4 +548,313 @@ export function rankStoreyBandCandidates(
 		}
 		return a.id.localeCompare(b.id);
 	});
+}
+
+export function generateBarrierNodeId(x: number, z: number): string {
+	return `node:${formatQuantized(x)}_${formatQuantized(z)}`;
+}
+
+export function generateBarrierEdgeId(nodeAId: string, nodeBId: string): string {
+	const [n1, n2] = [nodeAId, nodeBId].sort();
+	return `edge:${n1}__${n2}`;
+}
+
+export function buildBarrierGraph(
+	verticalEvidence: VerticalBarrierEvidence[],
+	storeyCandidate: StoreyBandEvidence
+): BarrierGraph {
+	const storeyId = storeyCandidate.id;
+	const cMin = storeyCandidate.elevationRange.min;
+	const cMax = storeyCandidate.elevationRange.max;
+
+	const tolY = 0.2;
+	const filteredBarriers = verticalEvidence.filter(b => {
+		return b.elevationRange.min <= cMax + tolY && b.elevationRange.max >= cMin - tolY;
+	});
+
+	const inputBarriers = filteredBarriers.length;
+	let acceptedEdgesCount = 0;
+	let rejectedEdgesCount = 0;
+	let snappedEndpointsCount = 0;
+	let duplicateEdgesMerged = 0;
+
+	const barrierPoints: Array<{ barrierIdx: number; isEnd: boolean }> = [];
+	const points: PlanCoord[] = [];
+	for (let i = 0; i < filteredBarriers.length; i++) {
+		const b = filteredBarriers[i];
+		barrierPoints.push({ barrierIdx: i, isEnd: false });
+		points.push(b.segment.start);
+		barrierPoints.push({ barrierIdx: i, isEnd: true });
+		points.push(b.segment.end);
+	}
+
+	const n = points.length;
+	const indices = Array.from({ length: n }, (_, i) => i);
+	indices.sort((a, b) => {
+		const pa = points[a];
+		const pb = points[b];
+		if (pa.x !== pb.x) return pa.x - pb.x;
+		return pa.z - pb.z;
+	});
+
+	const sortedPoints = indices.map(idx => points[idx]);
+	const sortedBarrierRefs = indices.map(idx => barrierPoints[idx]);
+
+	const parent = Array.from({ length: n }, (_, i) => i);
+	function find(i: number): number {
+		let root = i;
+		while (parent[root] !== root) root = parent[root];
+		let curr = i;
+		while (curr !== root) {
+			const nxt = parent[curr];
+			parent[curr] = root;
+			curr = nxt;
+		}
+		return root;
+	}
+
+	function union(i: number, j: number) {
+		const rootI = find(i);
+		const rootJ = find(j);
+		if (rootI !== rootJ) {
+			if (rootI < rootJ) {
+				parent[rootJ] = rootI;
+			} else {
+				parent[rootI] = rootJ;
+			}
+		}
+	}
+
+	const tol = GEOMETRY_TOLERANCES.positionM;
+	for (let i = 0; i < n; i++) {
+		for (let j = i + 1; j < n; j++) {
+			if (sortedPoints[j].x - sortedPoints[i].x > tol) {
+				break;
+			}
+			if (Math.hypot(sortedPoints[i].x - sortedPoints[j].x, sortedPoints[i].z - sortedPoints[j].z) <= tol) {
+				union(i, j);
+			}
+		}
+	}
+
+	const groups = new Map<number, number[]>();
+	for (let i = 0; i < n; i++) {
+		const root = find(i);
+		if (!groups.has(root)) groups.set(root, []);
+		groups.get(root)!.push(i);
+	}
+
+	const snappedCoords = new Map<number, PlanCoord>();
+	for (const [root, idxs] of groups.entries()) {
+		let sumX = 0;
+		let sumZ = 0;
+		for (const idx of idxs) {
+			sumX += sortedPoints[idx].x;
+			sumZ += sortedPoints[idx].z;
+		}
+		const snapped = {
+			x: quantizeCoord(sumX / idxs.length),
+			z: quantizeCoord(sumZ / idxs.length)
+		};
+		for (const idx of idxs) {
+			snappedCoords.set(idx, snapped);
+		}
+		if (idxs.length > 1) {
+			snappedEndpointsCount += idxs.length;
+		}
+	}
+
+	const barrierSegments = Array.from({ length: filteredBarriers.length }, () => ({
+		start: null as PlanCoord | null,
+		end: null as PlanCoord | null
+	}));
+
+	for (let i = 0; i < n; i++) {
+		const ref = sortedBarrierRefs[i];
+		const coord = snappedCoords.get(i)!;
+		if (ref.isEnd) {
+			barrierSegments[ref.barrierIdx].end = coord;
+		} else {
+			barrierSegments[ref.barrierIdx].start = coord;
+		}
+	}
+
+	const nodeMap = new Map<string, BarrierGraphNode>();
+	const edgeMap = new Map<string, BarrierGraphEdge>();
+
+	for (let i = 0; i < filteredBarriers.length; i++) {
+		const b = filteredBarriers[i];
+		const snapped = barrierSegments[i];
+		const start = snapped.start!;
+		const end = snapped.end!;
+
+		const isFinite =
+			Number.isFinite(start.x) && Number.isFinite(start.z) &&
+			Number.isFinite(end.x) && Number.isFinite(end.z);
+
+		if (!isFinite) {
+			rejectedEdgesCount++;
+			continue;
+		}
+
+		const nodeAId = generateBarrierNodeId(start.x, start.z);
+		const nodeBId = generateBarrierNodeId(end.x, end.z);
+
+		if (nodeAId === nodeBId) {
+			rejectedEdgesCount++;
+			continue;
+		}
+
+		acceptedEdgesCount++;
+
+		if (!nodeMap.has(nodeAId)) {
+			nodeMap.set(nodeAId, { id: nodeAId, coord: start });
+		}
+		if (!nodeMap.has(nodeBId)) {
+			nodeMap.set(nodeBId, { id: nodeBId, coord: end });
+		}
+
+		const edgeId = generateBarrierEdgeId(nodeAId, nodeBId);
+		const [firstNodeId, secondNodeId] = [nodeAId, nodeBId].sort();
+		const pStart = firstNodeId === nodeAId ? start : end;
+		const pEnd = firstNodeId === nodeAId ? end : start;
+
+		const existing = edgeMap.get(edgeId);
+		if (existing) {
+			duplicateEdgesMerged++;
+			existing.verticalEvidenceIds = [...new Set([...existing.verticalEvidenceIds, b.id])].sort();
+			existing.classificationUnitIds = [...new Set([...existing.classificationUnitIds, ...b.classificationUnitIds])].sort();
+
+			const logObjs = [...new Set([...existing.logicalObjectId.split('|'), b.logicalObjectId])].sort();
+			existing.logicalObjectId = logObjs.join('|');
+
+			if (b.materialIds) {
+				const mats = new Set([...existing.materialIds, ...b.materialIds]);
+				existing.materialIds = [...mats].sort((x, y) => x - y);
+			}
+		} else {
+			edgeMap.set(edgeId, {
+				id: edgeId,
+				nodeAId: firstNodeId,
+				nodeBId: secondNodeId,
+				start: pStart,
+				end: pEnd,
+				originalStart: b.segment.start,
+				originalEnd: b.segment.end,
+				verticalEvidenceIds: [b.id],
+				logicalObjectId: b.logicalObjectId,
+				classificationUnitIds: [...b.classificationUnitIds].sort(),
+				materialIds: b.materialIds ? [...b.materialIds].sort((x, y) => x - y) : [],
+				storeyCandidateId: storeyId
+			});
+		}
+	}
+
+	const nodeIds = [...nodeMap.keys()].sort();
+	const nodeParent = new Map<string, string>();
+	for (const id of nodeIds) {
+		nodeParent.set(id, id);
+	}
+
+	function findNode(id: string): string {
+		let root = id;
+		while (nodeParent.get(root) !== root) root = nodeParent.get(root)!;
+		let curr = id;
+		while (curr !== root) {
+			const nxt = nodeParent.get(curr)!;
+			nodeParent.set(curr, root);
+			curr = nxt;
+		}
+		return root;
+	}
+
+	function unionNodes(id1: string, id2: string) {
+		const root1 = findNode(id1);
+		const root2 = findNode(id2);
+		if (root1 !== root2) {
+			if (root1 < root2) {
+				nodeParent.set(root2, root1);
+			} else {
+				nodeParent.set(root1, root2);
+			}
+		}
+	}
+
+	for (const edge of edgeMap.values()) {
+		unionNodes(edge.nodeAId, edge.nodeBId);
+	}
+
+	const compGroups = new Map<string, string[]>();
+	for (const id of nodeIds) {
+		const root = findNode(id);
+		if (!compGroups.has(root)) compGroups.set(root, []);
+		compGroups.get(root)!.push(id);
+	}
+
+	const components: string[][] = [];
+	for (const list of compGroups.values()) {
+		list.sort();
+		components.push(list);
+	}
+	components.sort((a, b) => a[0].localeCompare(b[0]));
+
+	const nodes = [...nodeMap.values()].sort((a, b) => a.id.localeCompare(b.id));
+	const edges = [...edgeMap.values()].sort((a, b) => a.id.localeCompare(b.id));
+
+	return {
+		storeyCandidateId: storeyId,
+		nodes,
+		edges,
+		components,
+		diagnostics: {
+			inputBarriers,
+			acceptedEdges: acceptedEdgesCount,
+			rejectedEdges: rejectedEdgesCount,
+			snappedEndpoints: snappedEndpointsCount,
+			duplicateEdgesMerged,
+			graphNodes: nodes.length,
+			graphEdges: edges.length,
+			connectedComponents: components.length
+		}
+	};
+}
+
+export function calculateBarrierGraphFingerprint(graph: BarrierGraph): string {
+	const payload = {
+		storeyCandidateId: graph.storeyCandidateId,
+		nodes: graph.nodes.map((n: BarrierGraphNode) => ({
+			id: n.id,
+			coord: { x: Number(n.coord.x.toFixed(6)), z: Number(n.coord.z.toFixed(6)) }
+		})),
+		edges: graph.edges.map((e: BarrierGraphEdge) => ({
+			id: e.id,
+			nodeAId: e.nodeAId,
+			nodeBId: e.nodeBId,
+			start: { x: Number(e.start.x.toFixed(6)), z: Number(e.start.z.toFixed(6)) },
+			end: { x: Number(e.end.x.toFixed(6)), z: Number(e.end.z.toFixed(6)) },
+			originalStart: { x: Number(e.originalStart.x.toFixed(6)), z: Number(e.originalStart.z.toFixed(6)) },
+			originalEnd: { x: Number(e.originalEnd.x.toFixed(6)), z: Number(e.originalEnd.z.toFixed(6)) },
+			verticalEvidenceIds: [...e.verticalEvidenceIds].sort(),
+			logicalObjectId: e.logicalObjectId,
+			classificationUnitIds: [...e.classificationUnitIds].sort(),
+			materialIds: [...e.materialIds].sort((x, y) => x - y)
+		})),
+		components: graph.components
+	};
+
+	const serialized = JSON.stringify(payload);
+
+	let sha256: (str: string) => string;
+	if (typeof window === 'undefined') {
+		try {
+			const { createHash } = require('crypto');
+			sha256 = (str: string) => createHash('sha256').update(str).digest('hex');
+		} catch (e) {
+			sha256 = simpleHash;
+		}
+	} else {
+		sha256 = simpleHash;
+	}
+
+	return sha256(serialized);
 }

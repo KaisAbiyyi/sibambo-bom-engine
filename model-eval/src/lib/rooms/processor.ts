@@ -11,7 +11,8 @@ import {
 	extractVerticalBarrierEvidence,
 	buildStoreyBands,
 	createDeterministicSnapshot,
-	rankStoreyBandCandidates
+	rankStoreyBandCandidates,
+	buildBarrierGraph
 } from './helpers';
 
 export interface RoomEvidenceProcessor {
@@ -97,6 +98,9 @@ export function createRoomEvidenceProcessor(): RoomEvidenceProcessor {
 
 	function snapshot(): RoomEvidenceSnapshot {
 		const rankedBands = rankStoreyBandCandidates(storeyBands, horizontalSurfaces);
+		const candidates = rankedBands.filter(b => b.status === 'primary' || b.status === 'secondary');
+		const barrierGraphs = candidates.map(c => buildBarrierGraph(verticalBarriers, c));
+
 		return createDeterministicSnapshot({
 			storeyBands: rankedBands,
 			horizontalSurfaces,
@@ -109,7 +113,8 @@ export function createRoomEvidenceProcessor(): RoomEvidenceProcessor {
 				cancelled,
 				acceptedHorizontalCount: horizontalSurfaces.length,
 				rejectedHorizontalCount: rejected // mapping rejected count
-			}
+			},
+			barrierGraphs
 		}, startTime);
 	}
 

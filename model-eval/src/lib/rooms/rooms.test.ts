@@ -13,7 +13,9 @@ import {
 	buildStoreyBands,
 	extractVerticalBarrierEvidence,
 	calculateRoomEvidenceFingerprint,
-	rankStoreyBandCandidates
+	rankStoreyBandCandidates,
+	buildBarrierGraph,
+	calculateBarrierGraphFingerprint
 } from './helpers';
 import { createRoomEvidenceProcessor } from './processor';
 import type {
@@ -594,5 +596,93 @@ describe('Room evidence types and deterministic IDs', () => {
 		for (const r of ranked) {
 			expect(r.storeyName).toBeUndefined();
 		}
+	});
+
+	test('13. deterministic 2D barrier graphs', () => {
+		const makeVert = (id: string, sx: number, sz: number, ex: number, ez: number, minY: number, maxY: number) => ({
+			id,
+			logicalObjectId: logObjA,
+			classificationUnitIds: [id],
+			elevationRange: { min: minY, max: maxY },
+			segment: { start: { x: sx, z: sz }, end: { x: ex, z: ez } },
+			materialIds: [42],
+			thickness: 0.2,
+			isExterior: false,
+			quality: 1.0,
+			isAmbiguous: false
+		});
+
+		const storeyCandidate = {
+			id: 'storey:c1',
+			logicalObjectId: logObjA,
+			classificationUnitIds: ['c1'],
+			elevationRange: { min: 0.0, max: 0.1 },
+			planBounds: { min: { x: 0, z: 0 }, max: { x: 10, z: 10 } },
+			quality: 1.0,
+			isAmbiguous: false,
+			status: 'primary' as const
+		};
+
+		const w1 = makeVert('w1', 0.0, 0.0, 5.0, 0.0, 0.0, 3.0);
+		const w2 = makeVert('w2', 5.0, 0.0, 5.0, 5.0, 0.0, 3.0);
+		const w3 = makeVert('w3', 5.0, 5.0, 0.0, 5.0, 0.0, 3.0);
+		const w4 = makeVert('w4', 0.0, 5.0, 0.0, 0.0, 0.0, 3.0);
+
+		const verticalEvidence = [w1, w2, w3, w4];
+		const g1 = buildBarrierGraph(verticalEvidence as any, storeyCandidate);
+
+		expect(g1.edges.length).toBe(4);
+		expect(g1.nodes.length).toBe(4);
+
+		const wTinyGap1 = makeVert('w1', 0.0, 0.0, 5.0002, 0.0, 0.0, 3.0);
+		const wTinyGap2 = makeVert('w2', 4.9998, 0.0, 5.0, 5.0, 0.0, 3.0);
+		const gSnap = buildBarrierGraph([wTinyGap1, wTinyGap2] as any, storeyCandidate);
+		expect(gSnap.nodes.length).toBe(3);
+
+		const wBigGap1 = makeVert('w1', 0.0, 0.0, 5.002, 0.0, 0.0, 3.0);
+		const wBigGap2 = makeVert('w2', 4.997, 0.0, 5.0, 5.0, 0.0, 3.0);
+		const gNoSnap = buildBarrierGraph([wBigGap1, wBigGap2] as any, storeyCandidate);
+		expect(gNoSnap.nodes.length).toBe(4);
+
+		const wDup1 = makeVert('w1', 0.0, 0.0, 5.0, 0.0, 0.0, 3.0);
+		const wDup2 = makeVert('w1_dup', 0.0, 0.0, 5.0, 0.0, 0.0, 3.0);
+		const gMerge = buildBarrierGraph([wDup1, wDup2] as any, storeyCandidate);
+		expect(gMerge.edges.length).toBe(1);
+		expect(gMerge.edges[0].verticalEvidenceIds).toContain('w1');
+		expect(gMerge.edges[0].verticalEvidenceIds).toContain('w1_dup');
+
+		const wPara1 = makeVert('wp1', 0.0, 0.0, 5.0, 0.0, 0.0, 3.0);
+		const wPara2 = makeVert('wp2', 0.0, 1.0, 5.0, 1.0, 0.0, 3.0);
+		const gPara = buildBarrierGraph([wPara1, wPara2] as any, storeyCandidate);
+		expect(gPara.edges.length).toBe(2);
+		expect(gPara.components.length).toBe(2);
+
+		const w1Rev = makeVert('w1', 5.0, 0.0, 0.0, 0.0, 0.0, 3.0);
+		const gRev = buildBarrierGraph([w1Rev] as any, storeyCandidate);
+		const gNormal = buildBarrierGraph([w1] as any, storeyCandidate);
+		expect(gRev.edges[0].id).toBe(gNormal.edges[0].id);
+		expect(gRev.edges[0].start).toEqual(gNormal.edges[0].start);
+		expect(gRev.edges[0].end).toEqual(gNormal.edges[0].end);
+		expect(gRev.nodes).toEqual(gNormal.nodes);
+		expect(gRev.components).toEqual(gNormal.components);
+
+		const gShuf1 = buildBarrierGraph([w1, w2, w3, w4] as any, storeyCandidate);
+		const gShuf2 = buildBarrierGraph([w3, w1, w4, w2] as any, storeyCandidate);
+		expect(gShuf1).toEqual(gShuf2);
+
+		const wZero = makeVert('wZero', 0.0, 0.0, 0.0002, 0.0002, 0.0, 3.0);
+		const gZero = buildBarrierGraph([wZero] as any, storeyCandidate);
+		expect(gZero.edges.length).toBe(0);
+
+		const wHigh = makeVert('wHigh', 0.0, 0.0, 5.0, 0.0, 5.0, 8.0);
+		const gHigh = buildBarrierGraph([wHigh] as any, storeyCandidate);
+		expect(gHigh.edges.length).toBe(0);
+
+		expect(g1.edges[0].logicalObjectId).toBe(logObjA);
+		expect(g1.edges[0].materialIds).toEqual([42]);
+
+		const gOpen = buildBarrierGraph([w1, w2, w3] as any, storeyCandidate);
+		expect(gOpen.edges.length).toBe(3);
+		expect(gOpen.nodes.length).toBe(4);
 	});
 });

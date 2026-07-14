@@ -2,7 +2,7 @@ import { createClassificationUnitIndex } from '../src/lib/annotation';
 import { parseModelEvalJsonV1 } from '../src/lib/formats/model-eval-json';
 import { createGeometryFoundation } from '../src/lib/geometry';
 import { createRoomEvidenceProcessor } from '../src/lib/rooms/processor';
-import { calculateRoomEvidenceFingerprint } from '../src/lib/rooms/helpers';
+import { calculateRoomEvidenceFingerprint, calculateBarrierGraphFingerprint } from '../src/lib/rooms/helpers';
 import { createHash } from 'crypto';
 
 const path = Bun.argv[2];
@@ -70,13 +70,37 @@ try {
 	const secondaryCandidates = snapshot.storeyBands.filter(b => b.status === 'secondary');
 	const noiseCandidates = snapshot.storeyBands.filter(b => b.status === 'noise');
 
+	const getGraphInfo = (candId: string) => {
+		const g = snapshot.barrierGraphs?.find(x => x.storeyCandidateId === candId);
+		if (!g) return null;
+		return {
+			nodeCount: g.nodes.length,
+			edgeCount: g.edges.length,
+			connectedComponentCount: g.components.length,
+			rejectedEdgeCount: g.diagnostics.rejectedEdges,
+			duplicateMerges: g.diagnostics.duplicateEdgesMerged,
+			fingerprint: calculateBarrierGraphFingerprint(g)
+		};
+	};
+
 	const primaryCandidatesDetails = primaryCandidates.map(b => ({
 		id: b.id,
 		elevationRange: b.elevationRange,
 		score: Number((b.score ?? 0).toFixed(6)),
 		totalArea: Number((b.totalArea ?? 0).toFixed(3)),
 		modelRelativeCoverage: Number((b.modelRelativeCoverage ?? 0).toFixed(6)),
-		isAmbiguous: b.isAmbiguous
+		isAmbiguous: b.isAmbiguous,
+		graph: getGraphInfo(b.id)
+	}));
+
+	const secondaryCandidatesDetails = secondaryCandidates.map(b => ({
+		id: b.id,
+		elevationRange: b.elevationRange,
+		score: Number((b.score ?? 0).toFixed(6)),
+		totalArea: Number((b.totalArea ?? 0).toFixed(3)),
+		modelRelativeCoverage: Number((b.modelRelativeCoverage ?? 0).toFixed(6)),
+		isAmbiguous: b.isAmbiguous,
+		graph: getGraphInfo(b.id)
 	}));
 
 	const summary = {
@@ -99,7 +123,8 @@ try {
 		duplicateUnitsSkipped: processor.diagnostics().duplicatesSkipped,
 		fingerprint,
 		initialFaceRecordExpansion,
-		primaryCandidates: primaryCandidatesDetails
+		primaryCandidates: primaryCandidatesDetails,
+		secondaryCandidates: secondaryCandidatesDetails
 	};
 
 	if (isJson) {
@@ -125,6 +150,7 @@ try {
 		console.log(`Duplicate Units Skipped:       ${summary.duplicateUnitsSkipped}`);
 		console.log(`Fingerprint:                   ${summary.fingerprint}`);
 		console.log(`Initial FaceRecord Expansion:  ${summary.initialFaceRecordExpansion}`);
+
 		console.log(`\n=== PRIMARY CANDIDATES DETAILS ===`);
 		for (const p of summary.primaryCandidates) {
 			console.log(`  - ID: ${p.id.length > 80 ? p.id.slice(0, 77) + '...' : p.id}`);
@@ -133,6 +159,32 @@ try {
 			console.log(`    Total Area:       ${p.totalArea.toFixed(3)} m2`);
 			console.log(`    Coverage Ratio:   ${p.modelRelativeCoverage.toFixed(6)}`);
 			console.log(`    Ambiguous:        ${p.isAmbiguous}`);
+			if (p.graph) {
+				console.log(`    Graph Nodes:      ${p.graph.nodeCount}`);
+				console.log(`    Graph Edges:      ${p.graph.edgeCount}`);
+				console.log(`    Components:       ${p.graph.connectedComponentCount}`);
+				console.log(`    Rejected Edges:   ${p.graph.rejectedEdgeCount}`);
+				console.log(`    Duplicate Merges: ${p.graph.duplicateMerges}`);
+				console.log(`    Graph FP:         ${p.graph.fingerprint}`);
+			}
+		}
+
+		console.log(`\n=== SECONDARY CANDIDATES DETAILS ===`);
+		for (const s of summary.secondaryCandidates) {
+			console.log(`  - ID: ${s.id.length > 80 ? s.id.slice(0, 77) + '...' : s.id}`);
+			console.log(`    Elevation Range:  ${s.elevationRange.min.toFixed(3)} to ${s.elevationRange.max.toFixed(3)} m`);
+			console.log(`    Score:            ${s.score.toFixed(6)}`);
+			console.log(`    Total Area:       ${s.totalArea.toFixed(3)} m2`);
+			console.log(`    Coverage Ratio:   ${s.modelRelativeCoverage.toFixed(6)}`);
+			console.log(`    Ambiguous:        ${s.isAmbiguous}`);
+			if (s.graph) {
+				console.log(`    Graph Nodes:      ${s.graph.nodeCount}`);
+				console.log(`    Graph Edges:      ${s.graph.edgeCount}`);
+				console.log(`    Components:       ${s.graph.connectedComponentCount}`);
+				console.log(`    Rejected Edges:   ${s.graph.rejectedEdgeCount}`);
+				console.log(`    Duplicate Merges: ${s.graph.duplicateMerges}`);
+				console.log(`    Graph FP:         ${s.graph.fingerprint}`);
+			}
 		}
 	}
 } catch (e: any) {
