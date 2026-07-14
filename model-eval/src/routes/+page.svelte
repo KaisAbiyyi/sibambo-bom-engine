@@ -149,6 +149,7 @@
 	let annotationSourceReliability = $state<SourceLabelReliability>('absent');
 	let annotationNote = $state('');
 	let annotationMessage = $state('');
+	let annotationJsonText = $state('');
 	let annotationQueue = $derived(buildAnnotationReviewQueue(annotationUnits, annotationRecords, annotationFilters, annotationSort));
 	let selectedAnnotationUnit = $derived(annotationQueue.find((unit) => unit.id === selectedAnnotationUnitId) || annotationQueue[0] || null);
 	let readiness = $derived<ReadinessItem[]>(getReadiness(model, inputs, touched));
@@ -204,6 +205,16 @@
 			if (qaMode) void Promise.all([loadQaCamera(corpus, view), loadCorpus(corpus, format)]);
 			else void loadCorpus(corpus, format);
 		}
+		const devModel = params.get('devModel');
+		if (devModel) {
+			if (!import.meta.env.DEV) {
+				loadError = 'Dev model loader is disabled in production.';
+			} else if (devModel.includes('..') || devModel.includes('/') || devModel.includes('\\')) {
+				loadError = 'Invalid dev model path.';
+			} else {
+				void loadDevModel(devModel);
+			}
+		}
 	});
 
 	async function ensureModelCanvas() {
@@ -251,6 +262,27 @@
 			if (qaMode) {
 				(window as Window & { __BOM_QA__?: unknown }).__BOM_QA__ = { status: 'error', error: loadError };
 			}
+		} finally {
+			isLoading = false;
+		}
+	}
+
+	async function loadDevModel(filename: string) {
+		isLoading = true;
+		qaReady = false;
+		loadError = '';
+		parseMessage = `Loading dev model ${filename}...`;
+		try {
+			const response = await fetch(`/dev-models/${filename}`);
+			if (!response.ok) throw new Error(`Dev model tidak ditemukan: ${response.status}`);
+			let data = (await response.json()) as any;
+			const { isModelEvalJsonV1, parseModelEvalJsonV1 } = await import('$lib/formats/model-eval-json');
+			if (isModelEvalJsonV1(data)) {
+				data = { __modelEvalRuntime: parseModelEvalJsonV1(data) };
+			}
+			acceptModel(data, filename);
+		} catch (error) {
+			loadError = error instanceof Error ? error.message : 'Gagal load dev model';
 		} finally {
 			isLoading = false;
 		}
@@ -360,29 +392,58 @@
 		if (!annotationMode || !model?.runtimeScene) return;
 		annotationIndex = createClassificationUnitIndex(createGeometryFoundation(model.runtimeScene), model.sourceName);
 		annotationMessage = `Menyiapkan objek pertama dari ${annotationIndex.progress.totalLogicalObjects} logical object.`;
-		void processAnnotationBatch(20);
+		void runIncrementalIndexing();
 	}
 
-	async function processAnnotationBatch(maxObjects = 20) {
+	async function runIncrementalIndexing() {
 		const index = annotationIndex;
 		const run = annotationRun;
-		if (!index || annotationProcessing || index.complete) return;
+		if (!index || index.complete || index.progress.cancelled) return;
+
 		annotationProcessing = true;
-		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+		await new Promise<void>((resolve) => setTimeout(resolve, 0));
+		if (run !== annotationRun || index !== annotationIndex) return;
+
 		const added: ClassificationUnitRecord[] = [];
 		const started = performance.now();
-		for (let count = 0; count < maxObjects && !index.complete && !index.progress.cancelled; count += 1) {
+		const isInitial = annotationUnits.length === 0;
+
+		while (!index.complete && !index.progress.cancelled) {
 			const progress = index.processNext();
-			added.push(...(progress.addedUnits || []));
-			if (performance.now() - started > 150) break;
+			if (progress.addedUnits) {
+				added.push(...progress.addedUnits);
+			}
+			if (performance.now() - started > 30) {
+				if (!isInitial || (annotationUnits.length + added.length > 0)) {
+					break;
+				}
+			}
 		}
+
 		if (run !== annotationRun || index !== annotationIndex) return;
-		annotationUnits.push(...added);
-		annotationUnits = annotationUnits;
-		annotationProcessing = false;
-		if (!selectedAnnotationUnitId) selectedAnnotationUnitId = annotationQueue[0]?.id || '';
+
+		if (added.length > 0) {
+			annotationUnits.push(...added);
+			annotationUnits = annotationUnits;
+			if (!selectedAnnotationUnitId && annotationQueue.length > 0) {
+				selectedAnnotationUnitId = annotationQueue[0].id;
+			}
+		}
+
 		const progress = index.progress;
 		annotationMessage = `${progress.processedLogicalObjects}/${progress.totalLogicalObjects} logical object, ${progress.unitsDiscovered} unit, ${Math.round(progress.elapsedMs)} ms.`;
+
+		annotationProcessing = false;
+
+		if (!index.complete && !index.progress.cancelled) {
+			void runIncrementalIndexing();
+		}
+	}
+
+	function resumeAnnotationProcessing() {
+		if (!annotationIndex) return;
+		annotationIndex.resume();
+		void runIncrementalIndexing();
 	}
 
 	function cancelAnnotationProcessing() {
@@ -460,6 +521,39 @@
 		const annotationDocument = createGroundTruthDocument({ modelId: model.sourceName, sourceExportHash, split: 'train', annotations: [...annotationRecords.values()] });
 		const blob = new Blob([JSON.stringify(annotationDocument, null, 2)], { type: 'application/json;charset=utf-8' });
 		const url = URL.createObjectURL(blob); const anchor = window.document.createElement('a'); anchor.href = url; anchor.download = `${model.sourceName}_tier1-ground-truth.json`; anchor.click(); URL.revokeObjectURL(url);
+	}
+
+	function generateAnnotationText() {
+		if (!model) return;
+		const doc = createGroundTruthDocument({ modelId: model.sourceName, sourceExportHash, split: 'train', annotations: [...annotationRecords.values()] });
+		annotationJsonText = JSON.stringify(doc, null, 2);
+	}
+
+	async function copyAnnotationText() {
+		generateAnnotationText();
+		if (annotationJsonText) {
+			try {
+				await navigator.clipboard.writeText(annotationJsonText);
+				annotationMessage = 'Copied to clipboard.';
+			} catch {
+				annotationMessage = 'Failed to copy to clipboard.';
+			}
+		}
+	}
+
+	function importAnnotationText() {
+		if (!model || !annotationJsonText) return;
+		try {
+			const value = JSON.parse(annotationJsonText);
+			const validation = validateGroundTruthDocument(value, { sourceExportHash, units: annotationUnits });
+			if (!validation.valid) throw new Error(validation.errors.join(' '));
+			const annotations = value.annotations as Tier1AnnotationRecord[];
+			annotationRecords = new Map(annotations.map((annotation) => [annotation.classificationUnitId, annotation]));
+			annotationMessage = `${annotations.length} annotation dimuat dari text.`;
+			if (selectedAnnotationUnitId) selectAnnotationUnit(selectedAnnotationUnitId);
+		} catch (error) {
+			annotationMessage = error instanceof Error ? error.message : 'Annotation JSON tidak valid.';
+		}
 	}
 
 	async function handleAnnotationFileChange(event: Event) {
@@ -785,7 +879,7 @@
 				{#if annotationIndex}
 					<p class="status-line">{annotationIndex.progress.processedLogicalObjects}/{annotationIndex.progress.totalLogicalObjects} object · {annotationIndex.progress.unitsDiscovered} unit · {Math.round(annotationIndex.progress.elapsedMs)} ms</p>
 					<div class="button-row">
-						<button class="ghost-button" type="button" onclick={() => processAnnotationBatch(20)} disabled={annotationProcessing || annotationIndex.complete}>Process next 20</button>
+						<button class="ghost-button" type="button" onclick={resumeAnnotationProcessing} disabled={annotationProcessing || annotationIndex.complete}>Resume</button>
 						<button class="ghost-button" type="button" onclick={cancelAnnotationProcessing} disabled={!annotationProcessing}>Stop</button>
 					</div>
 				{/if}
@@ -841,6 +935,15 @@
 					<div class="button-row">
 						<button class="ghost-button" type="button" onclick={exportAnnotations}>Export JSON</button>
 						<button class="ghost-button" type="button" onclick={() => annotationFileInput?.click()}>Reload JSON</button>
+					</div>
+					<div class="field" style="margin-top: 10px;">
+						<span>JSON Text</span>
+						<textarea bind:value={annotationJsonText} rows="4" style="font-family:monospace; font-size:10px; width:100%; resize:vertical; background: #1e1e1e; color: #d4d4d4; border: 1px solid #3c3c3c; border-radius: 4px; padding: 4px;" placeholder="Annotation JSON text for copy/paste"></textarea>
+					</div>
+					<div class="button-row" style="margin-top: 5px;">
+						<button class="ghost-button" type="button" onclick={generateAnnotationText}>Show JSON</button>
+						<button class="ghost-button" type="button" onclick={copyAnnotationText}>Copy JSON</button>
+						<button class="ghost-button" type="button" onclick={importAnnotationText}>Import Pasted JSON</button>
 					</div>
 					<input bind:this={annotationFileInput} accept=".json,application/json" hidden type="file" onchange={handleAnnotationFileChange} />
 				{/if}

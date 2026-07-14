@@ -303,13 +303,13 @@ function groupCompatibleClusters(clusters: SurfaceClusterRecord[], counters?: Cl
 	const parent = ordered.map((_, index) => index);
 	const find = (index: number): number => parent[index] === index ? index : parent[index] = find(parent[index]);
 	const union = (left: number, right: number) => { const leftRoot = find(left); const rightRoot = find(right); if (leftRoot !== rightRoot) parent[rightRoot] = leftRoot; };
-	const cells = new Map<string, number[]>();
+	const cells = new Map<number, number[]>();
 	ordered.forEach((cluster, right) => {
-		for (const key of neighboringClusterCells(cluster.centroid)) for (const left of cells.get(key) || []) {
+		for (const key of neighboringClusterCellHashes(cluster.centroid)) for (const left of cells.get(key) || []) {
 			if (counters) counters.compatibleClusterComparisons += 1;
 			if (clustersCompatible(ordered[left], cluster)) union(left, right);
 		}
-		const key = clusterCell(cluster.centroid);
+		const key = clusterCellHash(cluster.centroid);
 		const bucket = cells.get(key);
 		if (bucket) bucket.push(right);
 		else cells.set(key, [right]);
@@ -356,25 +356,60 @@ function sweepUnitAdjacency(units: ClassificationUnitRecord[], counters: Classif
 	return neighbors;
 }
 
-function clusterCell(point: Vec3) {
+function clusterCellHash(point: Vec3) {
 	const cell = CLASSIFICATION_UNIT_TOLERANCES.spatialIndexCellM;
-	return `${Math.floor(point.x / cell)},${Math.floor(point.y / cell)},${Math.floor(point.z / cell)}`;
+	const cx = Math.floor(point.x / cell);
+	const cy = Math.floor(point.y / cell);
+	const cz = Math.floor(point.z / cell);
+	return ((cx * 73856093) ^ (cy * 19349663) ^ (cz * 83492791)) >>> 0;
 }
 
-function neighboringClusterCells(point: Vec3) {
+function neighboringClusterCellHashes(point: Vec3) {
 	const cell = CLASSIFICATION_UNIT_TOLERANCES.spatialIndexCellM;
-	const origin = [Math.floor(point.x / cell), Math.floor(point.y / cell), Math.floor(point.z / cell)];
-	const keys: string[] = [];
-	for (let x = -1; x <= 1; x += 1) for (let y = -1; y <= 1; y += 1) for (let z = -1; z <= 1; z += 1) keys.push(`${origin[0] + x},${origin[1] + y},${origin[2] + z}`);
-	return keys;
+	const cx = Math.floor(point.x / cell);
+	const cy = Math.floor(point.y / cell);
+	const cz = Math.floor(point.z / cell);
+	const hashes: number[] = [];
+	for (let x = -1; x <= 1; x += 1) {
+		for (let y = -1; y <= 1; y += 1) {
+			for (let z = -1; z <= 1; z += 1) {
+				const nx = cx + x;
+				const ny = cy + y;
+				const nz = cz + z;
+				hashes.push(((nx * 73856093) ^ (ny * 19349663) ^ (nz * 83492791)) >>> 0);
+			}
+		}
+	}
+	return hashes;
+}
+
+const ADJACENCY_TOL2 = CLASSIFICATION_UNIT_TOLERANCES.adjacencyM * CLASSIFICATION_UNIT_TOLERANCES.adjacencyM;
+
+function arraysEqual(a: number[], b: number[]) {
+	if (a.length !== b.length) return false;
+	for (let i = 0; i < a.length; i++) {
+		if (a[i] !== b[i]) return false;
+	}
+	return true;
 }
 
 function clustersCompatible(left: SurfaceClusterRecord, right: SurfaceClusterRecord) {
-	if (boundsDistance(left.worldBounds, right.worldBounds) > CLASSIFICATION_UNIT_TOLERANCES.adjacencyM) return false;
+	const tol = 0.004;
+	const b1 = left.worldBounds;
+	const b2 = right.worldBounds;
+	if (b1.min.x - b2.max.x > tol || b2.min.x - b1.max.x > tol) return false;
+	if (b1.min.y - b2.max.y > tol || b2.min.y - b1.max.y > tol) return false;
+	if (b1.min.z - b2.max.z > tol || b2.min.z - b1.max.z > tol) return false;
+
+	if (Math.abs(left.centroid.y - right.centroid.y) > 0.15) return false;
+
 	const normalDot = left.dominantNormal.x * right.dominantNormal.x + left.dominantNormal.y * right.dominantNormal.y + left.dominantNormal.z * right.dominantNormal.z;
-	if (normalDot < Math.cos(CLASSIFICATION_UNIT_TOLERANCES.mergeNormalAngleDeg * Math.PI / 180)) return false;
-	if (CLASSIFICATION_UNIT_TOLERANCES.splitMaterialBoundaries && left.materialIds.join('|') !== right.materialIds.join('|')) return false;
-	return Math.abs(left.centroid.y - right.centroid.y) <= CLASSIFICATION_UNIT_TOLERANCES.elevationDiscontinuityM;
+	if (normalDot < 0.990268) return false; // Math.cos(8 * Math.PI / 180) is approx 0.990268
+
+	if (CLASSIFICATION_UNIT_TOLERANCES.splitMaterialBoundaries && !arraysEqual(left.materialIds, right.materialIds)) return false;
+
+	if (boundsDistanceSquared(b1, b2) > 0.000016) return false;
+	return true;
 }
 
 function weightedCentroid(clusters: SurfaceClusterRecord[], area: number): Vec3 {
@@ -420,7 +455,7 @@ function splitReasonsFromAdjacency(unit: ClassificationUnitRecord, touchingPeers
 	for (const peer of touchingPeers) {
 		const dot = unit.dominantNormal.x * peer.dominantNormal.x + unit.dominantNormal.y * peer.dominantNormal.y + unit.dominantNormal.z * peer.dominantNormal.z;
 		if (dot < Math.cos(CLASSIFICATION_UNIT_TOLERANCES.mergeNormalAngleDeg * Math.PI / 180)) reasons.add('split because normal angle');
-		else if (CLASSIFICATION_UNIT_TOLERANCES.splitMaterialBoundaries && unit.materialIds.join('|') !== peer.materialIds.join('|')) reasons.add('split because material boundary');
+		else if (CLASSIFICATION_UNIT_TOLERANCES.splitMaterialBoundaries && !arraysEqual(unit.materialIds, peer.materialIds)) reasons.add('split because material boundary');
 		else if (Math.abs(unit.centroid.y - peer.centroid.y) > CLASSIFICATION_UNIT_TOLERANCES.elevationDiscontinuityM) reasons.add('split because elevation discontinuity');
 	}
 	return reasons.size ? [...reasons].sort() : ['adjacent compatible cluster retained separately for annotation granularity'];
@@ -435,13 +470,14 @@ function clusterOrientation(cluster: SurfaceClusterRecord) {
 
 function unitsTouch(left: ClassificationUnitRecord, right: ClassificationUnitRecord) {
 	if (left.logicalObjectId !== right.logicalObjectId) return false;
-	const distance = boundsDistance(left.worldBounds, right.worldBounds);
-	return distance <= CLASSIFICATION_UNIT_TOLERANCES.adjacencyM;
+	return boundsDistanceSquared(left.worldBounds, right.worldBounds) <= ADJACENCY_TOL2;
 }
 
-function boundsDistance(left: ClassificationUnitRecord['worldBounds'], right: ClassificationUnitRecord['worldBounds']) {
-	const axis = (a0: number, a1: number, b0: number, b1: number) => Math.max(a0 - b1, b0 - a1, 0);
-	return Math.hypot(axis(left.min.x, left.max.x, right.min.x, right.max.x), axis(left.min.y, left.max.y, right.min.y, right.max.y), axis(left.min.z, left.max.z, right.min.z, right.max.z));
+function boundsDistanceSquared(left: { min: Vec3; max: Vec3 }, right: { min: Vec3; max: Vec3 }) {
+	const dx = Math.max(left.min.x - right.max.x, right.min.x - left.max.x, 0);
+	const dy = Math.max(left.min.y - right.max.y, right.min.y - left.max.y, 0);
+	const dz = Math.max(left.min.z - right.max.z, right.min.z - left.max.z, 0);
+	return dx * dx + dy * dy + dz * dz;
 }
 
 function modelIdentifier(foundation: GeometryFoundation) {
