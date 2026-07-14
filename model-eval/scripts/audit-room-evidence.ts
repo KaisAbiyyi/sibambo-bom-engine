@@ -2,7 +2,7 @@ import { createClassificationUnitIndex } from '../src/lib/annotation';
 import { parseModelEvalJsonV1 } from '../src/lib/formats/model-eval-json';
 import { createGeometryFoundation } from '../src/lib/geometry';
 import { createRoomEvidenceProcessor } from '../src/lib/rooms/processor';
-import { calculateRoomEvidenceFingerprint, calculateBarrierGraphFingerprint } from '../src/lib/rooms/helpers';
+import { calculateRoomEvidenceFingerprint, calculateBarrierGraphFingerprint, normalizeBarrierGraph } from '../src/lib/rooms/helpers';
 import { createHash } from 'crypto';
 
 const path = Bun.argv[2];
@@ -73,13 +73,33 @@ try {
 	const getGraphInfo = (candId: string) => {
 		const g = snapshot.barrierGraphs?.find(x => x.storeyCandidateId === candId);
 		if (!g) return null;
+		const normG = normalizeBarrierGraph(g);
+		const nd = normG.normalizationDiagnostics;
 		return {
+			// Raw graph
 			nodeCount: g.nodes.length,
 			edgeCount: g.edges.length,
 			connectedComponentCount: g.components.length,
 			rejectedEdgeCount: g.diagnostics.rejectedEdges,
 			duplicateMerges: g.diagnostics.duplicateEdgesMerged,
-			fingerprint: calculateBarrierGraphFingerprint(g)
+			fingerprint: calculateBarrierGraphFingerprint(g),
+			// Normalized graph
+			norm: {
+				nodesAfter: nd.nodesAfter,
+				edgesAfter: nd.edgesAfter,
+				componentsAfter: nd.componentsAfter,
+				endpointsSnapped: nd.endpointsSnapped,
+				intersectionsFound: nd.intersectionsFound,
+				tJunctionsFound: nd.tJunctionsFound,
+				edgesSplit: nd.edgesSplit,
+				collinearOverlapsMerged: nd.collinearOverlapsMerged,
+				duplicateSubsegmentsRemoved: nd.duplicateSubsegmentsRemoved,
+				zeroLengthRejected: nd.zeroLengthRejected,
+				degree1Nodes: nd.degree1Nodes,
+				degree2Nodes: nd.degree2Nodes,
+				degree3PlusNodes: nd.degree3PlusNodes,
+				normFingerprint: calculateBarrierGraphFingerprint(normG)
+			}
 		};
 	};
 
@@ -166,6 +186,13 @@ try {
 				console.log(`    Rejected Edges:   ${p.graph.rejectedEdgeCount}`);
 				console.log(`    Duplicate Merges: ${p.graph.duplicateMerges}`);
 				console.log(`    Graph FP:         ${p.graph.fingerprint}`);
+				const n = p.graph.norm;
+				console.log(`    Norm Nodes:       ${n.nodesAfter}  (snapped=${n.endpointsSnapped})`);
+				console.log(`    Norm Edges:       ${n.edgesAfter}  (split=${n.edgesSplit} overlap=${n.collinearOverlapsMerged} dup=${n.duplicateSubsegmentsRemoved} zero=${n.zeroLengthRejected})`);
+				console.log(`    Norm Components:  ${n.componentsAfter}`);
+				console.log(`    Intersections:    ${n.intersectionsFound}  T-junctions: ${n.tJunctionsFound}`);
+				console.log(`    Degree 1/2/3+:    ${n.degree1Nodes} / ${n.degree2Nodes} / ${n.degree3PlusNodes}`);
+				console.log(`    Norm FP:          ${n.normFingerprint}`);
 			}
 		}
 
@@ -184,6 +211,13 @@ try {
 				console.log(`    Rejected Edges:   ${s.graph.rejectedEdgeCount}`);
 				console.log(`    Duplicate Merges: ${s.graph.duplicateMerges}`);
 				console.log(`    Graph FP:         ${s.graph.fingerprint}`);
+				const n = s.graph.norm;
+				console.log(`    Norm Nodes:       ${n.nodesAfter}  (snapped=${n.endpointsSnapped})`);
+				console.log(`    Norm Edges:       ${n.edgesAfter}  (split=${n.edgesSplit} overlap=${n.collinearOverlapsMerged} dup=${n.duplicateSubsegmentsRemoved} zero=${n.zeroLengthRejected})`);
+				console.log(`    Norm Components:  ${n.componentsAfter}`);
+				console.log(`    Intersections:    ${n.intersectionsFound}  T-junctions: ${n.tJunctionsFound}`);
+				console.log(`    Degree 1/2/3+:    ${n.degree1Nodes} / ${n.degree2Nodes} / ${n.degree3PlusNodes}`);
+				console.log(`    Norm FP:          ${n.normFingerprint}`);
 			}
 		}
 	}

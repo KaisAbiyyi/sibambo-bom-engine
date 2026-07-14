@@ -15,7 +15,8 @@ import {
 	calculateRoomEvidenceFingerprint,
 	rankStoreyBandCandidates,
 	buildBarrierGraph,
-	calculateBarrierGraphFingerprint
+	calculateBarrierGraphFingerprint,
+	normalizeBarrierGraph
 } from './helpers';
 import { createRoomEvidenceProcessor } from './processor';
 import type {
@@ -684,5 +685,150 @@ describe('Room evidence types and deterministic IDs', () => {
 		const gOpen = buildBarrierGraph([w1, w2, w3] as any, storeyCandidate);
 		expect(gOpen.edges.length).toBe(3);
 		expect(gOpen.nodes.length).toBe(4);
+	});
+
+	test('14. normalize barrier graph topology', () => {
+		const storey = {
+			id: 'storey:norm-test',
+			logicalObjectId: logObjA,
+			classificationUnitIds: ['c1'],
+			elevationRange: { min: 0.0, max: 3.0 },
+			planBounds: { min: { x: 0, z: 0 }, max: { x: 20, z: 20 } },
+			quality: 1.0,
+			isAmbiguous: false,
+			status: 'primary' as const
+		};
+
+		function makeVert(id: string, sx: number, sz: number, ex: number, ez: number, matId: number = 1) {
+			return {
+				id,
+				logicalObjectId: logObjA,
+				classificationUnitIds: [id],
+				elevationRange: { min: 0.0, max: 3.0 },
+				segment: { start: { x: sx, z: sz }, end: { x: ex, z: ez } },
+				materialIds: [matId],
+				thickness: 0.2,
+				isExterior: false,
+				quality: 1.0,
+				isAmbiguous: false
+			};
+		}
+
+		// Test 1: Crossing segments split at intersection
+		// Two segments that cross in an X pattern
+		const cross1 = makeVert('c1', 0, 5, 10, 5); // horizontal
+		const cross2 = makeVert('c2', 5, 0, 5, 10); // vertical
+		const gCross = buildBarrierGraph([cross1, cross2] as any, storey);
+		const normCross = normalizeBarrierGraph(gCross);
+		expect(normCross.normalizationDiagnostics.intersectionsFound).toBeGreaterThan(0);
+		// Should have 5 nodes: 4 endpoints + 1 intersection
+		expect(normCross.nodes.length).toBe(5);
+		// Should have 4 edges (each segment split in 2)
+		expect(normCross.edges.length).toBe(4);
+
+		// Test 2: T-junction creates shared graph node
+		// Segment along x-axis, another segment ends at the middle
+		const tHoriz = makeVert('th', 0, 0, 10, 0); // horizontal long
+		const tStem = makeVert('ts', 5, 0, 5, 5); // stem from midpoint
+		const gTjunc = buildBarrierGraph([tHoriz, tStem] as any, storey);
+		const normTjunc = normalizeBarrierGraph(gTjunc);
+		expect(normTjunc.normalizationDiagnostics.tJunctionsFound).toBeGreaterThan(0);
+		// Shared node at (5,0)
+		const midNode = normTjunc.nodes.find(n => Math.abs(n.coord.x - 5) < 0.01 && Math.abs(n.coord.z - 0) < 0.01);
+		expect(midNode).toBeDefined();
+
+		// Test 3: Collinear overlapping segments merge
+		const col1 = makeVert('col1', 0, 0, 6, 0);
+		const col2 = makeVert('col2', 4, 0, 10, 0); // overlaps with col1 at [4,6]
+		const gColOverlap = buildBarrierGraph([col1, col2] as any, storey);
+		const normColOverlap = normalizeBarrierGraph(gColOverlap);
+		expect(normColOverlap.normalizationDiagnostics.collinearOverlapsMerged).toBeGreaterThan(0);
+		// Should result in single segment [0,10]
+		expect(normColOverlap.edges.length).toBe(1);
+
+		// Test 4: Collinear touching segments within tolerance merge
+		// Two segments that share endpoint exactly (or within tol)
+		const touch1 = makeVert('t1', 0, 0, 5, 0);
+		const touch2 = makeVert('t2', 5, 0, 10, 0); // touches touch1 at x=5
+		const gTouch = buildBarrierGraph([touch1, touch2] as any, storey);
+		const normTouch = normalizeBarrierGraph(gTouch);
+		// Touching collinear segments must merge into 1
+		expect(normTouch.edges.length).toBe(1);
+
+		// Test 5: Gap outside tolerance remains open (non-touching)
+		const gap1 = makeVert('g1', 0, 0, 5, 0);
+		const gap2 = makeVert('g2', 6, 0, 10, 0); // 1m gap — well outside tolerance
+		const gGap = buildBarrierGraph([gap1, gap2] as any, storey);
+		const normGap = normalizeBarrierGraph(gGap);
+		// Two separate edges must remain
+		expect(normGap.edges.length).toBe(2);
+		expect(normGap.components.length).toBe(2);
+
+		// Test 6: Parallel segments remain separate
+		const para1 = makeVert('p1', 0, 0, 5, 0);
+		const para2 = makeVert('p2', 0, 1, 5, 1); // parallel, 1m apart
+		const gPara = buildBarrierGraph([para1, para2] as any, storey);
+		const normPara = normalizeBarrierGraph(gPara);
+		expect(normPara.edges.length).toBe(2);
+		expect(normPara.components.length).toBe(2);
+
+		// Test 7: Open rectangular boundary remains open (3 sides)
+		const r1 = makeVert('r1', 0, 0, 5, 0);
+		const r2 = makeVert('r2', 5, 0, 5, 5);
+		const r3 = makeVert('r3', 5, 5, 0, 5);
+		const gOpen3 = buildBarrierGraph([r1, r2, r3] as any, storey);
+		const normOpen3 = normalizeBarrierGraph(gOpen3);
+		// Open boundary: no closing edge is created
+		expect(normOpen3.edges.length).toBe(3);
+		// Degree-1 nodes at open ends
+		expect(normOpen3.normalizationDiagnostics.degree1Nodes).toBeGreaterThan(0);
+
+		// Test 8: Closed rectangle remains closed without new edges
+		const sq1 = makeVert('sq1', 0, 0, 5, 0);
+		const sq2 = makeVert('sq2', 5, 0, 5, 5);
+		const sq3 = makeVert('sq3', 5, 5, 0, 5);
+		const sq4 = makeVert('sq4', 0, 5, 0, 0);
+		const gClosed = buildBarrierGraph([sq1, sq2, sq3, sq4] as any, storey);
+		const normClosed = normalizeBarrierGraph(gClosed);
+		// All 4 edges remain, no extra
+		expect(normClosed.edges.length).toBe(4);
+		// All nodes degree 2 (closed loop)
+		expect(normClosed.normalizationDiagnostics.degree1Nodes).toBe(0);
+		expect(normClosed.normalizationDiagnostics.degree2Nodes).toBe(4);
+
+		// Test 9: Source ownership and materials survive split and merge
+		const ownSeg1 = makeVert('own1', 0, 0, 10, 0, 5); // mat 5
+		const ownSeg2 = makeVert('own2', 5, 0, 5, 5, 7); // mat 7, creates T-junction
+		const gOwn = buildBarrierGraph([ownSeg1, ownSeg2] as any, storey);
+		const normOwn = normalizeBarrierGraph(gOwn);
+		// Find the sub-segment containing ownership from both ownSeg1 and ownSeg2 at T-junc
+		const allMats = normOwn.edges.flatMap(e => e.materialIds);
+		expect(allMats).toContain(5);
+		expect(allMats).toContain(7);
+
+		// Test 10: Reversed and shuffled input produce identical output
+		const normRev = normalizeBarrierGraph(buildBarrierGraph([cross2, cross1] as any, storey));
+		expect(normRev.nodes.length).toBe(normCross.nodes.length);
+		expect(normRev.edges.length).toBe(normCross.edges.length);
+		expect(normRev.components.length).toBe(normCross.components.length);
+		const normShuf = normalizeBarrierGraph(buildBarrierGraph([sq3, sq1, sq4, sq2] as any, storey));
+		expect(normShuf).toEqual(normClosed);
+
+		// Test 11: Repeated normalization is idempotent
+		const normClosed2 = normalizeBarrierGraph(normClosed);
+		expect(normClosed2.nodes.length).toBe(normClosed.nodes.length);
+		expect(normClosed2.edges.length).toBe(normClosed.edges.length);
+		expect(normClosed2.components.length).toBe(normClosed.components.length);
+
+		// Test 12: Zero-length output edges are absent
+		const shortSeg = makeVert('short', 0, 0, 0.0002, 0.0002); // just under sqrt(2)*TOL → still tiny
+		const gShort = buildBarrierGraph([shortSeg] as any, storey);
+		const normShort = normalizeBarrierGraph(gShort);
+		for (const edge of normShort.edges) {
+			const dx = edge.end.x - edge.start.x;
+			const dz = edge.end.z - edge.start.z;
+			const len = Math.sqrt(dx * dx + dz * dz);
+			expect(len).toBeGreaterThan(0.001);
+		}
 	});
 });

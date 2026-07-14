@@ -124,4 +124,5 @@ export interface RoomEvidenceSnapshot {
 	boundaryOpenings: BoundaryOpeningEvidence[];
 	diagnostics: RoomEvidenceDiagnostics;
 	barrierGraphs?: BarrierGraph[];
+	normalizedBarrierGraphs?: import('./helpers').NormalizedBarrierGraph[];
 }

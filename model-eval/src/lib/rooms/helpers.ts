@@ -858,3 +858,629 @@ export function calculateBarrierGraphFingerprint(graph: BarrierGraph): string {
 
 	return sha256(serialized);
 }
+
+// ---------------------------------------------------------------------------
+// normalizeBarrierGraph — topology normalization
+// ---------------------------------------------------------------------------
+
+export interface BarrierGraphNormalizationDiagnostics {
+	nodesBefore: number;
+	nodesAfter: number;
+	edgesBefore: number;
+	edgesAfter: number;
+	componentsBefore: number;
+	componentsAfter: number;
+	endpointsSnapped: number;
+	intersectionsFound: number;
+	tJunctionsFound: number;
+	edgesSplit: number;
+	collinearOverlapsMerged: number;
+	duplicateSubsegmentsRemoved: number;
+	zeroLengthRejected: number;
+	degree1Nodes: number;
+	degree2Nodes: number;
+	degree3PlusNodes: number;
+}
+
+export interface NormalizedBarrierGraph extends BarrierGraph {
+	normalizationDiagnostics: BarrierGraphNormalizationDiagnostics;
+}
+
+const TOL = GEOMETRY_TOLERANCES.positionM; // 0.001 m
+const TOL2 = TOL * TOL;
+
+function coord2Key(x: number, z: number): string {
+	return `${quantizeCoord(x)}_${quantizeCoord(z)}`;
+}
+
+function dist2(ax: number, az: number, bx: number, bz: number): number {
+	const dx = ax - bx, dz = az - bz;
+	return dx * dx + dz * dz;
+}
+
+function planLength2(sx: number, sz: number, ex: number, ez: number): number {
+	return dist2(sx, sz, ex, ez);
+}
+
+// Project point P onto segment AB. Returns t in [0,1] (clamped) and squared distance.
+function projectPointOnSegment(
+	px: number, pz: number,
+	ax: number, az: number,
+	bx: number, bz: number
+): { t: number; dx: number; dz: number; distSq: number } {
+	const abx = bx - ax, abz = bz - az;
+	const len2 = abx * abx + abz * abz;
+	if (len2 < 1e-24) {
+		return { t: 0, dx: px - ax, dz: pz - az, distSq: dist2(px, pz, ax, az) };
+	}
+	const t = Math.max(0, Math.min(1, ((px - ax) * abx + (pz - az) * abz) / len2));
+	const cx = ax + t * abx, cz = az + t * abz;
+	const ddx = px - cx, ddz = pz - cz;
+	return { t, dx: ddx, dz: ddz, distSq: ddx * ddx + ddz * ddz };
+}
+
+// Returns t in [0,1] on segment AB where segment CD intersects, or null.
+// Uses strict crossing (both segments must properly cross, not just touch endpoints).
+function segmentCrossing(
+	ax: number, az: number, bx: number, bz: number,
+	cx: number, cz: number, dx: number, dz: number
+): { tAB: number; tCD: number } | null {
+	const dabx = bx - ax, dabz = bz - az;
+	const dcx = dx - cx, dcz = dz - cz;
+	const denom = dabx * dcz - dabz * dcx;
+	if (Math.abs(denom) < 1e-14) return null; // parallel/collinear
+	const ex = cx - ax, ez = cz - az;
+	const tAB = (ex * dcz - ez * dcx) / denom;
+	const tCD = (ex * dabz - ez * dabx) / denom;
+	const eps = TOL / Math.max(1, Math.sqrt(dabx * dabx + dabz * dabz));
+	const epsCD = TOL / Math.max(1, Math.sqrt(dcx * dcx + dcz * dcz));
+	if (tAB < eps || tAB > 1 - eps) return null; // not interior to AB
+	if (tCD < epsCD || tCD > 1 - epsCD) return null; // not interior to CD
+	return { tAB, tCD };
+}
+
+// Are two segments collinear (same infinite line) within tolerance?
+function areCollinear(
+	ax: number, az: number, bx: number, bz: number,
+	cx: number, cz: number, dx: number, dz: number
+): boolean {
+	const dx1 = bx - ax, dz1 = bz - az;
+	const len1 = Math.sqrt(dx1 * dx1 + dz1 * dz1);
+	if (len1 < 1e-12) return false;
+	// direction perpendicular to AB: (-dz1, dx1) / len1
+	// project C and D onto this perp and check distance
+	const perpX = -dz1 / len1, perpZ = dx1 / len1;
+	const distC = Math.abs((cx - ax) * perpX + (cz - az) * perpZ);
+	const distD = Math.abs((dx - ax) * perpX + (dz - az) * perpZ);
+	return distC <= TOL && distD <= TOL;
+}
+
+// For collinear segments AB and CD, compute their overlap on AB's line.
+// Returns the overlap as t values on AB's parameterization, or null if no overlap/touch.
+function collinearOverlap(
+	ax: number, az: number, bx: number, bz: number,
+	cx: number, cz: number, dx: number, dz: number,
+	allowGapTol: boolean
+): { tStart: number; tEnd: number } | null {
+	const dabx = bx - ax, dabz = bz - az;
+	const len2 = dabx * dabx + dabz * dabz;
+	if (len2 < 1e-24) return null;
+	// Project C and D onto AB
+	const tC = ((cx - ax) * dabx + (cz - az) * dabz) / len2;
+	const tD = ((dx - ax) * dabx + (dz - az) * dabz) / len2;
+	const tMin = Math.min(tC, tD);
+	const tMax = Math.max(tC, tD);
+	const gapTol = allowGapTol ? TOL / Math.sqrt(len2) : 0;
+	// Overlap with [0,1] extended by gap tolerance
+	const oStart = Math.max(0, tMin);
+	const oEnd = Math.min(1, tMax);
+	if (oEnd + gapTol < oStart) return null; // gap too large
+	return { tStart: Math.max(0, oStart), tEnd: Math.min(1, oEnd) };
+}
+
+type RawSeg = {
+	sx: number; sz: number;
+	ex: number; ez: number;
+	verticalEvidenceIds: string[];
+	logicalObjectId: string;
+	classificationUnitIds: string[];
+	materialIds: number[];
+	storeyCandidateId: string;
+};
+
+function mergeOwnership(a: RawSeg, b: RawSeg): Pick<RawSeg, 'verticalEvidenceIds' | 'logicalObjectId' | 'classificationUnitIds' | 'materialIds'> {
+	const ids = [...new Set([...a.verticalEvidenceIds, ...b.verticalEvidenceIds])].sort();
+	const units = [...new Set([...a.classificationUnitIds, ...b.classificationUnitIds])].sort();
+	const mats = [...new Set([...a.materialIds, ...b.materialIds])].sort((x, y) => x - y);
+	const logObjs = [...new Set([...a.logicalObjectId.split('|'), ...b.logicalObjectId.split('|')])].sort();
+	return {
+		verticalEvidenceIds: ids,
+		logicalObjectId: logObjs.join('|'),
+		classificationUnitIds: units,
+		materialIds: mats
+	};
+}
+
+export function normalizeBarrierGraph(graph: BarrierGraph): NormalizedBarrierGraph {
+	const nodesBefore = graph.nodes.length;
+	const edgesBefore = graph.edges.length;
+	const componentsBefore = graph.components.length;
+
+	let endpointsSnapped = 0;
+	let intersectionsFound = 0;
+	let tJunctionsFound = 0;
+	let edgesSplit = 0;
+	let collinearOverlapsMerged = 0;
+	let duplicateSubsegmentsRemoved = 0;
+	let zeroLengthRejected = 0;
+
+	// -------------------------------------------------------------------------
+	// Step 1: Convert edges to raw working segments
+	// -------------------------------------------------------------------------
+	let segs: RawSeg[] = graph.edges.map(e => ({
+		sx: e.start.x, sz: e.start.z,
+		ex: e.end.x, ez: e.end.z,
+		verticalEvidenceIds: [...e.verticalEvidenceIds],
+		logicalObjectId: e.logicalObjectId,
+		classificationUnitIds: [...e.classificationUnitIds],
+		materialIds: [...e.materialIds],
+		storeyCandidateId: e.storeyCandidateId
+	}));
+
+	// -------------------------------------------------------------------------
+	// Step 2: Collect all endpoints, snap nearby ones together (union-find on coords)
+	// -------------------------------------------------------------------------
+	// All endpoints (2 per segment)
+	const allPts: Array<{ x: number; z: number }> = [];
+	for (const s of segs) {
+		allPts.push({ x: s.sx, z: s.sz });
+		allPts.push({ x: s.ex, z: s.ez });
+	}
+
+	// Sort by x then z for sweep
+	const sortedIdx = Array.from({ length: allPts.length }, (_, i) => i);
+	sortedIdx.sort((a, b) => {
+		if (allPts[a].x !== allPts[b].x) return allPts[a].x - allPts[b].x;
+		return allPts[a].z - allPts[b].z;
+	});
+
+	const uf = Array.from({ length: allPts.length }, (_, i) => i);
+	function find(i: number): number {
+		while (uf[i] !== i) { uf[i] = uf[uf[i]]; i = uf[i]; }
+		return i;
+	}
+	function union(i: number, j: number): void {
+		const ri = find(i), rj = find(j);
+		if (ri !== rj) uf[ri < rj ? rj : ri] = ri < rj ? ri : rj;
+	}
+
+	for (let ii = 0; ii < sortedIdx.length; ii++) {
+		const ai = sortedIdx[ii];
+		const pa = allPts[ai];
+		for (let jj = ii + 1; jj < sortedIdx.length; jj++) {
+			const bj = sortedIdx[jj];
+			const pb = allPts[bj];
+			if (pb.x - pa.x > TOL) break;
+			if (dist2(pa.x, pa.z, pb.x, pb.z) <= TOL2) {
+				union(ai, bj);
+				endpointsSnapped++;
+			}
+		}
+	}
+
+	// Compute snapped coordinate for each group (use smallest sorted index's coords)
+	const groupCoord = new Map<number, { x: number; z: number }>();
+	for (let i = 0; i < allPts.length; i++) {
+		const root = find(i);
+		if (!groupCoord.has(root)) {
+			groupCoord.set(root, { x: quantizeCoord(allPts[root].x), z: quantizeCoord(allPts[root].z) });
+		}
+	}
+
+	// Apply snapping to all segments
+	for (let si = 0; si < segs.length; si++) {
+		const base = si * 2;
+		const sc = groupCoord.get(find(base))!;
+		const ec = groupCoord.get(find(base + 1))!;
+		segs[si].sx = sc.x; segs[si].sz = sc.z;
+		segs[si].ex = ec.x; segs[si].ez = ec.z;
+	}
+
+	// -------------------------------------------------------------------------
+	// Step 3: Find all crossings and T-junctions, collect split points per segment
+	// -------------------------------------------------------------------------
+	// For each segment i, a sorted list of t values where it should be split
+	const splitTs: Map<number, number[]> = new Map();
+	// Intersection and T-junction node coordinates — collinear merge must not cross these
+	const splitNodeKeys = new Set<string>();
+	function addSplit(segIdx: number, t: number, nodeKey?: string): void {
+		if (!splitTs.has(segIdx)) splitTs.set(segIdx, []);
+		splitTs.get(segIdx)!.push(t);
+		if (nodeKey) splitNodeKeys.add(nodeKey);
+	}
+
+	const n = segs.length;
+	for (let i = 0; i < n; i++) {
+		const si = segs[i];
+		if (planLength2(si.sx, si.sz, si.ex, si.ez) < TOL2 * 4) continue;
+		for (let j = i + 1; j < n; j++) {
+			const sj = segs[j];
+			if (planLength2(sj.sx, sj.sz, sj.ex, sj.ez) < TOL2 * 4) continue;
+
+			// Check collinearity first - collinear segments handled in step 4
+			if (areCollinear(si.sx, si.sz, si.ex, si.ez, sj.sx, sj.sz, sj.ex, sj.ez)) continue;
+
+			// Check proper crossing
+			const cross = segmentCrossing(si.sx, si.sz, si.ex, si.ez, sj.sx, sj.sz, sj.ex, sj.ez);
+			if (cross !== null) {
+				intersectionsFound++;
+				const dabx = si.ex - si.sx, dabz = si.ez - si.sz;
+				const ixX = quantizeCoord(si.sx + cross.tAB * dabx);
+				const ixZ = quantizeCoord(si.sz + cross.tAB * dabz);
+				const ixKey = coord2Key(ixX, ixZ);
+				addSplit(i, cross.tAB, ixKey);
+				addSplit(j, cross.tCD, ixKey);
+				edgesSplit += 2;
+				continue;
+			}
+
+			// Check T-junctions: endpoint of j lies interior to i
+			const siAbx = si.ex - si.sx, siAbz = si.ez - si.sz;
+			const siLen2 = siAbx * siAbx + siAbz * siAbz;
+			if (siLen2 >= TOL2 * 4) {
+				for (const [px, pz] of [[sj.sx, sj.sz], [sj.ex, sj.ez]]) {
+					const proj = projectPointOnSegment(px, pz, si.sx, si.sz, si.ex, si.ez);
+					if (proj.distSq <= TOL2 && proj.t > TOL / Math.sqrt(siLen2) && proj.t < 1 - TOL / Math.sqrt(siLen2)) {
+						tJunctionsFound++;
+						const tjKey = coord2Key(quantizeCoord(px), quantizeCoord(pz));
+						addSplit(i, proj.t, tjKey);
+						edgesSplit++;
+					}
+				}
+			}
+
+			// Check T-junctions: endpoint of i lies interior to j
+			const sjAbx = sj.ex - sj.sx, sjAbz = sj.ez - sj.sz;
+			const sjLen2 = sjAbx * sjAbx + sjAbz * sjAbz;
+			if (sjLen2 >= TOL2 * 4) {
+				for (const [px, pz] of [[si.sx, si.sz], [si.ex, si.ez]]) {
+					const proj = projectPointOnSegment(px, pz, sj.sx, sj.sz, sj.ex, sj.ez);
+					if (proj.distSq <= TOL2 && proj.t > TOL / Math.sqrt(sjLen2) && proj.t < 1 - TOL / Math.sqrt(sjLen2)) {
+						tJunctionsFound++;
+						const tjKey = coord2Key(quantizeCoord(px), quantizeCoord(pz));
+						addSplit(j, proj.t, tjKey);
+						edgesSplit++;
+					}
+				}
+			}
+		}
+	}
+
+	// -------------------------------------------------------------------------
+	// Step 4: Apply splits — produce sub-segments
+	// -------------------------------------------------------------------------
+	const splitSegs: RawSeg[] = [];
+	for (let i = 0; i < n; i++) {
+		const s = segs[i];
+		const len2 = planLength2(s.sx, s.sz, s.ex, s.ez);
+		if (!splitTs.has(i) || len2 < TOL2 * 4) {
+			if (len2 >= TOL2 * 4) splitSegs.push(s);
+			else zeroLengthRejected++;
+			continue;
+		}
+		const ts = [...new Set(splitTs.get(i)!)].sort((a, b) => a - b);
+		// Add 0 and 1 boundaries
+		const allT = [0, ...ts.filter(t => t > 1e-9 && t < 1 - 1e-9), 1];
+		const abx = s.ex - s.sx, abz = s.ez - s.sz;
+		for (let k = 0; k < allT.length - 1; k++) {
+			const t0 = allT[k], t1 = allT[k + 1];
+			const sx = quantizeCoord(s.sx + t0 * abx), sz = quantizeCoord(s.sz + t0 * abz);
+			const ex = quantizeCoord(s.sx + t1 * abx), ez = quantizeCoord(s.sz + t1 * abz);
+			if (planLength2(sx, sz, ex, ez) < TOL2 * 4) { zeroLengthRejected++; continue; }
+			splitSegs.push({
+				sx, sz, ex, ez,
+				verticalEvidenceIds: [...s.verticalEvidenceIds],
+				logicalObjectId: s.logicalObjectId,
+				classificationUnitIds: [...s.classificationUnitIds],
+				materialIds: [...s.materialIds],
+				storeyCandidateId: s.storeyCandidateId
+			});
+		}
+	}
+
+	// -------------------------------------------------------------------------
+	// Step 5: Collinear overlap/touching merge
+	// -------------------------------------------------------------------------
+	// Group segments by their line (direction + offset bucket)
+	// For each collinear group, merge overlapping/touching sub-segments
+	function segLineKey(sx: number, sz: number, ex: number, ez: number): string {
+		const dx = ex - sx, dz = ez - sz;
+		const len = Math.sqrt(dx * dx + dz * dz);
+		if (len < 1e-12) return `zero`;
+		// Normalize direction, force canonical direction
+		let nx = dx / len, nz = dz / len;
+		if (nx < -1e-9 || (Math.abs(nx) < 1e-9 && nz < 0)) { nx = -nx; nz = -nz; }
+		// Quantize direction to 3 decimal places
+		const qnx = Math.round(nx * 1000) / 1000;
+		const qnz = Math.round(nz * 1000) / 1000;
+		// Distance from origin to line (perp offset)
+		const perpDist = Math.round((-nz * sx + nx * sz) * 1000) / 1000;
+		return `${qnx}_${qnz}_${perpDist}`;
+	}
+
+	const lineGroups = new Map<string, number[]>();
+	for (let i = 0; i < splitSegs.length; i++) {
+		const s = splitSegs[i];
+		const key = segLineKey(s.sx, s.sz, s.ex, s.ez);
+		if (!lineGroups.has(key)) lineGroups.set(key, []);
+		lineGroups.get(key)!.push(i);
+	}
+
+	const mergedSegs: RawSeg[] = [];
+	const processedSplitIdx = new Set<number>();
+
+	for (const [, group] of lineGroups.entries()) {
+		if (group.length === 1) {
+			mergedSegs.push(splitSegs[group[0]]);
+			processedSplitIdx.add(group[0]);
+			continue;
+		}
+
+		// For each segment in the group, try to merge with collinear neighbours
+		// Use a union-find to group overlapping/touching segments
+		const guf = Array.from({ length: group.length }, (_, i) => i);
+		function gfind(i: number): number {
+			while (guf[i] !== i) { guf[i] = guf[guf[i]]; i = guf[i]; }
+			return i;
+		}
+		function gunion(i: number, j: number): void {
+			const ri = gfind(i), rj = gfind(j);
+			if (ri !== rj) guf[ri < rj ? rj : ri] = ri < rj ? ri : rj;
+		}
+
+		// Pairwise check for overlap/touch within group
+		for (let gi = 0; gi < group.length; gi++) {
+			const si = splitSegs[group[gi]];
+			for (let gj = gi + 1; gj < group.length; gj++) {
+				const sj = splitSegs[group[gj]];
+				if (!areCollinear(si.sx, si.sz, si.ex, si.ez, sj.sx, sj.sz, sj.ex, sj.ez)) continue;
+				const ov = collinearOverlap(si.sx, si.sz, si.ex, si.ez, sj.sx, sj.sz, sj.ex, sj.ez, true);
+				if (ov !== null) gunion(gi, gj);
+			}
+		}
+
+		// Gather merge groups
+		const mergeMap = new Map<number, number[]>();
+		for (let gi = 0; gi < group.length; gi++) {
+			const root = gfind(gi);
+			if (!mergeMap.has(root)) mergeMap.set(root, []);
+			mergeMap.get(root)!.push(gi);
+		}
+
+		for (const [, gIndices] of mergeMap.entries()) {
+			if (gIndices.length === 1) {
+				mergedSegs.push(splitSegs[group[gIndices[0]]]);
+			} else {
+				// Merge all segments in this collinear cluster into one or more non-overlapping segments
+				// Project all endpoints onto the first segment's line
+				const ref = splitSegs[group[gIndices[0]]];
+				const abx = ref.ex - ref.sx, abz = ref.ez - ref.sz;
+				const len2 = abx * abx + abz * abz;
+
+				const intervals: Array<{ t0: number; t1: number; seg: RawSeg }> = [];
+				for (const gi of gIndices) {
+					const s = splitSegs[group[gi]];
+					// Project s's endpoints onto ref's line (unbounded)
+					const tS = len2 > 0 ? ((s.sx - ref.sx) * abx + (s.sz - ref.sz) * abz) / len2 : 0;
+					const tE = len2 > 0 ? ((s.ex - ref.sx) * abx + (s.ez - ref.sz) * abz) / len2 : 0;
+					intervals.push({ t0: Math.min(tS, tE), t1: Math.max(tS, tE), seg: s });
+				}
+				// Sort intervals by t0
+				intervals.sort((a, b) => a.t0 - b.t0);
+
+				// Merge overlapping/touching intervals — but do NOT merge across intersection/T-junction nodes
+				let merged = ownershipFrom(intervals[0]);
+				for (let m = 1; m < intervals.length; m++) {
+					const iv = intervals[m];
+					const gapTol = TOL / Math.sqrt(Math.max(len2, 1e-24));
+					// Compute world coord at the boundary between merged and next interval
+					const boundX = quantizeCoord(ref.sx + merged.t1 * abx);
+					const boundZ = quantizeCoord(ref.sz + merged.t1 * abz);
+					const boundKey = coord2Key(boundX, boundZ);
+					const isSplitNode = splitNodeKeys.has(boundKey);
+					if (!isSplitNode && iv.t0 <= merged.t1 + gapTol) {
+						// Merge — overlapping or touching without split barrier
+						if (iv.t1 > merged.t1) merged.t1 = iv.t1;
+						const mergedAsRaw = { sx: 0, sz: 0, ex: 0, ez: 0, ...merged } as RawSeg;
+						const mo = mergeOwnership(mergedAsRaw, iv.seg);
+						merged.verticalEvidenceIds = mo.verticalEvidenceIds;
+						merged.logicalObjectId = mo.logicalObjectId;
+						merged.classificationUnitIds = mo.classificationUnitIds;
+						merged.materialIds = mo.materialIds;
+						collinearOverlapsMerged++;
+					} else {
+						// Flush current, start new
+						const mSeg = intervalToSeg(merged, ref, abx, abz);
+						if (mSeg) mergedSegs.push(mSeg);
+						merged = ownershipFrom(iv);
+					}
+				}
+				const last = intervalToSeg(merged, ref, abx, abz);
+				if (last) mergedSegs.push(last);
+			}
+			for (const gi of gIndices) processedSplitIdx.add(group[gi]);
+		}
+	}
+
+	type MergeState = { t0: number; t1: number; verticalEvidenceIds: string[]; logicalObjectId: string; classificationUnitIds: string[]; materialIds: number[]; storeyCandidateId: string };
+	function ownershipFrom(iv: { t0: number; t1: number; seg: RawSeg }): MergeState {
+		return {
+			t0: iv.t0, t1: iv.t1,
+			verticalEvidenceIds: [...iv.seg.verticalEvidenceIds],
+			logicalObjectId: iv.seg.logicalObjectId,
+			classificationUnitIds: [...iv.seg.classificationUnitIds],
+			materialIds: [...iv.seg.materialIds],
+			storeyCandidateId: iv.seg.storeyCandidateId
+		};
+	}
+	function intervalToSeg(iv: MergeState, ref: RawSeg, abx: number, abz: number): RawSeg | null {
+		const sx = quantizeCoord(ref.sx + iv.t0 * abx), sz = quantizeCoord(ref.sz + iv.t0 * abz);
+		const ex = quantizeCoord(ref.sx + iv.t1 * abx), ez = quantizeCoord(ref.sz + iv.t1 * abz);
+		if (planLength2(sx, sz, ex, ez) < TOL2 * 4) { zeroLengthRejected++; return null; }
+		return {
+			sx, sz, ex, ez,
+			verticalEvidenceIds: iv.verticalEvidenceIds,
+			logicalObjectId: iv.logicalObjectId,
+			classificationUnitIds: iv.classificationUnitIds,
+			materialIds: iv.materialIds,
+			storeyCandidateId: iv.storeyCandidateId
+		};
+	}
+
+	// -------------------------------------------------------------------------
+	// Step 6: Deduplicate (same canonical endpoint pair)
+	// -------------------------------------------------------------------------
+	const edgeKeyMap = new Map<string, RawSeg>();
+	for (const s of mergedSegs) {
+		// canonical direction: smaller node key first
+		const kA = coord2Key(s.sx, s.sz), kB = coord2Key(s.ex, s.ez);
+		const edgeKey = kA < kB ? `${kA}__${kB}` : `${kB}__${kA}`;
+		const existing = edgeKeyMap.get(edgeKey);
+		if (existing) {
+			duplicateSubsegmentsRemoved++;
+			const mo = mergeOwnership(existing, s);
+			existing.verticalEvidenceIds = mo.verticalEvidenceIds;
+			existing.logicalObjectId = mo.logicalObjectId;
+			existing.classificationUnitIds = mo.classificationUnitIds;
+			existing.materialIds = mo.materialIds;
+		} else {
+			edgeKeyMap.set(edgeKey, s);
+		}
+	}
+
+	const finalSegs = [...edgeKeyMap.values()];
+
+	// -------------------------------------------------------------------------
+	// Step 7: Rebuild nodes, edges, and components
+	// -------------------------------------------------------------------------
+	const nodeMap = new Map<string, BarrierGraphNode>();
+	const finalEdges: BarrierGraphEdge[] = [];
+
+	for (const s of finalSegs) {
+		const kA = coord2Key(s.sx, s.sz), kB = coord2Key(s.ex, s.ez);
+		const nodeAId = generateBarrierNodeId(s.sx, s.sz);
+		const nodeBId = generateBarrierNodeId(s.ex, s.ez);
+		if (!nodeMap.has(kA)) nodeMap.set(kA, { id: nodeAId, coord: { x: s.sx, z: s.sz } });
+		if (!nodeMap.has(kB)) nodeMap.set(kB, { id: nodeBId, coord: { x: s.ex, z: s.ez } });
+
+		const [firstNodeId, secondNodeId] = [nodeAId, nodeBId].sort();
+		const edgeId = generateBarrierEdgeId(nodeAId, nodeBId);
+		const pStart = firstNodeId === nodeAId ? { x: s.sx, z: s.sz } : { x: s.ex, z: s.ez };
+		const pEnd = firstNodeId === nodeAId ? { x: s.ex, z: s.ez } : { x: s.sx, z: s.sz };
+
+		finalEdges.push({
+			id: edgeId,
+			nodeAId: firstNodeId,
+			nodeBId: secondNodeId,
+			start: pStart,
+			end: pEnd,
+			originalStart: pStart,
+			originalEnd: pEnd,
+			verticalEvidenceIds: [...s.verticalEvidenceIds].sort(),
+			logicalObjectId: s.logicalObjectId,
+			classificationUnitIds: [...s.classificationUnitIds].sort(),
+			materialIds: [...s.materialIds].sort((a, b) => a - b),
+			storeyCandidateId: s.storeyCandidateId
+		});
+	}
+
+	// Build a reverse map from node id → coord-key for component union-find
+	const nodeIdToCoordKey = new Map<string, string>();
+	for (const [coordKey, node] of nodeMap.entries()) {
+		nodeIdToCoordKey.set(node.id, coordKey);
+	}
+
+	const nodeIds = [...nodeMap.keys()].sort();
+	const nodeParent = new Map<string, string>(nodeIds.map(id => [id, id]));
+
+	function findNode(id: string): string {
+		let root = id;
+		while (nodeParent.get(root) !== root) root = nodeParent.get(root)!;
+		let curr = id;
+		while (curr !== root) { const nxt = nodeParent.get(curr)!; nodeParent.set(curr, root); curr = nxt; }
+		return root;
+	}
+	function unionNodes(id1: string, id2: string): void {
+		const r1 = findNode(id1), r2 = findNode(id2);
+		if (r1 !== r2) nodeParent.set(r1 < r2 ? r2 : r1, r1 < r2 ? r1 : r2);
+	}
+
+	// Union using coord-keys resolved from node IDs
+	for (const edge of finalEdges) {
+		const ckA = nodeIdToCoordKey.get(edge.nodeAId);
+		const ckB = nodeIdToCoordKey.get(edge.nodeBId);
+		if (ckA && ckB) unionNodes(ckA, ckB);
+	}
+
+	const compGroups = new Map<string, string[]>();
+	for (const id of nodeIds) {
+		const root = findNode(id);
+		if (!compGroups.has(root)) compGroups.set(root, []);
+		// Store node IDs (not coord-keys) in components for external consumers
+		compGroups.get(root)!.push(nodeMap.get(id)!.id);
+	}
+
+	const components: string[][] = [];
+	for (const list of compGroups.values()) { list.sort(); components.push(list); }
+	components.sort((a, b) => a[0].localeCompare(b[0]));
+
+	// Compute degree
+	const degree = new Map<string, number>();
+	for (const edge of finalEdges) {
+		degree.set(edge.nodeAId, (degree.get(edge.nodeAId) ?? 0) + 1);
+		degree.set(edge.nodeBId, (degree.get(edge.nodeBId) ?? 0) + 1);
+	}
+
+	let degree1Nodes = 0, degree2Nodes = 0, degree3PlusNodes = 0;
+	for (const [, deg] of degree.entries()) {
+		if (deg === 1) degree1Nodes++;
+		else if (deg === 2) degree2Nodes++;
+		else degree3PlusNodes++;
+	}
+
+	const nodes = [...nodeMap.values()].sort((a, b) => a.id.localeCompare(b.id));
+	const sortedEdges = [...finalEdges].sort((a, b) => a.id.localeCompare(b.id));
+
+	const normDiag: BarrierGraphNormalizationDiagnostics = {
+		nodesBefore,
+		nodesAfter: nodes.length,
+		edgesBefore,
+		edgesAfter: sortedEdges.length,
+		componentsBefore,
+		componentsAfter: components.length,
+		endpointsSnapped,
+		intersectionsFound,
+		tJunctionsFound,
+		edgesSplit,
+		collinearOverlapsMerged,
+		duplicateSubsegmentsRemoved,
+		zeroLengthRejected,
+		degree1Nodes,
+		degree2Nodes,
+		degree3PlusNodes
+	};
+
+	return {
+		storeyCandidateId: graph.storeyCandidateId,
+		nodes,
+		edges: sortedEdges,
+		components,
+		diagnostics: {
+			...graph.diagnostics,
+			graphNodes: nodes.length,
+			graphEdges: sortedEdges.length,
+			connectedComponents: components.length
+		},
+		normalizationDiagnostics: normDiag
+	};
+}
