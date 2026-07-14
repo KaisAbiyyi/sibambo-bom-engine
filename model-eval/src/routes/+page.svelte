@@ -211,6 +211,7 @@
 		qaMode = params.get('qa') === '1';
 		annotationMode = params.get('annotate') === 'tier1';
 		roomDebug = params.get('roomDebug') === '1';
+		const debugModel = params.get('debugModel');
 
 		qaSlug = corpus || '';
 		const view = params.get('view') || 'isometric';
@@ -226,6 +227,13 @@
 				loadError = 'Invalid dev model path.';
 			} else {
 				void loadDevModel(devModel);
+			}
+		}
+		if (roomDebug && debugModel === 'house2') {
+			if (!import.meta.env.DEV) {
+				roomDebugError = 'House2 debug loader is disabled in production.';
+			} else {
+				void loadHouse2DebugModel();
 			}
 		}
 	});
@@ -296,6 +304,30 @@
 			acceptModel(data, filename);
 		} catch (error) {
 			loadError = error instanceof Error ? error.message : 'Gagal load dev model';
+		} finally {
+			isLoading = false;
+		}
+	}
+
+	async function loadHouse2DebugModel() {
+		isLoading = true;
+		qaReady = false;
+		loadError = '';
+		roomDebugError = '';
+		parseMessage = 'Loading local House2 debug model...';
+		try {
+			const response = await fetch('/api/debug-model/house2');
+			if (!response.ok) throw new Error(`House2 debug model tidak bisa dibaca: ${response.status}`);
+			const bytes = await response.arrayBuffer();
+			const file = new File([bytes], 'house2_model-eval.json', {
+				type: response.headers.get('content-type') || 'application/json'
+			});
+			const data = await readBomModelData(file, MAX_DECOMPRESSED_MODEL_BYTES);
+			acceptModel(data, file.name);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : 'Gagal load House2 debug model';
+			loadError = message;
+			roomDebugError = message;
 		} finally {
 			isLoading = false;
 		}
@@ -1165,7 +1197,9 @@
 			<div class="room-debug-hud">
 				<div class="room-debug-hud__title">
 					<span>Room Debug</span>
-					{#if roomDebugRunning}
+					{#if isLoading}
+						<span class="room-debug-hud__badge room-debug-hud__badge--running">loading…</span>
+					{:else if roomDebugRunning}
 						<span class="room-debug-hud__badge room-debug-hud__badge--running">running…</span>
 					{:else if roomDebugError}
 						<span class="room-debug-hud__badge room-debug-hud__badge--error">error</span>
