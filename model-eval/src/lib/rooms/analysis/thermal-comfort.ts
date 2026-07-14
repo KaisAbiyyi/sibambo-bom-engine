@@ -57,6 +57,18 @@ export function calculateThermalComfort(
 	const airTemp = input.assumptions.indoorDesignTempC;
 	const mrtTemp = airTemp; // Assume equal to air temp unless envelope surface temperatures are simulated
 	const operativeTemp = (airTemp + mrtTemp) / 2.0;
+	const warnings: string[] = [];
+
+	if (
+		!Number.isFinite(airTemp) ||
+		!Number.isFinite(input.assumptions.airSpeedMs) ||
+		!Number.isFinite(input.assumptions.relativeHumidityPercent) ||
+		!Number.isFinite(input.assumptions.metabolicRateMet) ||
+		!Number.isFinite(input.assumptions.clothingClo) ||
+		!Number.isFinite(input.assumptions.outdoorDesignTempC)
+	) {
+		warnings.push('Non-finite environmental inputs detected; fallback values used');
+	}
 
 	if (input.dataQuality === 'insufficient') {
 		missingInputs.push('Insufficient room geometry or environmental inputs');
@@ -79,7 +91,17 @@ export function calculateThermalComfort(
 			status: 'insufficient_data',
 			missingInputs,
 			assumptions,
-			confidence: 0.2
+			confidence: 0.2,
+			trace: {
+				method: 'Unresolved',
+				formula: 'N/A',
+				inputs: [],
+				intermediateValues: [],
+				assumptions: ['Missing required environmental data'],
+				finalResult: { value: 'insufficient_data', unit: 'N/A' },
+				confidence: 0.2,
+				warnings: missingInputs
+			}
 		};
 	}
 
@@ -129,7 +151,27 @@ export function calculateThermalComfort(
 			status,
 			missingInputs,
 			assumptions,
-			confidence: 0.85
+			confidence: 0.85,
+			trace: {
+				method: 'ISO 7730 / ASHRAE 55 Mechanical PMV/PPD',
+				formula: 'PMV = f(T_air, T_mrt, v_air, RH, Met, Clo); PPD = 100 - 95 * exp(-0.03353*PMV^4 - 0.2179*PMV^2)',
+				inputs: [
+					{ name: 'Air Temperature', value: airTemp, unit: '°C' },
+					{ name: 'Mean Radiant Temp', value: mrtTemp, unit: '°C' },
+					{ name: 'Air Speed', value: input.assumptions.airSpeedMs, unit: 'm/s' },
+					{ name: 'Relative Humidity', value: input.assumptions.relativeHumidityPercent, unit: '%' },
+					{ name: 'Metabolic Rate', value: input.assumptions.metabolicRateMet, unit: 'Met' },
+					{ name: 'Clothing Insulation', value: input.assumptions.clothingClo, unit: 'Clo' }
+				],
+				intermediateValues: [
+					{ name: 'Operative Temperature', value: operativeTemp, unit: '°C' },
+					{ name: 'Neutral Operative Temp', value: Math.round((24.0 - (input.assumptions.metabolicRateMet - 1.2) * 3.0) * 10) / 10, unit: '°C' }
+				],
+				assumptions,
+				finalResult: { value: pmvRounded, unit: 'PMV (-3 to +3)' },
+				confidence: 0.85,
+				warnings
+			}
 		};
 	} else {
 		// Adaptive comfort (ASHRAE 55 Adaptive model for naturally ventilated spaces)
@@ -163,7 +205,24 @@ export function calculateThermalComfort(
 			status,
 			missingInputs,
 			assumptions,
-			confidence: 0.8
+			confidence: 0.8,
+			trace: {
+				method: 'ASHRAE 55 / EN 16798 Adaptive Comfort',
+				formula: 'T_neutral = 17.8 + 0.31 * T_outdoor; Limits = T_neutral ± 3.5 °C (80% acceptability)',
+				inputs: [
+					{ name: 'Operative Temperature', value: operativeTemp, unit: '°C' },
+					{ name: 'Outdoor Design Temperature', value: outdoorTemp, unit: '°C' }
+				],
+				intermediateValues: [
+					{ name: 'Neutral Temperature', value: neutralTemp, unit: '°C' },
+					{ name: 'Lower Limit (80%)', value: limitMin, unit: '°C' },
+					{ name: 'Upper Limit (80%)', value: limitMax, unit: '°C' }
+				],
+				assumptions,
+				finalResult: { value: `${limitMin} - ${limitMax}`, unit: '°C' },
+				confidence: 0.8,
+				warnings
+			}
 		};
 	}
 }

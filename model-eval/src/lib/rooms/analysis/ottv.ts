@@ -128,6 +128,7 @@ export function calculateBuildingOttv(
 	let sumOttvArea = 0;
 	let totalExteriorOpaqueAreaM2 = 0;
 	let totalExteriorGlazingAreaM2 = 0;
+	const warnings: string[] = [];
 
 	for (const [orientName, grp] of groupMap.entries()) {
 		// Subtract window area from gross wall area to ensure no double-counting
@@ -137,12 +138,21 @@ export function calculateBuildingOttv(
 
 		if (facadeGrossArea < 0.1) continue; // Skip orientation if no exterior envelope present
 
-		const wwr = glazingArea / facadeGrossArea;
+		let wwr = grp.totalGrossWallArea > 0 ? glazingArea / grp.totalGrossWallArea : (glazingArea > 0 ? 1.0 : 0);
+		if (!Number.isFinite(wwr) || wwr < 0 || wwr > 1.0) {
+			warnings.push(`WWR out of bounds on ${orientName} façade (${wwr.toFixed(2)}); clamped to [0, 1]`);
+			wwr = Math.max(0, Math.min(1.0, wwr));
+		}
+
 		const areaWeightedWallU = opaqueArea > 0 ? grp.sumWallUArea / grp.totalGrossWallArea : config.defaultWallUValue;
 		const areaWeightedAlpha = opaqueArea > 0 ? grp.sumAlphaArea / grp.totalGrossWallArea : config.defaultSolarAbsorptance;
 		const areaWeightedGlazingU = glazingArea > 0 ? grp.sumWindowUArea / glazingArea : config.defaultGlazingUValue;
 		const areaWeightedSc = glazingArea > 0 ? grp.sumScArea / glazingArea : config.defaultShadingCoefficient;
 		const sf = getSolarFactorForOrientation(orientName);
+
+		if (!Number.isFinite(areaWeightedWallU) || !Number.isFinite(areaWeightedAlpha) || !Number.isFinite(areaWeightedGlazingU) || !Number.isFinite(areaWeightedSc)) {
+			warnings.push(`Non-finite thermal properties on ${orientName} façade`);
+		}
 
 		// OTTV Formula terms
 		const opaqueConduction = areaWeightedAlpha * areaWeightedWallU * (1.0 - wwr) * tdek;
@@ -182,13 +192,38 @@ export function calculateBuildingOttv(
 			glazingConductionContributionWm2: Math.round(glazingConduction * 10) / 10,
 			solarFenestrationContributionWm2: Math.round(solarFenestration * 10) / 10,
 			facadeOttvWm2: facadeOttv,
-			adjacentRoomIds: Array.from(grp.roomIds)
+			adjacentRoomIds: Array.from(grp.roomIds),
+			trace: {
+				method: `Façade OTTV (${orientName})`,
+				formula: 'OTTV_facade = alpha * U_w * (1 - WWR) * TDEK + U_f * WWR * deltaT + SC * WWR * SF',
+				inputs: [
+					{ name: 'Opaque Area', value: Math.round(opaqueArea * 100) / 100, unit: 'm²' },
+					{ name: 'Glazing Area', value: Math.round(glazingArea * 100) / 100, unit: 'm²' },
+					{ name: 'WWR', value: Math.round(wwr * 1000) / 1000, unit: 'ratio (0-1)' },
+					{ name: 'Wall U-Value', value: Math.round(areaWeightedWallU * 100) / 100, unit: 'W/m²·K' },
+					{ name: 'Glazing U-Value', value: Math.round(areaWeightedGlazingU * 100) / 100, unit: 'W/m²·K' },
+					{ name: 'Solar Factor SF', value: sf, unit: 'W/m²' }
+				],
+				intermediateValues: [
+					{ name: 'Opaque Conduction Contribution', value: Math.round(opaqueConduction * 10) / 10, unit: 'W/m²' },
+					{ name: 'Glazing Conduction Contribution', value: Math.round(glazingConduction * 10) / 10, unit: 'W/m²' },
+					{ name: 'Solar Fenestration Contribution', value: Math.round(solarFenestration * 10) / 10, unit: 'W/m²' }
+				],
+				assumptions,
+				finalResult: { value: facadeOttv, unit: 'W/m²' },
+				confidence: 0.85,
+				warnings
+			}
 		});
 	}
 
 	const buildingOttv = totalFacadeArea > 0 ? Math.round((sumOttvArea / totalFacadeArea) * 10) / 10 : 0;
 	const isCompliant = buildingOttv <= config.ottvThresholdWm2;
-	const overallWwr = totalFacadeArea > 0 ? Math.round((totalExteriorGlazingAreaM2 / totalFacadeArea) * 1000) / 1000 : 0;
+	let overallWwr = totalFacadeArea > 0 ? Math.round((totalExteriorGlazingAreaM2 / totalFacadeArea) * 1000) / 1000 : 0;
+	if (overallWwr < 0 || overallWwr > 1.0) {
+		warnings.push(`Overall building WWR clamped to [0, 1] range (${overallWwr})`);
+		overallWwr = Math.max(0, Math.min(1.0, overallWwr));
+	}
 
 	return {
 		facades,
@@ -212,6 +247,26 @@ export function calculateBuildingOttv(
 		overallWwr,
 		missingInputs,
 		assumptions,
-		diagnostics
+		diagnostics,
+		trace: {
+			method: 'Façade-Area Weighted Building OTTV (SNI 6389 / CIBSE)',
+			formula: 'BuildingOTTV = sum(OTTV_facade_i * A_facade_i) / sum(A_facade_i)',
+			inputs: [
+				{ name: 'Total Exterior Façade Area', value: Math.round(totalFacadeArea * 100) / 100, unit: 'm²' },
+				{ name: 'Total Opaque Wall Area', value: Math.round(totalExteriorOpaqueAreaM2 * 100) / 100, unit: 'm²' },
+				{ name: 'Total Exterior Glazing Area', value: Math.round(totalExteriorGlazingAreaM2 * 100) / 100, unit: 'm²' },
+				{ name: 'Overall WWR', value: overallWwr, unit: 'ratio (0-1)' },
+				{ name: 'OTTV Threshold', value: config.ottvThresholdWm2, unit: 'W/m²' }
+			],
+			intermediateValues: facades.map((f) => ({
+				name: `Façade Contribution (${f.orientationName}, ${f.totalOpaqueAreaM2 + f.totalGlazingAreaM2} m²)`,
+				value: f.facadeOttvWm2,
+				unit: 'W/m²'
+			})),
+			assumptions,
+			finalResult: { value: buildingOttv, unit: 'W/m²' },
+			confidence: totalFacadeArea > 0 ? 0.85 : 0.2,
+			warnings
+		}
 	};
 }

@@ -19,6 +19,11 @@ export function calculateNaturalVentilation(
 ): NaturalVentilationResult {
 	const missingInputs: string[] = [];
 	const assumptions: string[] = [];
+	const warnings: string[] = [];
+
+	if (!Number.isFinite(input.geometry.volume) || input.geometry.volume < 0 || !Number.isFinite(input.geometry.floorArea)) {
+		warnings.push('Non-finite or negative room dimensions detected; volume clamped for ACH');
+	}
 
 	const extOpenings = input.openings.filter((o) => o.isExterior && o.area > 0.1);
 	const extCount = extOpenings.length;
@@ -51,7 +56,20 @@ export function calculateNaturalVentilation(
 			confidence: 0.95,
 			methodIdentifier: 'first_order_opening_balance',
 			missingInputs,
-			assumptions
+			assumptions,
+			trace: {
+				method: 'First-Order Opening Balance',
+				formula: 'Q = 0 (No exterior openings)',
+				inputs: [
+					{ name: 'Exterior Openings Count', value: 0, unit: 'count' },
+					{ name: 'Room Volume', value: input.geometry.volume, unit: 'm³' }
+				],
+				intermediateValues: [],
+				assumptions: ['Space is entirely reliant on mechanical ventilation or transfer air'],
+				finalResult: { value: 0, unit: 'ACH' },
+				confidence: 0.95,
+				warnings
+			}
 		};
 	}
 
@@ -165,6 +183,24 @@ export function calculateNaturalVentilation(
 		confidence: 0.8,
 		methodIdentifier: 'first_order_opening_balance',
 		missingInputs,
-		assumptions
+		assumptions,
+		trace: {
+			method: 'First-Order Opening Balance & Stack-Assisted Airflow',
+			formula: 'Q_total = max(Q_wind, Q_stack); Q_wind = C_v * A_eff * v_wind; ACH = Q_total * 3600 / V',
+			inputs: [
+				{ name: 'Effective Opening Area', value: Math.round(effectiveArea * 100) / 100, unit: 'm²' },
+				{ name: 'Room Volume', value: volume, unit: 'm³' },
+				{ name: 'Wind Speed', value: config.localWindSpeedMs, unit: 'm/s' },
+				{ name: 'Wind Direction', value: config.localWindDirectionDeg, unit: 'deg' }
+			],
+			intermediateValues: [
+				{ name: 'Wind-driven Airflow Q_wind', value: Math.round(qWind * 100) / 100, unit: 'm³/s' },
+				{ name: 'Stack-driven Airflow Q_stack', value: Math.round(qStack * 100) / 100, unit: 'm³/s' }
+			],
+			assumptions,
+			finalResult: { value: ach, unit: 'ACH' },
+			confidence: 0.8,
+			warnings
+		}
 	};
 }

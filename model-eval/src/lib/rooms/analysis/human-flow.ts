@@ -90,6 +90,11 @@ export function calculateHumanFlow(
 	const majorConstraints: string[] = [];
 	const evidence: string[] = [];
 	const diagnostics: string[] = [];
+	const warnings: string[] = [];
+
+	if (!Number.isFinite(input.geometry.floorArea) || input.geometry.floorArea < 0 || !Number.isFinite(input.geometry.minWidth)) {
+		warnings.push('Non-finite or negative room dimensions in flow calculation');
+	}
 
 	const componentMap = computeConnectedComponents(topology);
 	const connectedComponentId = componentMap.get(input.room.id) || 1;
@@ -118,7 +123,7 @@ export function calculateHumanFlow(
 	for (const o of input.openings) {
 		if (o.type === 'door' || o.type === 'open_passage') {
 			accessibleNeighborCount++;
-			if (o.isExterior || o.connectedRoomId && exitRoomIds.has(o.connectedRoomId)) {
+			if (o.isExterior || (o.connectedRoomId && exitRoomIds.has(o.connectedRoomId))) {
 				entranceCount++;
 			}
 		}
@@ -206,6 +211,25 @@ export function calculateHumanFlow(
 		accessibilityStatus,
 		majorConstraints,
 		evidence,
-		diagnostics
+		diagnostics,
+		trace: {
+			method: 'Topological Graph Analysis & Movement Scoring',
+			formula: 'MovementScore = min(100, accessibleNeighbors * 20 + circLikelihood * 40 + (isDeadEnd ? 0 : 20))',
+			inputs: [
+				{ name: 'Accessible Neighbors', value: accessibleNeighborCount, unit: 'count' },
+				{ name: 'Entrance Count', value: entranceCount, unit: 'count' },
+				{ name: 'Connection Degree', value: connectionDegree, unit: 'count' },
+				{ name: 'Floor Area', value: input.geometry.floorArea, unit: 'm²' }
+			],
+			intermediateValues: [
+				{ name: 'Circulation Likelihood', value: circLikelihood, unit: 'ratio (0-1)' },
+				{ name: 'Shortest Steps to Exit', value: shortestDist ?? 'unreachable', unit: 'steps' },
+				{ name: 'Min Circulation Width', value: Math.round(minOpeningWidth * 100) / 100, unit: 'm' }
+			],
+			assumptions: ['Topological paths assume traversable doors and open passages'],
+			finalResult: { value: score, unit: 'score (0-100)' },
+			confidence: 0.85,
+			warnings
+		}
 	};
 }

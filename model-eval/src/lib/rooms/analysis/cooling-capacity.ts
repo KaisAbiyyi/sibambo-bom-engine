@@ -21,6 +21,11 @@ export function calculateCoolingCapacity(
 ): CoolingCapacityResult {
 	const missingInputs: string[] = [];
 	const assumptions: string[] = [];
+	const warnings: string[] = [];
+
+	if (!Number.isFinite(input.geometry.floorArea) || input.geometry.floorArea < 0 || !Number.isFinite(input.geometry.volume)) {
+		warnings.push('Non-finite or negative room dimensions detected in cooling capacity calculation');
+	}
 
 	const deltaT = Math.max(0, input.assumptions.outdoorDesignTempC - input.assumptions.indoorDesignTempC);
 	assumptions.push(`Design ΔT: ${deltaT.toFixed(1)} °C (${input.assumptions.indoorDesignTempC} °C indoor, ${input.assumptions.outdoorDesignTempC} °C outdoor)`);
@@ -77,12 +82,6 @@ export function calculateCoolingCapacity(
 	const totalLatent = Math.round((occupantLatent + ventLatent) * 10) / 10;
 	const totalCoolingLoad = Math.round((totalSensible + totalLatent) * 10) / 10;
 
-	const factor = 1.0 + config.acSafetyMargin;
-	const recommendedW = Math.round(totalCoolingLoad * factor);
-	const recommendedKw = Math.round((recommendedW / 1000.0) * 100) / 100;
-	const recommendedBtuh = Math.round(recommendedW * 3.412142);
-	const recommendedPk = Math.round((recommendedBtuh / 9000.0) * 10) / 10;
-
 	const breakdown: CoolingLoadBreakdown = {
 		envelopeConductiveW: { value: Math.round(envelopeConductive), state: 'calculated', source: ['model', 'user_config'], confidence: 0.8, diagnostics: [] },
 		glazingConductiveW: { value: Math.round(glazingConductive), state: 'calculated', source: ['model', 'user_config'], confidence: 0.8, diagnostics: [] },
@@ -93,6 +92,18 @@ export function calculateCoolingCapacity(
 		equipmentW: { value: Math.round(equipment), state: 'calculated', source: ['standard_profile'], confidence: 0.8, diagnostics: [] },
 		ventilationInfiltrationW: { value: Math.round(ventSensible + ventLatent), state: 'calculated', source: ['standard_profile', 'user_config'], confidence: 0.75, diagnostics: [] }
 	};
+
+	// Ensure cooling-load components sum check
+	const sumComponents = Math.round(envelopeConductive) + Math.round(glazingConductive) + Math.round(solarGlazing) + Math.round(occupantSensible) + Math.round(occupantLatent) + Math.round(lighting) + Math.round(equipment) + Math.round(ventSensible + ventLatent);
+	if (Math.abs(sumComponents - totalCoolingLoad) > 2.0) {
+		warnings.push(`Breakdown sum (${sumComponents} W) deviates from total cooling load (${totalCoolingLoad} W) beyond rounding tolerance`);
+	}
+
+	const factor = 1.0 + config.acSafetyMargin;
+	const recommendedW = Math.round(totalCoolingLoad * factor);
+	const recommendedKw = Math.round((recommendedW / 1000.0) * 100) / 100;
+	const recommendedBtuh = Math.round(recommendedW * 3.412142);
+	const recommendedPk = Math.round((recommendedBtuh / 9000.0) * 10) / 10;
 
 	return {
 		methodIdentifier: 'simplified_peak_load_component_summation',
@@ -105,6 +116,35 @@ export function calculateCoolingCapacity(
 		recommendedCapacityBtuh: { value: recommendedBtuh, state: 'calculated', source: ['model', 'standard_profile', 'user_config'], confidence: 0.85, diagnostics: [] },
 		recommendedCapacityPk: { value: recommendedPk, state: 'calculated', source: ['model', 'standard_profile', 'user_config'], confidence: 0.85, diagnostics: [`Nominal PK: ${recommendedPk.toFixed(1)} PK (~9000 BTU/h per PK)`] },
 		missingInputs,
-		assumptions
+		assumptions,
+		trace: {
+			method: 'Peak Cooling Load Component Summation & AC Sizing',
+			formula: 'Q_total = Q_sensible + Q_latent; Q_recom = Q_total * (1 + safetyMargin); 1 kW = 3412.142 BTU/h; 1 PK ~ 9000 BTU/h',
+			inputs: [
+				{ name: 'Floor Area', value: input.geometry.floorArea, unit: 'm²' },
+				{ name: 'Room Volume', value: input.geometry.volume, unit: 'm³' },
+				{ name: 'Occupants', value: occupants, unit: 'people' },
+				{ name: 'Indoor Design Temp', value: input.assumptions.indoorDesignTempC, unit: '°C' },
+				{ name: 'Outdoor Design Temp', value: input.assumptions.outdoorDesignTempC, unit: '°C' },
+				{ name: 'Safety Margin', value: config.acSafetyMargin * 100, unit: '%' }
+			],
+			intermediateValues: [
+				{ name: 'Envelope Conductive Load', value: Math.round(envelopeConductive), unit: 'W' },
+				{ name: 'Glazing Conductive Load', value: Math.round(glazingConductive), unit: 'W' },
+				{ name: 'Solar Glazing Load', value: Math.round(solarGlazing), unit: 'W' },
+				{ name: 'Occupant Sensible Load', value: Math.round(occupantSensible), unit: 'W' },
+				{ name: 'Occupant Latent Load', value: Math.round(occupantLatent), unit: 'W' },
+				{ name: 'Lighting Load', value: Math.round(lighting), unit: 'W' },
+				{ name: 'Equipment Load', value: Math.round(equipment), unit: 'W' },
+				{ name: 'Ventilation & Infiltration Load', value: Math.round(ventSensible + ventLatent), unit: 'W' },
+				{ name: 'Total Sensible Load', value: totalSensible, unit: 'W' },
+				{ name: 'Total Latent Load', value: totalLatent, unit: 'W' },
+				{ name: 'Total Cooling Load', value: totalCoolingLoad, unit: 'W' }
+			],
+			assumptions,
+			finalResult: { value: `${recommendedW} W (${recommendedKw} kW / ${recommendedBtuh} BTU/h / ${recommendedPk} PK)`, unit: 'W / kW / BTU/h / PK' },
+			confidence: 0.85,
+			warnings
+		}
 	};
 }

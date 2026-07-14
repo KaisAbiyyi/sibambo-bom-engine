@@ -39,11 +39,27 @@ export function calculateArtificialLighting(
 		'Lumen method provides average horizontal illuminance only',
 		'Photometric simulation required for exact UGR (glare), uniformity, and shadow analysis'
 	];
+	const warnings: string[] = [];
+
+	let cu = config.coefficientOfUtilization;
+	let llf = config.lightLossFactor;
+	const flux = Math.max(1, config.defaultLuminaireFluxLm);
+
+	if (!Number.isFinite(cu) || cu <= 0 || cu > 1.0) {
+		warnings.push(`Invalid CU value (${cu}); restricted to (0, 1.0] range`);
+		if (cu <= 0) cu = 0.6;
+		if (cu > 1.0) cu = 1.0;
+	}
+	if (!Number.isFinite(llf) || llf <= 0 || llf > 1.0) {
+		warnings.push(`Invalid LLF value (${llf}); restricted to (0, 1.0] range`);
+		if (llf <= 0) llf = 0.8;
+		if (llf > 1.0) llf = 1.0;
+	}
+	if (!Number.isFinite(input.geometry.floorArea) || input.geometry.floorArea < 0 || !Number.isFinite(requiredLux) || requiredLux < 0) {
+		warnings.push('Non-finite or negative floor area or required lux detected');
+	}
 
 	const area = Math.max(0.1, input.geometry.floorArea);
-	const flux = config.defaultLuminaireFluxLm;
-	const cu = config.coefficientOfUtilization;
-	const llf = config.lightLossFactor;
 
 	assumptions.push(`Luminaire flux: ${flux} Lm, CU: ${cu}, LLF: ${llf}`);
 	assumptions.push(`Target illuminance: ${requiredLux} Lux`);
@@ -143,6 +159,28 @@ export function calculateArtificialLighting(
 		workPlaneHeightM: workPlaneHeight,
 		proposedPositions,
 		assumptions,
-		limitations
+		limitations,
+		trace: {
+			method: 'Lumen Method (Average Horizontal Illuminance)',
+			formula: 'N = (E * A) / (Phi * CU * LLF); E_achieved = (N_rounded * Phi * CU * LLF) / A',
+			inputs: [
+				{ name: 'Target Illuminance E', value: requiredLux, unit: 'lux' },
+				{ name: 'Floor Area A', value: input.geometry.floorArea, unit: 'm²' },
+				{ name: 'Luminaire Flux Phi', value: flux, unit: 'lumen' },
+				{ name: 'Coefficient of Utilization CU', value: cu, unit: 'ratio (0-1)' },
+				{ name: 'Light Loss Factor LLF', value: llf, unit: 'ratio (0-1)' }
+			],
+			intermediateValues: [
+				{ name: 'Raw Luminaire Count', value: Math.round(rawCount * 100) / 100, unit: 'count' },
+				{ name: 'Proposed Grid Columns', value: cols, unit: 'count' },
+				{ name: 'Proposed Grid Rows', value: rows, unit: 'count' },
+				{ name: 'Luminaire Spacing X', value: spacingX, unit: 'm' },
+				{ name: 'Luminaire Spacing Z', value: spacingZ, unit: 'm' }
+			],
+			assumptions,
+			finalResult: { value: `${roundedCount} luminaires (${achievedLux} lux achieved)`, unit: 'count / lux' },
+			confidence: 0.85,
+			warnings
+		}
 	};
 }

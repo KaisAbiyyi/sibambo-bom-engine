@@ -171,6 +171,32 @@ export type RoomAnalysisInput = {
 	dataQuality: RoomAnalysisDataQuality;
 };
 
+export type CalculationTraceInput = {
+	name: string;
+	value: number | string | boolean | null | undefined;
+	unit: string;
+};
+
+export type CalculationTraceIntermediate = {
+	name: string;
+	value: number | string | boolean | null | undefined;
+	unit: string;
+};
+
+export type CalculationTrace = {
+	method: string;
+	formula: string;
+	inputs: CalculationTraceInput[];
+	intermediateValues: CalculationTraceIntermediate[];
+	assumptions: string[];
+	finalResult: {
+		value: number | string | boolean | null | undefined;
+		unit: string;
+	};
+	confidence: number;
+	warnings: string[];
+};
+
 // ─── Analysis Module Results ──────────────────────────────────────────────────
 
 export type ThermalComfortResult = {
@@ -182,6 +208,7 @@ export type ThermalComfortResult = {
 	missingInputs: string[];
 	assumptions: string[];
 	confidence: number;
+	trace?: CalculationTrace;
 };
 
 export type HumanFlowResult = {
@@ -200,6 +227,7 @@ export type HumanFlowResult = {
 	majorConstraints: string[];
 	evidence: string[];
 	diagnostics: string[];
+	trace?: CalculationTrace;
 };
 
 export type NaturalVentilationResult = {
@@ -213,6 +241,7 @@ export type NaturalVentilationResult = {
 	methodIdentifier: string;
 	missingInputs: string[];
 	assumptions: string[];
+	trace?: CalculationTrace;
 };
 
 export type CoolingLoadBreakdown = {
@@ -238,6 +267,7 @@ export type CoolingCapacityResult = {
 	recommendedCapacityPk: AnalysisValue<number>; // Nominal PK (~9000 BTU/h per PK)
 	missingInputs: string[];
 	assumptions: string[];
+	trace?: CalculationTrace;
 };
 
 export type IlluminanceRequirementResult = {
@@ -247,6 +277,7 @@ export type IlluminanceRequirementResult = {
 	workPlaneHeightM: number;
 	applicability: 'direct_match' | 'uncertain_fallback' | 'generic_default';
 	alternatives: { function: RoomFunction; targetLux: number }[];
+	trace?: CalculationTrace;
 };
 
 export type LuminairePoint3D = {
@@ -275,6 +306,7 @@ export type ArtificialLightingResult = {
 	proposedPositions: LuminairePoint3D[];
 	assumptions: string[];
 	limitations: string[];
+	trace?: CalculationTrace;
 };
 
 export type RoomAnalysisDiagnostic = {
@@ -314,6 +346,7 @@ export type FacadeOrientationGroup = {
 	solarFenestrationContributionWm2: number;
 	facadeOttvWm2: number;
 	adjacentRoomIds: string[];
+	trace?: CalculationTrace;
 };
 
 export type BuildingOttvResult = {
@@ -327,6 +360,7 @@ export type BuildingOttvResult = {
 	missingInputs: string[];
 	assumptions: string[];
 	diagnostics: string[];
+	trace?: CalculationTrace;
 };
 
 export type BuildingAnalysisSummary = {
