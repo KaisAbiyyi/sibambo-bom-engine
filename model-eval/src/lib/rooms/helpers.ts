@@ -9,6 +9,8 @@ import type {
 	RoomEvidenceSnapshot,
 	RoomEvidenceDiagnostics
 } from './types';
+import { GEOMETRY_TOLERANCES, type SurfaceClusterRecord } from '../geometry';
+import type { ClassificationUnitRecord } from '../annotation';
 
 // Centralized quantization step (1mm)
 export const QUANTIZATION_STEP = 0.001;
@@ -150,4 +152,157 @@ export function createDeterministicSnapshot(
 		boundaryOpenings,
 		diagnostics
 	};
+}
+
+const COS_HORIZONTAL = Math.cos((GEOMETRY_TOLERANCES.orientationAngleDeg * Math.PI) / 180);
+
+export function extractHorizontalSurfaceEvidence(
+	records: Array<ClassificationUnitRecord | SurfaceClusterRecord>,
+	diagnostics?: { acceptedHorizontalCount: number; rejectedHorizontalCount: number }
+): HorizontalSurfaceEvidence[] {
+	const results: HorizontalSurfaceEvidence[] = [];
+
+	for (const record of records) {
+		const area = record.areaM2;
+		const normal = record.dominantNormal;
+		const bounds = record.worldBounds;
+		const centroid = record.centroid;
+
+		const isFinite =
+			Number.isFinite(area) &&
+			Number.isFinite(normal.x) && Number.isFinite(normal.y) && Number.isFinite(normal.z) &&
+			Number.isFinite(bounds.min.x) && Number.isFinite(bounds.min.y) && Number.isFinite(bounds.min.z) &&
+			Number.isFinite(bounds.max.x) && Number.isFinite(bounds.max.y) && Number.isFinite(bounds.max.z) &&
+			Number.isFinite(centroid.x) && Number.isFinite(centroid.y) && Number.isFinite(centroid.z);
+
+		const hasArea = area > 0;
+		const validBounds = bounds.min.x <= bounds.max.x && bounds.min.y <= bounds.max.y && bounds.min.z <= bounds.max.z;
+
+		if (!isFinite || !hasArea || !validBounds) {
+			if (diagnostics) diagnostics.rejectedHorizontalCount++;
+			continue;
+		}
+
+		const verticalCos = Math.abs(normal.y);
+		if (verticalCos >= COS_HORIZONTAL) {
+			const surfaceType: 'floor' | 'ceiling' = normal.y >= 0 ? 'floor' : 'ceiling';
+			const planBounds: PlanBounds = {
+				min: { x: bounds.min.x, z: bounds.min.z },
+				max: { x: bounds.max.x, z: bounds.max.z }
+			};
+
+			const sourceIds = [record.id];
+			const id = generateHorizontalSurfaceId(
+				record.logicalObjectId,
+				sourceIds,
+				centroid.y,
+				planBounds,
+				surfaceType
+			);
+
+			results.push({
+				id,
+				logicalObjectId: record.logicalObjectId,
+				classificationUnitIds: sourceIds,
+				elevation: centroid.y,
+				planBounds,
+				materialIds: record.materialIds,
+				surfaceType,
+				areaM2: area,
+				quality: 1.0,
+				isAmbiguous: false
+			});
+
+			if (diagnostics) diagnostics.acceptedHorizontalCount++;
+		} else {
+			if (diagnostics) diagnostics.rejectedHorizontalCount++;
+		}
+	}
+
+	return results.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+export function buildStoreyBands(
+	evidence: HorizontalSurfaceEvidence[]
+): StoreyBandEvidence[] {
+	if (evidence.length === 0) return [];
+
+	const sorted = [...evidence].sort((a, b) => {
+		if (a.elevation !== b.elevation) {
+			return a.elevation - b.elevation;
+		}
+		return a.id.localeCompare(b.id);
+	});
+
+	const groups: HorizontalSurfaceEvidence[][] = [];
+	let currentGroup: HorizontalSurfaceEvidence[] = [];
+
+	for (const item of sorted) {
+		if (currentGroup.length === 0) {
+			currentGroup.push(item);
+		} else {
+			const baseElevation = currentGroup[0].elevation;
+			if (Math.abs(item.elevation - baseElevation) <= GEOMETRY_TOLERANCES.levelBandM) {
+				currentGroup.push(item);
+			} else {
+				groups.push(currentGroup);
+				currentGroup = [item];
+			}
+		}
+	}
+	if (currentGroup.length > 0) {
+		groups.push(currentGroup);
+	}
+
+	const storeyBands: StoreyBandEvidence[] = [];
+
+	for (const group of groups) {
+		const minEl = Math.min(...group.map(e => e.elevation));
+		const maxEl = Math.max(...group.map(e => e.elevation));
+
+		const minX = Math.min(...group.map(e => e.planBounds.min.x));
+		const minZ = Math.min(...group.map(e => e.planBounds.min.z));
+		const maxX = Math.max(...group.map(e => e.planBounds.max.x));
+		const maxZ = Math.max(...group.map(e => e.planBounds.max.z));
+		const planBounds: PlanBounds = {
+			min: { x: minX, z: minZ },
+			max: { x: maxX, z: maxZ }
+		};
+
+		const totalArea = group.reduce((sum, e) => sum + e.areaM2, 0);
+		const weightedSum = group.reduce((sum, e) => sum + e.elevation * e.areaM2, 0);
+		const representativeElevation = totalArea > 0 ? weightedSum / totalArea : group[0].elevation;
+
+		const classificationUnitIds = [...new Set(group.flatMap(e => e.classificationUnitIds))].sort();
+		const logicalObjectId = [...new Set(group.map(e => e.logicalObjectId))].sort().join('|');
+
+		const materialIdsSet = new Set<number>();
+		for (const e of group) {
+			if (e.materialIds) {
+				for (const matId of e.materialIds) {
+					materialIdsSet.add(matId);
+				}
+			}
+		}
+		const materialIds = materialIdsSet.size > 0 ? [...materialIdsSet].sort((a, b) => a - b) : undefined;
+
+		const hasUpward = group.some(e => e.surfaceType === 'floor');
+		const hasDownward = group.some(e => e.surfaceType === 'ceiling');
+		const isAmbiguous = hasUpward && hasDownward;
+
+		const id = generateStoreyBandId(logicalObjectId, classificationUnitIds, minEl, maxEl);
+
+		storeyBands.push({
+			id,
+			logicalObjectId,
+			classificationUnitIds,
+			elevationRange: { min: minEl, max: maxEl },
+			planBounds,
+			materialIds,
+			quality: 1.0,
+			isAmbiguous
+		});
+	}
+
+	return storeyBands.sort((a, b) => a.id.localeCompare(b.id));
 }

@@ -61,6 +61,8 @@ export interface RoomEvidenceDiagnostics {
 	totalBoundaryOpenings: number;
 	duplicatedIdsCount: number;
 	executionTimeMs: number;
+	acceptedHorizontalCount?: number;
+	rejectedHorizontalCount?: number;
 }
 
 export interface RoomEvidenceSnapshot {
