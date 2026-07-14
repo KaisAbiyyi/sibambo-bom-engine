@@ -201,3 +201,59 @@ export interface RankedBoundaryLoopResult {
 		rankedFingerprint: string;
 	};
 }
+
+export type LoopSurfaceAssignmentRole = 'lower-support' | 'upper-cover' | 'intersecting' | 'ambiguous';
+
+export interface LoopSurfaceAssignmentQuality {
+	approximateOverlap: boolean;
+	weakPlanOverlap: boolean;
+	strongPlanOverlap: boolean;
+	elevationMismatch: boolean;
+	orientationConflict: boolean;
+	multipleLowerCandidates: boolean;
+	multipleUpperCandidates: boolean;
+	noHorizontalSupport: boolean;
+	ambiguousRole: boolean;
+}
+
+export interface LoopSurfaceAssignment {
+	id: string;
+	loopCandidateId: string;
+	storeyCandidateId: string;
+	horizontalEvidenceId: string;
+	logicalObjectId: string;
+	classificationUnitIds: string[];
+	materialIds: number[];
+	orientation: 'up' | 'down' | 'horizontal' | 'unknown';
+	elevation: number;
+	loopArea: number;
+	overlapArea: number;
+	overlapProxy?: number;
+	loopCoverageRatio: number;
+	evidenceCoverageRatio: number;
+	verticalDistance: number;
+	role: LoopSurfaceAssignmentRole;
+	score: number;
+	qualityFlags: LoopSurfaceAssignmentQuality;
+}
+
+export interface LoopSurfaceAssignmentDiagnostics {
+	loopsInspected: number;
+	noiseLoopsSkipped: number;
+	horizontalEvidenceInspected: number;
+	planOverlapTests: number;
+	assignmentsAccepted: number;
+	lowerSupportCandidates: number;
+	upperCoverCandidates: number;
+	ambiguousAssignments: number;
+	loopsWithNoAssignment: number;
+	approximateOverlapAssignments: number;
+	rejectedNonFiniteGeometry: number;
+}
+
+export interface LoopSurfaceAssignmentResult {
+	assignments: LoopSurfaceAssignment[];
+	diagnostics: LoopSurfaceAssignmentDiagnostics & {
+		fingerprint?: string;
+	};
+}

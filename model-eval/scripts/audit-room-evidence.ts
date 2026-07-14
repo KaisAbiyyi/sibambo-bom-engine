@@ -4,7 +4,8 @@ import { createGeometryFoundation } from '../src/lib/geometry';
 import { createRoomEvidenceProcessor } from '../src/lib/rooms/processor';
 import { calculateRoomEvidenceFingerprint, calculateBarrierGraphFingerprint, normalizeBarrierGraph } from '../src/lib/rooms/helpers';
 import { findBoundaryLoopCandidates, calculateBoundaryLoopFingerprint, rankBoundaryLoopCandidates } from '../src/lib/rooms/loops';
-import type { BoundaryLoopDiagnostics } from '../src/lib/rooms/types';
+import { assignHorizontalEvidenceToLoops, calculateLoopSurfaceAssignmentFingerprint } from '../src/lib/rooms/surfaces';
+import type { BoundaryLoopDiagnostics, LoopSurfaceAssignment, RankedBoundaryLoopCandidate } from '../src/lib/rooms/types';
 import { createHash } from 'crypto';
 import { resolve } from 'path';
 
@@ -20,6 +21,39 @@ function computeAreaStats(candidates: Array<{ area: number }>) {
 	return { min, median, max };
 }
 
+function computeAssignmentStats(assignments: LoopSurfaceAssignment[], loopsOfStatus: RankedBoundaryLoopCandidate[]) {
+	const loopIds = new Set(loopsOfStatus.map(l => l.id));
+	const subsetAssignments = assignments.filter(a => loopIds.has(a.loopCandidateId));
+	const loopsWithLowerSupport = loopsOfStatus.filter(l => subsetAssignments.some(a => a.loopCandidateId === l.id && a.role === 'lower-support')).length;
+	const loopsWithUpperCover = loopsOfStatus.filter(l => subsetAssignments.some(a => a.loopCandidateId === l.id && a.role === 'upper-cover')).length;
+	const loopsWithNoAssignment = loopsOfStatus.filter(l => !subsetAssignments.some(a => a.loopCandidateId === l.id)).length;
+	const acceptedAssignmentCount = subsetAssignments.length;
+	const approximateAssignmentCount = subsetAssignments.filter(a => a.qualityFlags.approximateOverlap).length;
+
+	let coverageStats = { min: 0, median: 0, max: 0 };
+	if (subsetAssignments.length > 0) {
+		const ratios = subsetAssignments.map(a => a.loopCoverageRatio).sort((a, b) => a - b);
+		const min = Number(ratios[0].toFixed(6));
+		const max = Number(ratios[ratios.length - 1].toFixed(6));
+		const mid = Math.floor(ratios.length / 2);
+		const median = Number((ratios.length % 2 === 0 ? (ratios[mid - 1] + ratios[mid]) / 2 : ratios[mid]).toFixed(6));
+		coverageStats = { min, median, max };
+	}
+
+	const fingerprint = calculateLoopSurfaceAssignmentFingerprint(subsetAssignments);
+
+	return {
+		loopCountInspected: loopsOfStatus.length,
+		loopsWithLowerSupport,
+		loopsWithUpperCover,
+		loopsWithNoAssignment,
+		acceptedAssignmentCount,
+		approximateAssignmentCount,
+		coverageStats,
+		fingerprint
+	};
+}
+
 function parseOptions(args: string[]) {
 	let path: string | undefined;
 	let isJson = false;
@@ -30,6 +64,7 @@ function parseOptions(args: string[]) {
 	let barriers = false;
 	let graphs = false;
 	let loops = false;
+	let surfaces = false;
 
 	for (let i = 0; i < args.length; i++) {
 		const arg = args[i];
@@ -41,6 +76,7 @@ function parseOptions(args: string[]) {
 		else if (arg === '--barriers') barriers = true;
 		else if (arg === '--graphs') graphs = true;
 		else if (arg === '--loops') loops = true;
+		else if (arg === '--surfaces') surfaces = true;
 		else if (!arg.startsWith('--') && !path) path = arg;
 	}
 
@@ -48,13 +84,13 @@ function parseOptions(args: string[]) {
 		path = resolve(import.meta.dirname, '../../skps/model-eval-exports/house2_model-eval.json');
 	}
 
-	return { path, isJson, house2, summary, snapshot, storeys, barriers, graphs, loops };
+	return { path, isJson, house2, summary, snapshot, storeys, barriers, graphs, loops, surfaces };
 }
 
 const options = parseOptions(Bun.argv.slice(2));
 
 if (!options.path) {
-	console.error('Usage: bun run audit-room-evidence.ts <absolute-model-json-path> [--json] [--house2] [--summary|--snapshot|--storeys|--barriers|--graphs|--loops]');
+	console.error('Usage: bun run audit-room-evidence.ts <absolute-model-json-path> [--json] [--house2] [--summary|--snapshot|--storeys|--barriers|--graphs|--loops|--surfaces]');
 	process.exit(1);
 }
 
@@ -192,18 +228,12 @@ try {
 						qualityFlags: c.qualityFlags
 					})),
 					candidates: rankedRes.candidates.map(c => ({
-						id: c.id,
+						...c,
 						score: Number(c.score.toFixed(6)),
-						status: c.status,
 						area: Number(c.area.toFixed(6)),
 						perimeter: Number(c.perimeter.toFixed(6)),
 						compactness: Number(c.compactness.toFixed(6)),
-						boundsAspectRatio: Number(c.boundsAspectRatio.toFixed(6)),
-						edgeCount: c.edgeCount,
-						uniqueSourceObjectCount: c.uniqueSourceObjectCount,
-						sharedEdgeIds: c.sharedEdgeIds,
-						adjacentLoopIds: c.adjacentLoopIds,
-						qualityFlags: c.qualityFlags
+						boundsAspectRatio: Number(c.boundsAspectRatio.toFixed(6))
 					}))
 				}
 			}
@@ -287,6 +317,11 @@ try {
 	}
 	const aggregateRankedFingerprint = hashAll.digest('hex');
 
+	const surfaceAssignmentsResult = assignHorizontalEvidenceToLoops(allRankedCandidateList, snapshot.horizontalSurfaces, snapshot.storeyBands);
+	const primaryAssignmentStats = computeAssignmentStats(surfaceAssignmentsResult.assignments, allRankedCandidateList.filter(c => c.status === 'primary'));
+	const secondaryAssignmentStats = computeAssignmentStats(surfaceAssignmentsResult.assignments, allRankedCandidateList.filter(c => c.status === 'secondary'));
+	const aggregateAssignmentStats = computeAssignmentStats(surfaceAssignmentsResult.assignments, allRankedCandidateList);
+
 	const summary = {
 		inputPath: path,
 		inputSha256: sha256,
@@ -336,6 +371,14 @@ try {
 				}))
 			}
 		},
+		surfaces: {
+			diagnostics: surfaceAssignmentsResult.diagnostics,
+			stats: {
+				primary: primaryAssignmentStats,
+				secondary: secondaryAssignmentStats,
+				aggregate: aggregateAssignmentStats
+			}
+		},
 		primaryCandidates: primaryCandidatesDetails,
 		secondaryCandidates: secondaryCandidatesDetails
 	};
@@ -343,7 +386,7 @@ try {
 	if (isJson) {
 		console.log(JSON.stringify(summary, null, 2));
 	} else {
-		const showAll = !options.summary && !options.storeys && !options.barriers && !options.graphs && !options.loops;
+		const showAll = !options.summary && !options.storeys && !options.barriers && !options.graphs && !options.loops && !options.surfaces;
 
 		if (showAll || options.summary) {
 			console.log(`=== ROOM EVIDENCE AUDIT SUMMARY ===`);
@@ -367,9 +410,10 @@ try {
 			console.log(`Fingerprint:                   ${summary.fingerprint}`);
 			console.log(`Initial FaceRecord Expansion:  ${summary.initialFaceRecordExpansion}`);
 			console.log(`Total Loop Candidates:         ${summary.loops.totalCandidateCount}`);
+			console.log(`Total Surface Assignments:     ${summary.surfaces.diagnostics.assignmentsAccepted}`);
 		}
 
-		if (showAll || options.storeys || options.graphs || options.loops) {
+		if (showAll || options.storeys || options.graphs || options.loops || options.surfaces) {
 			console.log(`\n=== PRIMARY CANDIDATES DETAILS ===`);
 			for (const p of summary.primaryCandidates) {
 				console.log(`  - ID: ${p.id.length > 80 ? p.id.slice(0, 77) + '...' : p.id}`);
@@ -378,7 +422,7 @@ try {
 				console.log(`    Total Area:       ${p.totalArea.toFixed(3)} m2`);
 				console.log(`    Coverage Ratio:   ${p.modelRelativeCoverage.toFixed(6)}`);
 				console.log(`    Ambiguous:        ${p.isAmbiguous}`);
-				if (p.graph && (showAll || options.graphs || options.loops)) {
+				if (p.graph && (showAll || options.graphs || options.loops || options.surfaces)) {
 					if (showAll || options.graphs) {
 						console.log(`    Graph Nodes:      ${p.graph.nodeCount}`);
 						console.log(`    Graph Edges:      ${p.graph.edgeCount}`);
@@ -427,7 +471,7 @@ try {
 				console.log(`    Total Area:       ${s.totalArea.toFixed(3)} m2`);
 				console.log(`    Coverage Ratio:   ${s.modelRelativeCoverage.toFixed(6)}`);
 				console.log(`    Ambiguous:        ${s.isAmbiguous}`);
-				if (s.graph && (showAll || options.graphs || options.loops)) {
+				if (s.graph && (showAll || options.graphs || options.loops || options.surfaces)) {
 					if (showAll || options.graphs) {
 						console.log(`    Graph Nodes:      ${s.graph.nodeCount}`);
 						console.log(`    Graph Edges:      ${s.graph.edgeCount}`);
@@ -501,6 +545,49 @@ try {
 					console.log(`  - [${topC.status.toUpperCase()}] score=${topC.score.toFixed(3)} area=${topC.area.toFixed(3)}m2 flags=[${flagsStr || 'none'}] id=${topC.id.length > 50 ? topC.id.slice(0, 47) + '...' : topC.id}`);
 				}
 			}
+		}
+
+		if (showAll || options.surfaces) {
+			console.log(`\n=== HORIZONTAL SURFACE ASSIGNMENTS SUMMARY ===`);
+			console.log(`Horizontal Evidence Inspected: ${summary.surfaces.diagnostics.horizontalEvidenceInspected}`);
+			console.log(`Plan Overlap Tests:            ${summary.surfaces.diagnostics.planOverlapTests}`);
+			console.log(`Assignments Accepted:          ${summary.surfaces.diagnostics.assignmentsAccepted}`);
+			console.log(`Lower Support Candidates:      ${summary.surfaces.diagnostics.lowerSupportCandidates}`);
+			console.log(`Upper Cover Candidates:        ${summary.surfaces.diagnostics.upperCoverCandidates}`);
+			console.log(`Ambiguous Assignments:         ${summary.surfaces.diagnostics.ambiguousAssignments}`);
+			console.log(`Approximate Assignments:       ${summary.surfaces.diagnostics.approximateOverlapAssignments}`);
+			console.log(`Aggregate Surface FP:          ${summary.surfaces.diagnostics.fingerprint}`);
+
+			const st = summary.surfaces.stats;
+			console.log(`\n  [Primary Loops Assignment Stats]`);
+			console.log(`    Loops Inspected:           ${st.primary.loopCountInspected}`);
+			console.log(`    With Lower Support:        ${st.primary.loopsWithLowerSupport}`);
+			console.log(`    With Upper Cover:          ${st.primary.loopsWithUpperCover}`);
+			console.log(`    With No Assignment:        ${st.primary.loopsWithNoAssignment}`);
+			console.log(`    Accepted Assignments:      ${st.primary.acceptedAssignmentCount}`);
+			console.log(`    Approximate Assignments:   ${st.primary.approximateAssignmentCount}`);
+			console.log(`    Loop Coverage Ratios:      min=${st.primary.coverageStats.min} median=${st.primary.coverageStats.median} max=${st.primary.coverageStats.max}`);
+			console.log(`    Fingerprint:               ${st.primary.fingerprint}`);
+
+			console.log(`\n  [Secondary Loops Assignment Stats]`);
+			console.log(`    Loops Inspected:           ${st.secondary.loopCountInspected}`);
+			console.log(`    With Lower Support:        ${st.secondary.loopsWithLowerSupport}`);
+			console.log(`    With Upper Cover:          ${st.secondary.loopsWithUpperCover}`);
+			console.log(`    With No Assignment:        ${st.secondary.loopsWithNoAssignment}`);
+			console.log(`    Accepted Assignments:      ${st.secondary.acceptedAssignmentCount}`);
+			console.log(`    Approximate Assignments:   ${st.secondary.approximateAssignmentCount}`);
+			console.log(`    Loop Coverage Ratios:      min=${st.secondary.coverageStats.min} median=${st.secondary.coverageStats.median} max=${st.secondary.coverageStats.max}`);
+			console.log(`    Fingerprint:               ${st.secondary.fingerprint}`);
+
+			console.log(`\n  [Aggregate Loops Assignment Stats]`);
+			console.log(`    Loops Inspected:           ${st.aggregate.loopCountInspected}`);
+			console.log(`    With Lower Support:        ${st.aggregate.loopsWithLowerSupport}`);
+			console.log(`    With Upper Cover:          ${st.aggregate.loopsWithUpperCover}`);
+			console.log(`    With No Assignment:        ${st.aggregate.loopsWithNoAssignment}`);
+			console.log(`    Accepted Assignments:      ${st.aggregate.acceptedAssignmentCount}`);
+			console.log(`    Approximate Assignments:   ${st.aggregate.approximateAssignmentCount}`);
+			console.log(`    Loop Coverage Ratios:      min=${st.aggregate.coverageStats.min} median=${st.aggregate.coverageStats.median} max=${st.aggregate.coverageStats.max}`);
+			console.log(`    Fingerprint:               ${st.aggregate.fingerprint}`);
 		}
 	}
 } catch (e: any) {
