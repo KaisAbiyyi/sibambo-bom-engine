@@ -11,7 +11,8 @@ import {
 	QUANTIZATION_STEP,
 	extractHorizontalSurfaceEvidence,
 	buildStoreyBands,
-	extractVerticalBarrierEvidence
+	extractVerticalBarrierEvidence,
+	calculateRoomEvidenceFingerprint
 } from './helpers';
 import { createRoomEvidenceProcessor } from './processor';
 import type {
@@ -482,5 +483,55 @@ describe('Room evidence types and deterministic IDs', () => {
 
 		// 12. No opening evidence is fabricated
 		expect(snapReset.boundaryOpenings.length).toBe(0);
+	});
+
+	test('11. fingerprinting and audit CLI', () => {
+		const makeFace = (id: string, nx: number, ny: number, nz: number, area: number, y: number, minX = 0, maxX = 2, minZ = 0, maxZ = 3) => ({
+			id,
+			logicalObjectId: logObjA,
+			dominantNormal: { x: nx, y: ny, z: nz },
+			areaM2: area,
+			worldBounds: {
+				min: { x: minX, y: y, z: minZ },
+				max: { x: maxX, y: y + 3, z: maxZ },
+				size: { x: maxX - minX, y: 3, z: maxZ - minZ },
+				center: { x: (minX+maxX)/2, y: y+1.5, z: (minZ+maxZ)/2 }
+			},
+			centroid: { x: (minX+maxX)/2, y: y+1.5, z: (minZ+maxZ)/2 },
+			materialIds: [42]
+		});
+
+		const f1 = makeFace('f1', 0, 1, 0, 10, 1.0); // horizontal
+		const w1 = makeFace('w1', 1, 0, 0, 10, 0.0, 0, 0.2); // vertical
+
+		const proc = createRoomEvidenceProcessor();
+		proc.processAll([f1, w1] as any);
+		const snap = proc.snapshot();
+
+		// 3. Repeated runs produce the same fingerprint
+		const fp1 = calculateRoomEvidenceFingerprint(snap);
+		const fp2 = calculateRoomEvidenceFingerprint(snap);
+		expect(fp1).toBe(fp2);
+
+		// 4. Shuffled source processing produces the same fingerprint
+		const procShuf = createRoomEvidenceProcessor();
+		procShuf.processAll([w1, f1] as any);
+		const fpShuf = calculateRoomEvidenceFingerprint(procShuf.snapshot());
+		expect(fp1).toBe(fpShuf);
+
+		// 5. Counts match the snapshot
+		expect(snap.horizontalSurfaces.length).toBe(1);
+		expect(snap.verticalBarriers.length).toBe(1);
+
+		// 6. No opening evidence is fabricated
+		expect(snap.boundaryOpenings.length).toBe(0);
+
+		// 1. CLI argument validation (missing path exits with code 1)
+		const runNoArgs = Bun.spawnSync(['bun', 'run', 'scripts/audit-room-evidence.ts']);
+		expect(runNoArgs.exitCode).toBe(1);
+
+		// 8. Invalid path / invalid format returns a clear non-zero failure
+		const runBadPath = Bun.spawnSync(['bun', 'run', 'scripts/audit-room-evidence.ts', 'nonexistent-file.json']);
+		expect(runBadPath.exitCode).toBe(1);
 	});
 });

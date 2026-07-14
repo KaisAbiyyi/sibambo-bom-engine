@@ -17,6 +17,7 @@
 		"benchmark:annotation": "bun run scripts/benchmark-annotation.ts",
 		"benchmark:annotation-scale": "bun run scripts/benchmark-annotation-scale.ts",
 		"prepare:annotation-smoke": "bun run scripts/prepare-annotation-smoke.ts",
+		"audit:room-evidence": "bun run scripts/audit-room-evidence.ts",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},

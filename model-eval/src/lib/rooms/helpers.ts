@@ -394,3 +394,75 @@ export function extractVerticalBarrierEvidence(
 
 	return results.sort((a, b) => a.id.localeCompare(b.id));
 }
+
+export function calculateRoomEvidenceFingerprint(snapshot: RoomEvidenceSnapshot): string {
+	const payload = {
+		horizontal: snapshot.horizontalSurfaces.map(e => ({
+			id: e.id,
+			logicalObjectId: e.logicalObjectId,
+			classificationUnitIds: [...e.classificationUnitIds].sort(),
+			elevation: Number(e.elevation.toFixed(6)),
+			planBounds: {
+				min: { x: Number(e.planBounds.min.x.toFixed(6)), z: Number(e.planBounds.min.z.toFixed(6)) },
+				max: { x: Number(e.planBounds.max.x.toFixed(6)), z: Number(e.planBounds.max.z.toFixed(6)) }
+			},
+			materialIds: e.materialIds ? [...e.materialIds].sort((a, b) => a - b) : [],
+			quality: e.quality,
+			isAmbiguous: e.isAmbiguous
+		})),
+		vertical: snapshot.verticalBarriers.map(e => ({
+			id: e.id,
+			logicalObjectId: e.logicalObjectId,
+			classificationUnitIds: [...e.classificationUnitIds].sort(),
+			elevationRange: { min: Number(e.elevationRange.min.toFixed(6)), max: Number(e.elevationRange.max.toFixed(6)) },
+			segment: {
+				start: { x: Number(e.segment.start.x.toFixed(6)), z: Number(e.segment.start.z.toFixed(6)) },
+				end: { x: Number(e.segment.end.x.toFixed(6)), z: Number(e.segment.end.z.toFixed(6)) }
+			},
+			materialIds: e.materialIds ? [...e.materialIds].sort((a, b) => a - b) : [],
+			quality: e.quality,
+			isAmbiguous: e.isAmbiguous
+		})),
+		storeyBands: snapshot.storeyBands.map(e => ({
+			id: e.id,
+			logicalObjectId: e.logicalObjectId,
+			classificationUnitIds: [...e.classificationUnitIds].sort(),
+			elevationRange: { min: Number(e.elevationRange.min.toFixed(6)), max: Number(e.elevationRange.max.toFixed(6)) },
+			planBounds: {
+				min: { x: Number(e.planBounds.min.x.toFixed(6)), z: Number(e.planBounds.min.z.toFixed(6)) },
+				max: { x: Number(e.planBounds.max.x.toFixed(6)), z: Number(e.planBounds.max.z.toFixed(6)) }
+			},
+			materialIds: e.materialIds ? [...e.materialIds].sort((a, b) => a - b) : [],
+			quality: e.quality,
+			isAmbiguous: e.isAmbiguous
+		}))
+	};
+
+	const serialized = JSON.stringify(payload);
+
+	// Safe require for environment check
+	let sha256: (str: string) => string;
+	if (typeof window === 'undefined') {
+		try {
+			const { createHash } = require('crypto');
+			sha256 = (str: string) => createHash('sha256').update(str).digest('hex');
+		} catch (e) {
+			sha256 = simpleHash;
+		}
+	} else {
+		sha256 = simpleHash;
+	}
+
+	return sha256(serialized);
+}
+
+function simpleHash(str: string): string {
+	let h1 = 2166136261;
+	let h2 = 5381;
+	for (let i = 0; i < str.length; i++) {
+		const char = str.charCodeAt(i);
+		h1 = Math.imul(h1 ^ char, 16777619) >>> 0;
+		h2 = Math.imul(h2 ^ char, 33) >>> 0;
+	}
+	return h1.toString(16).padStart(8, '0') + h2.toString(16).padStart(8, '0');
+}
