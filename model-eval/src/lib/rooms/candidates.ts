@@ -121,10 +121,14 @@ export function assembleRoomCandidates(
 			continue;
 		}
 
-		// Find all non-noise envelopes for this loop
-		const loopEnvelopes = envelopes.filter(
-			(e) => e.loopCandidateId === loop.id && e.status !== 'noise'
-		);
+		// Find all non-noise envelopes for this loop.
+		// Respect the newer refinement contract if present.
+		const loopEnvelopes = envelopes.filter((e) => {
+			if (e.loopCandidateId !== loop.id) return false;
+			if (e.status === 'noise') return false;
+			if ('eligibleForRoomAssembly' in e && (e as any).eligibleForRoomAssembly === false) return false;
+			return true;
+		});
 
 		if (loopEnvelopes.length === 0) {
 			diagnostics.loopsWithoutValidEnvelopes++;
