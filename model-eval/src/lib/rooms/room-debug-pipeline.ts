@@ -16,10 +16,12 @@ import { findBoundaryLoopCandidates, rankBoundaryLoopCandidates } from './loops'
 import { assignHorizontalEvidenceToLoops, rankLoopSurfaceAssignments } from './surfaces';
 import { buildVerticalEnvelopeCandidates } from './envelopes';
 import { assembleRoomCandidates } from './candidates';
+import { buildRoomCandidateTraces, type RoomCandidateTrace } from './room-provenance';
 import type { RoomCandidate } from './types';
 
 export type RoomDebugResult = {
 	candidates: RoomCandidate[];
+	traces: RoomCandidateTrace[];
 	durationMs: number;
 	error?: string;
 };
@@ -85,14 +87,23 @@ export async function runRoomDebugPipeline(scene: RuntimeScene): Promise<RoomDeb
 			envelopes.candidates,
 			allNormalizedGraphs
 		);
+		const traces = buildRoomCandidateTraces({
+			candidates: roomsResult.candidates,
+			loops: allRankedCandidates,
+			envelopes: envelopes.candidates,
+			assignments: rankedSurfaces.assignments,
+			horizontalEvidence: snapshot.horizontalSurfaces
+		});
 
 		return {
 			candidates: roomsResult.candidates,
+			traces,
 			durationMs: performance.now() - t0
 		};
 	} catch (err) {
 		return {
 			candidates: [],
+			traces: [],
 			durationMs: performance.now() - t0,
 			error: err instanceof Error ? err.message : String(err)
 		};

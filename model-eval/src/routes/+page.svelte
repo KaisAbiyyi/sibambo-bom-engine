@@ -55,6 +55,7 @@
 	import { createGeometryFoundation } from '$lib/geometry';
 	import type { RoomCandidate } from '$lib/rooms/types';
 	import { runRoomDebugPipeline } from '$lib/rooms/room-debug-pipeline';
+	import { serializeRoomCandidateTrace, type RoomCandidateTrace } from '$lib/rooms/room-provenance';
 	import { getVisibleRoomCandidates, resolveRoomCandidateSelection, type RoomDebugVisibility } from '$lib/rooms/debug-selection';
 
 
@@ -73,6 +74,8 @@
 		onRoomCandidateSelect?: (id: string) => void;
 		roomFocusRequest?: number;
 		roomOverlayVisibility?: RoomDebugVisibility;
+		selectedRoomCandidateTrace?: RoomCandidateTrace | null;
+		showSelectedRoomEvidence?: boolean;
 		onQaReady?: (payload: {
 			viewName: string;
 			width: number;
@@ -162,16 +165,20 @@
 	let annotationJsonText = $state('');
 	let roomDebug = $state(false);
 	let roomCandidates = $state<RoomCandidate[]>([]);
+	let roomCandidateTraces = $state<RoomCandidateTrace[]>([]);
 	let roomDebugDurationMs = $state(0);
 	let roomDebugError = $state('');
 	let roomDebugRunning = $state(false);
 	let selectedRoomCandidateId = $state<string | null>(null);
 	let roomFocusRequest = $state(0);
 	let roomOverlayVisibility = $state<RoomDebugVisibility>({ primary: true, secondary: true, plan: true, prism: true, labels: true });
+	let showSelectedRoomEvidence = $state(false);
+	let roomTraceCopyMessage = $state('');
 
 	let annotationQueue = $derived(buildAnnotationReviewQueue(annotationUnits, annotationRecords, annotationFilters, annotationSort));
 	let selectedAnnotationUnit = $derived(annotationQueue.find((unit) => unit.id === selectedAnnotationUnitId) || annotationQueue[0] || null);
 	let selectedRoomCandidate = $derived(roomCandidates.find((candidate) => candidate.id === selectedRoomCandidateId) || null);
+	let selectedRoomCandidateTrace = $derived(roomCandidateTraces.find((trace) => trace.candidate.id === selectedRoomCandidateId) || null);
 	let visibleRoomCandidates = $derived(getVisibleRoomCandidates(roomCandidates, roomOverlayVisibility));
 	let readiness = $derived<ReadinessItem[]>(getReadiness(model, inputs, touched));
 	let selectedReadiness = $derived<ReadinessItem | undefined>(readiness.find((item) => item.kind === selectedAnalysis));
@@ -449,9 +456,11 @@
 		roomDebugRunning = true;
 		roomDebugError = '';
 		roomCandidates = [];
+		roomCandidateTraces = [];
 		try {
 		const res = await runRoomDebugPipeline(scene);
 		roomCandidates = res.candidates;
+		roomCandidateTraces = res.traces;
 		selectedRoomCandidateId = resolveRoomCandidateSelection(res.candidates, selectedRoomCandidateId);
 		roomDebugDurationMs = res.durationMs;
 			if (res.error) roomDebugError = res.error;
@@ -472,6 +481,17 @@
 
 	function toggleRoomOverlayVisibility(key: keyof RoomDebugVisibility) {
 		roomOverlayVisibility = { ...roomOverlayVisibility, [key]: !roomOverlayVisibility[key] };
+	}
+
+	async function copySelectedRoomTrace() {
+		if (!selectedRoomCandidateTrace) return;
+		roomTraceCopyMessage = '';
+		try {
+			await navigator.clipboard.writeText(serializeRoomCandidateTrace(selectedRoomCandidateTrace));
+			roomTraceCopyMessage = 'Trace copied.';
+		} catch (error) {
+			roomTraceCopyMessage = `Copy failed: ${error instanceof Error ? error.message : String(error)}`;
+		}
 	}
 
 
@@ -1201,7 +1221,7 @@
 
 	<section class="stage-panel">
 		{#if ModelCanvasComponent}
-			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} activeAnalysis={selectedAnalysis} {result} {qaMode} {qaCamera} annotationUnit={annotationMode ? selectedAnnotationUnit : null} roomCandidates={roomDebug ? visibleRoomCandidates : []} {selectedRoomCandidateId} onRoomCandidateSelect={selectRoomCandidate} {roomFocusRequest} {roomOverlayVisibility} onQaReady={handleQaReady} />
+			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} activeAnalysis={selectedAnalysis} {result} {qaMode} {qaCamera} annotationUnit={annotationMode ? selectedAnnotationUnit : null} roomCandidates={roomDebug ? visibleRoomCandidates : []} {selectedRoomCandidateId} onRoomCandidateSelect={selectRoomCandidate} {roomFocusRequest} {roomOverlayVisibility} {selectedRoomCandidateTrace} {showSelectedRoomEvidence} onQaReady={handleQaReady} />
 
 		{:else}
 			<div class="model-stage-placeholder">
@@ -1246,6 +1266,7 @@
 					<button class:room-debug-hud__control--active={roomOverlayVisibility.labels} class="room-debug-hud__control" type="button" aria-pressed={roomOverlayVisibility.labels} onclick={() => toggleRoomOverlayVisibility('labels')}>Show labels</button>
 				</div>
 				<button class="room-debug-hud__focus" type="button" onclick={focusSelectedRoomCandidate} disabled={!selectedRoomCandidateId}>Focus selected</button>
+				<button class:room-debug-hud__control--active={showSelectedRoomEvidence} class="room-debug-hud__control room-debug-hud__evidence-toggle" type="button" aria-pressed={showSelectedRoomEvidence} disabled={!selectedRoomCandidateTrace} onclick={() => showSelectedRoomEvidence = !showSelectedRoomEvidence}>Show selected evidence</button>
 				{#if visibleRoomCandidates.length > 0}
 					<div class="room-debug-hud__timing">{roomDebugDurationMs.toFixed(0)} ms</div>
 					<ul class="room-debug-hud__list">
@@ -1277,6 +1298,22 @@
 								<dt>Alternatives</dt><dd>{selectedRoomCandidate.alternativeEnvelopeIds.length}</dd>
 								<dt>Quality</dt><dd>{Object.entries(selectedRoomCandidate.qualityFlags).filter(([, value]) => value).map(([key]) => key).join(', ') || 'none'}</dd>
 							</dl>
+							{#if selectedRoomCandidateTrace}
+								<details class="room-debug-hud__evidence">
+									<summary>Evidence</summary>
+									<dl>
+										<dt>Loop</dt><dd>{selectedRoomCandidateTrace.loop.id} · {selectedRoomCandidateTrace.loop.status} · {selectedRoomCandidateTrace.loop.score.toFixed(2)}</dd>
+										<dt>Boundary</dt><dd>{selectedRoomCandidateTrace.loop.edgeIds.join(', ') || 'none'}</dd>
+										<dt>Envelope</dt><dd>{selectedRoomCandidateTrace.selectedEnvelope?.id || 'missing'} · {selectedRoomCandidateTrace.selectedEnvelope?.score.toFixed(2) || 'n/a'}</dd>
+										<dt>Lower</dt><dd>{selectedRoomCandidateTrace.lowerAssignment ? `${selectedRoomCandidateTrace.lowerAssignment.id} · ${selectedRoomCandidateTrace.lowerAssignment.elevation.toFixed(6)} m · ${selectedRoomCandidateTrace.lowerAssignment.loopCoverageRatio.toFixed(3)}/${selectedRoomCandidateTrace.lowerAssignment.evidenceCoverageRatio.toFixed(3)}` : 'missing'}</dd>
+										<dt>Upper</dt><dd>{selectedRoomCandidateTrace.upperAssignment ? `${selectedRoomCandidateTrace.upperAssignment.id} · ${selectedRoomCandidateTrace.upperAssignment.elevation.toFixed(6)} m · ${selectedRoomCandidateTrace.upperAssignment.loopCoverageRatio.toFixed(3)}/${selectedRoomCandidateTrace.upperAssignment.evidenceCoverageRatio.toFixed(3)}` : 'missing'}</dd>
+										<dt>Alternatives</dt><dd>{selectedRoomCandidateTrace.alternativeEnvelopes.map((item) => `${item.id} (${item.score.toFixed(2)})`).join(', ') || 'none'}</dd>
+										<dt>Flags</dt><dd>{Object.entries(selectedRoomCandidateTrace.selectedEnvelope?.qualityFlags || {}).filter(([, value]) => value).map(([key]) => key).join(', ') || 'none'}</dd>
+									</dl>
+									<button class="room-debug-hud__copy" type="button" onclick={copySelectedRoomTrace}>Copy trace JSON</button>
+									{#if roomTraceCopyMessage}<p class="room-debug-hud__copy-message">{roomTraceCopyMessage}</p>{/if}
+								</details>
+							{/if}
 						</div>
 					{/if}
 				{/if}
@@ -2170,6 +2207,8 @@
 	}
 
 	.room-debug-hud__focus:disabled { opacity: 0.45; cursor: not-allowed; }
+	.room-debug-hud__evidence-toggle { width: 100%; margin: 0 0 6px; }
+	.room-debug-hud__evidence-toggle:disabled { opacity: 0.45; cursor: not-allowed; }
 
 	.room-debug-hud__error {
 		color: #f87171;
@@ -2233,6 +2272,11 @@
 
 	.room-debug-hud__details strong { color: #e2e8f0; }
 	.room-debug-hud__details dl { display: grid; grid-template-columns: 72px 1fr; gap: 3px 6px; margin: 6px 0 0; }
+	.room-debug-hud__evidence { margin-top: 8px; color: #94a3b8; }
+	.room-debug-hud__evidence summary { cursor: pointer; color: #cffafe; font-weight: 700; }
+	.room-debug-hud__evidence dd { overflow-wrap: anywhere; }
+	.room-debug-hud__copy { margin-top: 6px; padding: 3px 6px; border: 1px solid rgba(34, 211, 238, 0.52); border-radius: 4px; background: rgba(34, 211, 238, 0.12); color: #cffafe; font: inherit; cursor: pointer; }
+	.room-debug-hud__copy-message { margin: 4px 0 0; color: #67e8f9; }
 	.room-debug-hud__details dt { color: #94a3b8; }
 	.room-debug-hud__details dd { margin: 0; color: #cbd5e1; overflow-wrap: anywhere; }
 

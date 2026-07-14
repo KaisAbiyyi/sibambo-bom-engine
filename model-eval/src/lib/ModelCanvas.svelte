@@ -41,6 +41,7 @@
 	import { buildClassificationUnitHighlight } from './annotation/highlight';
 	import type { ClassificationUnitRecord } from './annotation';
 	import type { RoomCandidate } from './rooms/types';
+	import type { RoomCandidateTrace } from './rooms/room-provenance';
 	import { getPrismSideVertexCount, getRoomCandidateBounds, resolveRoomCandidateId, type RoomDebugVisibility } from './rooms/debug-selection';
 
 
@@ -58,7 +59,9 @@
 		selectedRoomCandidateId = null,
 		onRoomCandidateSelect = undefined,
 		roomFocusRequest = 0,
-		roomOverlayVisibility = { primary: true, secondary: true, plan: true, prism: true, labels: true }
+		roomOverlayVisibility = { primary: true, secondary: true, plan: true, prism: true, labels: true },
+		selectedRoomCandidateTrace = null,
+		showSelectedRoomEvidence = false
 	}: {
 		model: ParsedBuildingModel | null;
 		activeAnalysis: AnalysisKind;
@@ -73,6 +76,8 @@
 		onRoomCandidateSelect?: (id: string) => void;
 		roomFocusRequest?: number;
 		roomOverlayVisibility?: RoomDebugVisibility;
+		selectedRoomCandidateTrace?: RoomCandidateTrace | null;
+		showSelectedRoomEvidence?: boolean;
 		onQaReady?: (payload: {
 			viewName: string;
 			width: number;
@@ -115,6 +120,7 @@
 	let currentModel: ParsedBuildingModel | null = null;
 	let runtimes: PartRuntime[] = [];
 	let overlayObjects: Array<Mesh | ArrowHelper | Sprite | Group | LineSegments> = [];
+	let evidenceOverlayObjects: Array<Group | LineSegments> = [];
 	const roomRaycaster = new Raycaster();
 	const pointer = new Vector2();
 	let appliedRoomFocusRequest = 0;
@@ -278,11 +284,22 @@
 		});
 		runtimes = [];
 		clearOverlays();
+		clearEvidenceOverlays();
 		currentModel = null;
 	}
 
 	function clearOverlays() {
-		overlayObjects.forEach((object) => {
+		disposeOverlayObjects(overlayObjects);
+		overlayObjects = [];
+	}
+
+	function clearEvidenceOverlays() {
+		disposeOverlayObjects(evidenceOverlayObjects);
+		evidenceOverlayObjects = [];
+	}
+
+	function disposeOverlayObjects(objects: Array<Mesh | ArrowHelper | Sprite | Group | LineSegments>) {
+		objects.forEach((object) => {
 			overlayRoot.remove(object);
 			object.traverse((child: Object3D) => {
 				if (child instanceof Mesh) {
@@ -300,7 +317,6 @@
 				}
 			});
 		});
-		overlayObjects = [];
 	}
 
 	function clearAnnotationHighlight() {
@@ -912,6 +928,31 @@
 		}
 	}
 
+	function buildSelectedEvidenceOverlays() {
+		clearEvidenceOverlays();
+		if (!model || !showSelectedRoomEvidence || !selectedRoomCandidateTrace) return;
+		const trace = selectedRoomCandidateTrace;
+		const addGeometry = (kind: 'evidence-loop' | 'evidence-lower' | 'evidence-upper', geometry: RoomCandidateTrace['loop']['geometry'], elevation: number, color: string) => {
+			const polygon = geometry.polygon.length >= 3 ? geometry.polygon : [
+				{ x: geometry.bounds.min.x, z: geometry.bounds.min.z }, { x: geometry.bounds.max.x, z: geometry.bounds.min.z },
+				{ x: geometry.bounds.max.x, z: geometry.bounds.max.z }, { x: geometry.bounds.min.x, z: geometry.bounds.max.z }
+			];
+			const group = new Group();
+			group.userData.roomCandidateId = trace.candidate.id;
+			group.userData.roomOverlayKind = kind;
+			const line = new LineSegments(new BufferGeometry(), new LineBasicMaterial({ color: geometry.approximate ? '#f59e0b' : color }));
+			line.geometry.setAttribute('position', new Float32BufferAttribute(roomBoundaryPositions(polygon, elevation), 3));
+			line.userData.roomCandidateId = trace.candidate.id;
+			line.userData.roomOverlayKind = kind;
+			group.add(line);
+			overlayRoot.add(group);
+			evidenceOverlayObjects.push(group);
+		};
+		addGeometry('evidence-loop', trace.loop.geometry, trace.candidate.lowerElevation, '#f8fafc');
+		if (trace.lowerEvidence) addGeometry('evidence-lower', trace.lowerEvidence.geometry, trace.lowerEvidence.elevation, '#22c55e');
+		if (trace.upperEvidence) addGeometry('evidence-upper', trace.upperEvidence.geometry, trace.upperEvidence.elevation, '#fb7185');
+	}
+
 	function createRoomOverlayGroup(id: string, kind: 'plan' | 'prism' | 'label') {
 		const group = new Group();
 		group.userData.roomCandidateId = id;
@@ -1087,11 +1128,14 @@
 		roomCandidates;
 		selectedRoomCandidateId;
 		roomOverlayVisibility;
+		selectedRoomCandidateTrace;
+		showSelectedRoomEvidence;
 		if (mounted) {
 			refreshSurfaceMaterials();
 			rebuildAnnotationHighlight();
 			buildOverlays();
 			buildRoomDebugOverlays();
+			buildSelectedEvidenceOverlays();
 		}
 	});
 
