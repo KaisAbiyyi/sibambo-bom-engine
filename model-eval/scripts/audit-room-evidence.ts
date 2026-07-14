@@ -4,8 +4,8 @@ import { createGeometryFoundation } from '../src/lib/geometry';
 import { createRoomEvidenceProcessor } from '../src/lib/rooms/processor';
 import { calculateRoomEvidenceFingerprint, calculateBarrierGraphFingerprint, normalizeBarrierGraph } from '../src/lib/rooms/helpers';
 import { findBoundaryLoopCandidates, calculateBoundaryLoopFingerprint, rankBoundaryLoopCandidates } from '../src/lib/rooms/loops';
-import { assignHorizontalEvidenceToLoops, calculateLoopSurfaceAssignmentFingerprint } from '../src/lib/rooms/surfaces';
-import type { BoundaryLoopDiagnostics, LoopSurfaceAssignment, RankedBoundaryLoopCandidate } from '../src/lib/rooms/types';
+import { assignHorizontalEvidenceToLoops, calculateLoopSurfaceAssignmentFingerprint, rankLoopSurfaceAssignments, calculateRankedLoopSurfaceAssignmentFingerprint } from '../src/lib/rooms/surfaces';
+import type { BoundaryLoopDiagnostics, LoopSurfaceAssignment, RankedBoundaryLoopCandidate, RankedLoopSurfaceAssignment, LoopSurfaceRoleSelection, RankedLoopSurfaceAssignmentDiagnostics, RankedLoopSurfaceAssignmentResult } from '../src/lib/rooms/types';
 import { createHash } from 'crypto';
 import { resolve } from 'path';
 
@@ -51,6 +51,68 @@ function computeAssignmentStats(assignments: LoopSurfaceAssignment[], loopsOfSta
 		approximateAssignmentCount,
 		coverageStats,
 		fingerprint
+	};
+}
+
+function computeRankedSurfaceStats(rankedResult: RankedLoopSurfaceAssignmentResult, loopsOfStatus: RankedBoundaryLoopCandidate[]) {
+	const loopIds = new Set(loopsOfStatus.map(l => l.id));
+	const subsetSelections = rankedResult.loopSelections.filter(sel => loopIds.has(sel.loopId));
+
+	let rawAssignmentCount = 0;
+	let primaryLowerCount = 0;
+	let primaryUpperCount = 0;
+	let secondaryAssignmentCount = 0;
+	let noiseAssignmentCount = 0;
+	let loopsWithBothRoles = 0;
+	let loopsMissingLowerSupport = 0;
+	let loopsMissingUpperCover = 0;
+	let ambiguousVerticalEnvelopes = 0;
+
+	for (const sel of subsetSelections) {
+		const selRawCount = sel.primaryLowerAssignments.length + sel.secondaryLowerAssignments.length + sel.primaryUpperAssignments.length + sel.secondaryUpperAssignments.length + sel.noiseAssignments.length + (sel.otherAssignments?.length || 0);
+		rawAssignmentCount += selRawCount;
+		primaryLowerCount += sel.primaryLowerAssignments.length;
+		primaryUpperCount += sel.primaryUpperAssignments.length;
+		secondaryAssignmentCount += sel.secondaryLowerAssignments.length + sel.secondaryUpperAssignments.length + (sel.otherAssignments?.length || 0);
+		noiseAssignmentCount += sel.noiseAssignments.length;
+
+		if (!sel.noLowerSupport && !sel.noUpperCover) loopsWithBothRoles++;
+		if (sel.noLowerSupport) loopsMissingLowerSupport++;
+		if (sel.noUpperCover) loopsMissingUpperCover++;
+		if (sel.ambiguousVerticalEnvelope) ambiguousVerticalEnvelopes++;
+	}
+
+	const subsetAssignments = rankedResult.assignments.filter(a => loopIds.has(a.loopCandidateId));
+	const primaryCandidates = subsetAssignments.filter(a => a.status === 'primary').sort((a, b) => {
+		if (a.score !== b.score) return b.score - a.score;
+		return a.id.localeCompare(b.id);
+	});
+
+	const topSelectedAssignments = primaryCandidates.slice(0, 5).map(c => ({
+		loopId: c.loopCandidateId,
+		role: c.role,
+		score: Number(c.score.toFixed(6)),
+		loopCoverage: Number(c.loopCoverageRatio.toFixed(6)),
+		evidenceCoverage: Number(c.evidenceCoverageRatio.toFixed(6)),
+		verticalDistance: Number(c.verticalDistance.toFixed(6)),
+		flags: c.ambiguityFlags
+	}));
+
+	const rankedFingerprint = calculateRankedLoopSurfaceAssignmentFingerprint(subsetAssignments);
+
+	return {
+		loopCountInspected: loopsOfStatus.length,
+		rawAssignmentCount,
+		primaryLowerCount,
+		primaryUpperCount,
+		secondaryAssignmentCount,
+		noiseAssignmentCount,
+		loopsWithBothRoles,
+		loopsMissingLowerSupport,
+		loopsMissingUpperCover,
+		ambiguousVerticalEnvelopes,
+		topSelectedAssignments,
+		rankedFingerprint
 	};
 }
 
@@ -322,6 +384,11 @@ try {
 	const secondaryAssignmentStats = computeAssignmentStats(surfaceAssignmentsResult.assignments, allRankedCandidateList.filter(c => c.status === 'secondary'));
 	const aggregateAssignmentStats = computeAssignmentStats(surfaceAssignmentsResult.assignments, allRankedCandidateList);
 
+	const rankedSurfaceAssignmentsResult = rankLoopSurfaceAssignments(surfaceAssignmentsResult.assignments, allRankedCandidateList);
+	const primaryRankedSurfaceStats = computeRankedSurfaceStats(rankedSurfaceAssignmentsResult, allRankedCandidateList.filter(c => c.status === 'primary'));
+	const secondaryRankedSurfaceStats = computeRankedSurfaceStats(rankedSurfaceAssignmentsResult, allRankedCandidateList.filter(c => c.status === 'secondary'));
+	const aggregateRankedSurfaceStats = computeRankedSurfaceStats(rankedSurfaceAssignmentsResult, allRankedCandidateList);
+
 	const summary = {
 		inputPath: path,
 		inputSha256: sha256,
@@ -377,6 +444,14 @@ try {
 				primary: primaryAssignmentStats,
 				secondary: secondaryAssignmentStats,
 				aggregate: aggregateAssignmentStats
+			},
+			ranked: {
+				diagnostics: rankedSurfaceAssignmentsResult.diagnostics,
+				stats: {
+					primary: primaryRankedSurfaceStats,
+					secondary: secondaryRankedSurfaceStats,
+					aggregate: aggregateRankedSurfaceStats
+				}
 			}
 		},
 		primaryCandidates: primaryCandidatesDetails,
@@ -588,6 +663,41 @@ try {
 			console.log(`    Approximate Assignments:   ${st.aggregate.approximateAssignmentCount}`);
 			console.log(`    Loop Coverage Ratios:      min=${st.aggregate.coverageStats.min} median=${st.aggregate.coverageStats.median} max=${st.aggregate.coverageStats.max}`);
 			console.log(`    Fingerprint:               ${st.aggregate.fingerprint}`);
+
+			const rst = summary.surfaces.ranked.stats;
+			console.log(`\n  [Ranked Surface Assignments - Primary Loops]`);
+			console.log(`    Raw Assignments:           ${rst.primary.rawAssignmentCount}`);
+			console.log(`    Primary Lower:             ${rst.primary.primaryLowerCount}`);
+			console.log(`    Primary Upper:             ${rst.primary.primaryUpperCount}`);
+			console.log(`    Secondary Assignments:     ${rst.primary.secondaryAssignmentCount}`);
+			console.log(`    Noise Assignments:         ${rst.primary.noiseAssignmentCount}`);
+			console.log(`    Loops With Both Roles:     ${rst.primary.loopsWithBothRoles}`);
+			console.log(`    Loops Missing Lower:       ${rst.primary.loopsMissingLowerSupport}`);
+			console.log(`    Loops Missing Upper:       ${rst.primary.loopsMissingUpperCover}`);
+			console.log(`    Ambiguous Envelopes:       ${rst.primary.ambiguousVerticalEnvelopes}`);
+			console.log(`    Ranked Fingerprint:        ${rst.primary.rankedFingerprint}`);
+			console.log(`    Top Selected Assignments:`);
+			for (const topA of rst.primary.topSelectedAssignments) {
+				const flagsStr = Object.entries(topA.flags).filter(([_, val]) => val).map(([k]) => k).join(',');
+				console.log(`      - [${topA.role.toUpperCase()}] loop=${topA.loopId} score=${topA.score.toFixed(3)} loopCov=${topA.loopCoverage.toFixed(3)} evCov=${topA.evidenceCoverage.toFixed(3)} dist=${topA.verticalDistance.toFixed(3)} flags=[${flagsStr || 'none'}]`);
+			}
+
+			console.log(`\n  [Ranked Surface Assignments - Secondary Loops]`);
+			console.log(`    Raw Assignments:           ${rst.secondary.rawAssignmentCount}`);
+			console.log(`    Primary Lower:             ${rst.secondary.primaryLowerCount}`);
+			console.log(`    Primary Upper:             ${rst.secondary.primaryUpperCount}`);
+			console.log(`    Secondary Assignments:     ${rst.secondary.secondaryAssignmentCount}`);
+			console.log(`    Noise Assignments:         ${rst.secondary.noiseAssignmentCount}`);
+			console.log(`    Loops With Both Roles:     ${rst.secondary.loopsWithBothRoles}`);
+			console.log(`    Loops Missing Lower:       ${rst.secondary.loopsMissingLowerSupport}`);
+			console.log(`    Loops Missing Upper:       ${rst.secondary.loopsMissingUpperCover}`);
+			console.log(`    Ambiguous Envelopes:       ${rst.secondary.ambiguousVerticalEnvelopes}`);
+			console.log(`    Ranked Fingerprint:        ${rst.secondary.rankedFingerprint}`);
+			console.log(`    Top Selected Assignments:`);
+			for (const topA of rst.secondary.topSelectedAssignments) {
+				const flagsStr = Object.entries(topA.flags).filter(([_, val]) => val).map(([k]) => k).join(',');
+				console.log(`      - [${topA.role.toUpperCase()}] loop=${topA.loopId} score=${topA.score.toFixed(3)} loopCov=${topA.loopCoverage.toFixed(3)} evCov=${topA.evidenceCoverage.toFixed(3)} dist=${topA.verticalDistance.toFixed(3)} flags=[${flagsStr || 'none'}]`);
+			}
 		}
 	}
 } catch (e: any) {

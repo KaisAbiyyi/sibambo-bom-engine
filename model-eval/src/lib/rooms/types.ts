@@ -257,3 +257,59 @@ export interface LoopSurfaceAssignmentResult {
 		fingerprint?: string;
 	};
 }
+
+export type LoopSurfaceAssignmentStatus = 'primary' | 'secondary' | 'noise';
+
+export interface RankedLoopSurfaceAssignment extends LoopSurfaceAssignment {
+	status: LoopSurfaceAssignmentStatus;
+	rank: number;
+	normalizedOverlapScore: number;
+	normalizedElevationScore: number;
+	orientationConsistencyScore: number;
+	ambiguityFlags: {
+		isApproximate: boolean;
+		isAmbiguousRole: boolean;
+		isElevationMismatch: boolean;
+		isOrientationConflict: boolean;
+	};
+	rejectionReasons: string[];
+}
+
+export interface LoopSurfaceRoleSelection {
+	loopId: string;
+	primaryLowerAssignments: RankedLoopSurfaceAssignment[];
+	secondaryLowerAssignments: RankedLoopSurfaceAssignment[];
+	primaryUpperAssignments: RankedLoopSurfaceAssignment[];
+	secondaryUpperAssignments: RankedLoopSurfaceAssignment[];
+	noiseAssignments: RankedLoopSurfaceAssignment[];
+	otherAssignments?: RankedLoopSurfaceAssignment[];
+	noLowerSupport: boolean;
+	noUpperCover: boolean;
+	ambiguousVerticalEnvelope: boolean;
+}
+
+export interface RankedLoopSurfaceAssignmentDiagnostics {
+	rawAssignments: number;
+	primaryAssignments: number;
+	secondaryAssignments: number;
+	noiseAssignments: number;
+	loopsInspected: number;
+	loopsWithPrimaryLowerSupport: number;
+	loopsWithPrimaryUpperCover: number;
+	loopsWithBothRoles: number;
+	loopsWithNoLowerSupport: number;
+	loopsWithNoUpperCover: number;
+	ambiguousVerticalEnvelopes: number;
+	negligibleOverlapAssignments: number;
+	elevationMismatchAssignments: number;
+	orientationConflictAssignments: number;
+	approximateAssignments: number;
+	rankedFingerprint: string;
+}
+
+export interface RankedLoopSurfaceAssignmentResult {
+	assignments: RankedLoopSurfaceAssignment[];
+	selectionsByLoop: Map<string, LoopSurfaceRoleSelection>;
+	loopSelections: LoopSurfaceRoleSelection[];
+	diagnostics: RankedLoopSurfaceAssignmentDiagnostics;
+}

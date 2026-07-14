@@ -9,7 +9,12 @@ import type {
 	LoopSurfaceAssignment,
 	LoopSurfaceAssignmentDiagnostics,
 	LoopSurfaceAssignmentResult,
-	LoopSurfaceAssignmentRole
+	LoopSurfaceAssignmentRole,
+	RankedLoopSurfaceAssignment,
+	LoopSurfaceAssignmentStatus,
+	LoopSurfaceRoleSelection,
+	RankedLoopSurfaceAssignmentDiagnostics,
+	RankedLoopSurfaceAssignmentResult
 } from './types';
 
 function computeBoundsOverlapArea(a: PlanBounds, b: PlanBounds): number {
@@ -364,5 +369,236 @@ export function assignHorizontalEvidenceToLoops(
 			...diagnostics,
 			fingerprint
 		}
+	};
+}
+
+export function calculateRankedLoopSurfaceAssignmentFingerprint(assignments: RankedLoopSurfaceAssignment[]): string {
+	const sorted = [...assignments].sort((a, b) => a.id.localeCompare(b.id));
+	const hash = createHash('sha256');
+	for (const a of sorted) {
+		hash.update(a.id);
+		hash.update(a.loopCandidateId);
+		hash.update(a.horizontalEvidenceId);
+		hash.update(a.role);
+		hash.update(a.status);
+		hash.update(a.rank.toString());
+		hash.update(a.score.toFixed(6));
+		hash.update(a.normalizedOverlapScore.toFixed(6));
+		hash.update(a.normalizedElevationScore.toFixed(6));
+		hash.update(a.orientationConsistencyScore.toFixed(6));
+		hash.update(a.ambiguityFlags.isApproximate ? '1' : '0');
+		hash.update(a.ambiguityFlags.isAmbiguousRole ? '1' : '0');
+		hash.update(a.ambiguityFlags.isElevationMismatch ? '1' : '0');
+		hash.update(a.ambiguityFlags.isOrientationConflict ? '1' : '0');
+	}
+	return hash.digest('hex');
+}
+
+export function rankLoopSurfaceAssignments(
+	assignments: LoopSurfaceAssignment[],
+	loops: RankedBoundaryLoopCandidate[]
+): RankedLoopSurfaceAssignmentResult {
+	const loopIdSet = new Set<string>();
+	for (const l of loops) {
+		if (l.status !== 'noise') loopIdSet.add(l.id);
+	}
+	for (const a of assignments) {
+		loopIdSet.add(a.loopCandidateId);
+	}
+	const loopIds = Array.from(loopIdSet).sort();
+
+	const diagnostics: RankedLoopSurfaceAssignmentDiagnostics = {
+		rawAssignments: assignments.length,
+		primaryAssignments: 0,
+		secondaryAssignments: 0,
+		noiseAssignments: 0,
+		loopsInspected: 0,
+		loopsWithPrimaryLowerSupport: 0,
+		loopsWithPrimaryUpperCover: 0,
+		loopsWithBothRoles: 0,
+		loopsWithNoLowerSupport: 0,
+		loopsWithNoUpperCover: 0,
+		ambiguousVerticalEnvelopes: 0,
+		negligibleOverlapAssignments: 0,
+		elevationMismatchAssignments: 0,
+		orientationConflictAssignments: 0,
+		approximateAssignments: 0,
+		rankedFingerprint: ''
+	};
+
+	const allRankedAssignments: RankedLoopSurfaceAssignment[] = [];
+	const selectionsByLoop = new Map<string, LoopSurfaceRoleSelection>();
+	const loopSelections: LoopSurfaceRoleSelection[] = [];
+
+	for (const loopId of loopIds) {
+		const rawLoopAssignments = assignments.filter(a => a.loopCandidateId === loopId);
+
+		const candidateObjects: RankedLoopSurfaceAssignment[] = rawLoopAssignments.map(raw => {
+			const normalizedOverlapScore = Number((raw.loopCoverageRatio * 0.6 + raw.evidenceCoverageRatio * 0.4).toFixed(6));
+			const normalizedElevationScore = Number((1 / (1 + raw.verticalDistance)).toFixed(6));
+			const orientationConsistencyScore = Number((raw.qualityFlags.orientationConflict ? 0.0 : 1.0).toFixed(6));
+			const ambiguityFlags = {
+				isApproximate: Boolean(raw.qualityFlags.approximateOverlap),
+				isAmbiguousRole: Boolean(raw.qualityFlags.ambiguousRole || raw.role === 'ambiguous'),
+				isElevationMismatch: Boolean(raw.qualityFlags.elevationMismatch),
+				isOrientationConflict: Boolean(raw.qualityFlags.orientationConflict)
+			};
+
+			const isNegligible = raw.loopCoverageRatio < 0.02 && raw.evidenceCoverageRatio < 0.02;
+			if (isNegligible) diagnostics.negligibleOverlapAssignments++;
+			if (ambiguityFlags.isElevationMismatch) diagnostics.elevationMismatchAssignments++;
+			if (ambiguityFlags.isOrientationConflict) diagnostics.orientationConflictAssignments++;
+			if (ambiguityFlags.isApproximate) diagnostics.approximateAssignments++;
+
+			let baseScore = (normalizedOverlapScore * 0.6 + normalizedElevationScore * 0.3 + orientationConsistencyScore * 0.1) * 100;
+			if (ambiguityFlags.isApproximate) baseScore *= 0.95;
+			if (ambiguityFlags.isAmbiguousRole) baseScore *= 0.6;
+			if (ambiguityFlags.isElevationMismatch) baseScore *= 0.5;
+			if (ambiguityFlags.isOrientationConflict) baseScore *= 0.5;
+			const score = Number(Math.max(0, baseScore).toFixed(6));
+
+			return {
+				...raw,
+				score,
+				status: 'secondary',
+				rank: 0,
+				normalizedOverlapScore,
+				normalizedElevationScore,
+				orientationConsistencyScore,
+				ambiguityFlags,
+				rejectionReasons: []
+			};
+		});
+
+		const lowerCandidates = candidateObjects.filter(c => c.role === 'lower-support');
+		const upperCandidates = candidateObjects.filter(c => c.role === 'upper-cover');
+		const otherCandidates = candidateObjects.filter(c => c.role !== 'lower-support' && c.role !== 'upper-cover');
+
+		const rankRoleGroup = (candidates: RankedLoopSurfaceAssignment[]) => {
+			candidates.sort((a, b) => {
+				if (a.score !== b.score) return b.score - a.score;
+				return a.id.localeCompare(b.id);
+			});
+
+			let topValidScore: number | undefined = undefined;
+			candidates.forEach((cand, index) => {
+				cand.rank = index + 1;
+				const isNegligible = cand.loopCoverageRatio < 0.02 && cand.evidenceCoverageRatio < 0.02;
+				if (isNegligible || cand.score < 1.0) {
+					cand.status = 'noise';
+					cand.rejectionReasons.push('Negligible overlap');
+				} else if (cand.ambiguityFlags.isElevationMismatch) {
+					cand.status = 'secondary';
+					cand.rejectionReasons.push('Elevation mismatch');
+				} else if (cand.ambiguityFlags.isOrientationConflict) {
+					cand.status = 'secondary';
+					cand.rejectionReasons.push('Orientation conflict');
+				} else if (cand.ambiguityFlags.isAmbiguousRole) {
+					cand.status = 'secondary';
+					cand.rejectionReasons.push('Ambiguous role');
+				} else {
+					if (topValidScore === undefined) {
+						cand.status = 'primary';
+						topValidScore = cand.score;
+					} else if (topValidScore - cand.score <= 1.0) {
+						cand.status = 'primary';
+					} else {
+						cand.status = 'secondary';
+						cand.rejectionReasons.push('Outranked by primary candidate');
+					}
+				}
+			});
+		};
+
+		rankRoleGroup(lowerCandidates);
+		rankRoleGroup(upperCandidates);
+
+		otherCandidates.sort((a, b) => {
+			if (a.score !== b.score) return b.score - a.score;
+			return a.id.localeCompare(b.id);
+		});
+		otherCandidates.forEach((cand, index) => {
+			cand.rank = index + 1;
+			const isNegligible = cand.loopCoverageRatio < 0.02 && cand.evidenceCoverageRatio < 0.02;
+			if (isNegligible || cand.score < 1.0) {
+				cand.status = 'noise';
+				cand.rejectionReasons.push('Negligible overlap');
+			} else {
+				cand.status = 'secondary';
+				cand.rejectionReasons.push(`Role (${cand.role}) ineligible for primary boundary`);
+			}
+		});
+
+		const primaryLowerAssignments = lowerCandidates.filter(c => c.status === 'primary');
+		const secondaryLowerAssignments = lowerCandidates.filter(c => c.status === 'secondary');
+		const primaryUpperAssignments = upperCandidates.filter(c => c.status === 'primary');
+		const secondaryUpperAssignments = upperCandidates.filter(c => c.status === 'secondary');
+		const noiseAssignments = [
+			...lowerCandidates.filter(c => c.status === 'noise'),
+			...upperCandidates.filter(c => c.status === 'noise'),
+			...otherCandidates.filter(c => c.status === 'noise')
+		];
+		const otherAssignments = otherCandidates.filter(c => c.status === 'secondary');
+
+		const noLowerSupport = primaryLowerAssignments.length === 0;
+		const noUpperCover = primaryUpperAssignments.length === 0;
+
+		let ambiguousVerticalEnvelope = false;
+		if (noLowerSupport || noUpperCover) {
+			ambiguousVerticalEnvelope = true;
+		} else if (primaryLowerAssignments.length > 1 || primaryUpperAssignments.length > 1) {
+			ambiguousVerticalEnvelope = true;
+		} else if (
+			primaryLowerAssignments.some(a => a.ambiguityFlags.isApproximate || a.ambiguityFlags.isAmbiguousRole) ||
+			primaryUpperAssignments.some(a => a.ambiguityFlags.isApproximate || a.ambiguityFlags.isAmbiguousRole)
+		) {
+			ambiguousVerticalEnvelope = true;
+		} else if (primaryLowerAssignments.length > 0 && primaryUpperAssignments.length > 0) {
+			const minUpperElevation = Math.min(...primaryUpperAssignments.map(a => a.elevation));
+			const maxLowerElevation = Math.max(...primaryLowerAssignments.map(a => a.elevation));
+			if (minUpperElevation <= maxLowerElevation + 0.5 || Math.abs(minUpperElevation - maxLowerElevation) > 15.0) {
+				ambiguousVerticalEnvelope = true;
+			}
+		}
+
+		diagnostics.loopsInspected++;
+		if (!noLowerSupport) diagnostics.loopsWithPrimaryLowerSupport++;
+		if (!noUpperCover) diagnostics.loopsWithPrimaryUpperCover++;
+		if (!noLowerSupport && !noUpperCover) diagnostics.loopsWithBothRoles++;
+		if (noLowerSupport) diagnostics.loopsWithNoLowerSupport++;
+		if (noUpperCover) diagnostics.loopsWithNoUpperCover++;
+		if (ambiguousVerticalEnvelope) diagnostics.ambiguousVerticalEnvelopes++;
+
+		for (const cand of [...lowerCandidates, ...upperCandidates, ...otherCandidates]) {
+			if (cand.status === 'primary') diagnostics.primaryAssignments++;
+			else if (cand.status === 'secondary') diagnostics.secondaryAssignments++;
+			else if (cand.status === 'noise') diagnostics.noiseAssignments++;
+			allRankedAssignments.push(cand);
+		}
+
+		const selection: LoopSurfaceRoleSelection = {
+			loopId,
+			primaryLowerAssignments,
+			secondaryLowerAssignments,
+			primaryUpperAssignments,
+			secondaryUpperAssignments,
+			noiseAssignments,
+			otherAssignments,
+			noLowerSupport,
+			noUpperCover,
+			ambiguousVerticalEnvelope
+		};
+
+		selectionsByLoop.set(loopId, selection);
+		loopSelections.push(selection);
+	}
+
+	diagnostics.rankedFingerprint = calculateRankedLoopSurfaceAssignmentFingerprint(allRankedAssignments);
+
+	return {
+		assignments: allRankedAssignments,
+		selectionsByLoop,
+		loopSelections,
+		diagnostics
 	};
 }
