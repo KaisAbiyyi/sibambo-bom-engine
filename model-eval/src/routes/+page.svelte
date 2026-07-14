@@ -55,7 +55,7 @@
 	import { createGeometryFoundation } from '$lib/geometry';
 	import type { RoomCandidate } from '$lib/rooms/types';
 	import { runRoomDebugPipeline } from '$lib/rooms/room-debug-pipeline';
-	import { resolveRoomCandidateSelection } from '$lib/rooms/debug-selection';
+	import { getVisibleRoomCandidates, resolveRoomCandidateSelection, type RoomDebugVisibility } from '$lib/rooms/debug-selection';
 
 
 	type NumberInputKey = 'peopleCount' | 'operationHours' | 'setPointC' | 'orientationDeg' | 'glassRatio' | 'roomHeightM';
@@ -72,6 +72,7 @@
 		selectedRoomCandidateId?: string | null;
 		onRoomCandidateSelect?: (id: string) => void;
 		roomFocusRequest?: number;
+		roomOverlayVisibility?: RoomDebugVisibility;
 		onQaReady?: (payload: {
 			viewName: string;
 			width: number;
@@ -166,10 +167,12 @@
 	let roomDebugRunning = $state(false);
 	let selectedRoomCandidateId = $state<string | null>(null);
 	let roomFocusRequest = $state(0);
+	let roomOverlayVisibility = $state<RoomDebugVisibility>({ primary: true, secondary: true, plan: true, prism: true, labels: true });
 
 	let annotationQueue = $derived(buildAnnotationReviewQueue(annotationUnits, annotationRecords, annotationFilters, annotationSort));
 	let selectedAnnotationUnit = $derived(annotationQueue.find((unit) => unit.id === selectedAnnotationUnitId) || annotationQueue[0] || null);
 	let selectedRoomCandidate = $derived(roomCandidates.find((candidate) => candidate.id === selectedRoomCandidateId) || null);
+	let visibleRoomCandidates = $derived(getVisibleRoomCandidates(roomCandidates, roomOverlayVisibility));
 	let readiness = $derived<ReadinessItem[]>(getReadiness(model, inputs, touched));
 	let selectedReadiness = $derived<ReadinessItem | undefined>(readiness.find((item) => item.kind === selectedAnalysis));
 	let presentParts = $derived(model ? model.partStats.filter((part) => part.count > 0) : []);
@@ -193,6 +196,11 @@
 					.reduce((sum, surface) => sum + surface.areaM2, 0)
 			: 0
 	);
+
+	$effect(() => {
+		const nextSelection = resolveRoomCandidateSelection(visibleRoomCandidates, selectedRoomCandidateId);
+		if (nextSelection !== selectedRoomCandidateId) selectedRoomCandidateId = nextSelection;
+	});
 
 	onMount(() => {
 		const stored = localStorage.getItem(TEMPLATE_KEY);
@@ -460,6 +468,10 @@
 
 	function focusSelectedRoomCandidate() {
 		if (selectedRoomCandidateId) roomFocusRequest += 1;
+	}
+
+	function toggleRoomOverlayVisibility(key: keyof RoomDebugVisibility) {
+		roomOverlayVisibility = { ...roomOverlayVisibility, [key]: !roomOverlayVisibility[key] };
 	}
 
 
@@ -1189,7 +1201,7 @@
 
 	<section class="stage-panel">
 		{#if ModelCanvasComponent}
-			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} activeAnalysis={selectedAnalysis} {result} {qaMode} {qaCamera} annotationUnit={annotationMode ? selectedAnnotationUnit : null} roomCandidates={roomDebug ? roomCandidates : []} {selectedRoomCandidateId} onRoomCandidateSelect={selectRoomCandidate} {roomFocusRequest} onQaReady={handleQaReady} />
+			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} activeAnalysis={selectedAnalysis} {result} {qaMode} {qaCamera} annotationUnit={annotationMode ? selectedAnnotationUnit : null} roomCandidates={roomDebug ? visibleRoomCandidates : []} {selectedRoomCandidateId} onRoomCandidateSelect={selectRoomCandidate} {roomFocusRequest} {roomOverlayVisibility} onQaReady={handleQaReady} />
 
 		{:else}
 			<div class="model-stage-placeholder">
@@ -1220,17 +1232,24 @@
 					{:else if roomDebugError}
 						<span class="room-debug-hud__badge room-debug-hud__badge--error">error</span>
 					{:else}
-						<span class="room-debug-hud__badge room-debug-hud__badge--ok">{roomCandidates.length} candidates</span>
+						<span class="room-debug-hud__badge room-debug-hud__badge--ok">{visibleRoomCandidates.length}/{roomCandidates.length} candidates</span>
 					{/if}
 				</div>
 				{#if roomDebugError}
 					<p class="room-debug-hud__error">{roomDebugError}</p>
 				{/if}
-				{#if roomCandidates.length > 0}
+				<div class="room-debug-hud__controls" aria-label="Room debug visibility">
+					<button class:room-debug-hud__control--active={roomOverlayVisibility.primary} class="room-debug-hud__control" type="button" aria-pressed={roomOverlayVisibility.primary} onclick={() => toggleRoomOverlayVisibility('primary')}>Show primary</button>
+					<button class:room-debug-hud__control--active={roomOverlayVisibility.secondary} class="room-debug-hud__control" type="button" aria-pressed={roomOverlayVisibility.secondary} onclick={() => toggleRoomOverlayVisibility('secondary')}>Show secondary</button>
+					<button class:room-debug-hud__control--active={roomOverlayVisibility.plan} class="room-debug-hud__control" type="button" aria-pressed={roomOverlayVisibility.plan} onclick={() => toggleRoomOverlayVisibility('plan')}>Show plan polygons</button>
+					<button class:room-debug-hud__control--active={roomOverlayVisibility.prism} class="room-debug-hud__control" type="button" aria-pressed={roomOverlayVisibility.prism} onclick={() => toggleRoomOverlayVisibility('prism')}>Show vertical prisms</button>
+					<button class:room-debug-hud__control--active={roomOverlayVisibility.labels} class="room-debug-hud__control" type="button" aria-pressed={roomOverlayVisibility.labels} onclick={() => toggleRoomOverlayVisibility('labels')}>Show labels</button>
+				</div>
+				<button class="room-debug-hud__focus" type="button" onclick={focusSelectedRoomCandidate} disabled={!selectedRoomCandidateId}>Focus selected</button>
+				{#if visibleRoomCandidates.length > 0}
 					<div class="room-debug-hud__timing">{roomDebugDurationMs.toFixed(0)} ms</div>
-					<button class="room-debug-hud__focus" type="button" onclick={focusSelectedRoomCandidate} disabled={!selectedRoomCandidateId}>Focus selected</button>
 					<ul class="room-debug-hud__list">
-						{#each roomCandidates.slice(0, 12) as c (c.id)}
+						{#each visibleRoomCandidates.slice(0, 12) as c (c.id)}
 							<li>
 								<button class="room-debug-hud__item room-debug-hud__item--{c.status}" class:room-debug-hud__item--selected={c.id === selectedRoomCandidateId} type="button" aria-pressed={c.id === selectedRoomCandidateId} onclick={() => selectRoomCandidate(c.id)}>
 									<span class="room-debug-hud__status">{c.status[0].toUpperCase()}</span>
@@ -1240,8 +1259,8 @@
 								</button>
 							</li>
 						{/each}
-						{#if roomCandidates.length > 12}
-							<li class="room-debug-hud__more">+{roomCandidates.length - 12} more</li>
+						{#if visibleRoomCandidates.length > 12}
+							<li class="room-debug-hud__more">+{visibleRoomCandidates.length - 12} more</li>
 						{/if}
 					</ul>
 					{#if selectedRoomCandidate}
@@ -2115,6 +2134,27 @@
 		font-size: 0.68rem;
 		margin-bottom: 6px;
 	}
+
+	.room-debug-hud__controls {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 4px;
+		margin: 0 0 6px;
+	}
+
+	.room-debug-hud__control {
+		padding: 3px 5px;
+		border: 1px solid rgba(148, 163, 184, 0.35);
+		border-radius: 4px;
+		background: rgba(255, 255, 255, 0.04);
+		color: #94a3b8;
+		font: inherit;
+		font-size: 0.64rem;
+		text-align: left;
+		cursor: pointer;
+	}
+
+	.room-debug-hud__control--active { border-color: rgba(34, 211, 238, 0.56); background: rgba(34, 211, 238, 0.12); color: #cffafe; }
 
 	.room-debug-hud__focus {
 		width: 100%;

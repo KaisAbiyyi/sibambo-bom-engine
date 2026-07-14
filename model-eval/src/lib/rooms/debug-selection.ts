@@ -1,4 +1,12 @@
-import type { RoomCandidate } from './types';
+import type { PlanCoord, RoomCandidate } from './types';
+
+export type RoomDebugVisibility = {
+	primary: boolean;
+	secondary: boolean;
+	plan: boolean;
+	prism: boolean;
+	labels: boolean;
+};
 
 type OverlayObject = {
 	userData?: { roomCandidateId?: unknown };
@@ -18,6 +26,18 @@ export function resolveRoomCandidateId(object: OverlayObject | null | undefined)
 export function resolveRoomCandidateSelection(candidates: RoomCandidate[], selectedId: string | null) {
 	if (selectedId && candidates.some((candidate) => candidate.id === selectedId)) return selectedId;
 	return candidates[0]?.id ?? null;
+}
+
+export function getVisibleRoomCandidates(candidates: RoomCandidate[], visibility: RoomDebugVisibility) {
+	return candidates.filter((candidate) => {
+		if (candidate.status === 'primary') return visibility.primary;
+		if (candidate.status === 'secondary') return visibility.secondary;
+		return true;
+	});
+}
+
+export function getPrismSideVertexCount(polygon: PlanCoord[]) {
+	return polygon.length * 6;
 }
 
 export function getRoomCandidateBounds(candidate: RoomCandidate) {

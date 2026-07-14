@@ -41,7 +41,7 @@
 	import { buildClassificationUnitHighlight } from './annotation/highlight';
 	import type { ClassificationUnitRecord } from './annotation';
 	import type { RoomCandidate } from './rooms/types';
-	import { getRoomCandidateBounds, resolveRoomCandidateId } from './rooms/debug-selection';
+	import { getPrismSideVertexCount, getRoomCandidateBounds, resolveRoomCandidateId, type RoomDebugVisibility } from './rooms/debug-selection';
 
 
 	let {
@@ -57,7 +57,8 @@
 		roomCandidates = [],
 		selectedRoomCandidateId = null,
 		onRoomCandidateSelect = undefined,
-		roomFocusRequest = 0
+		roomFocusRequest = 0,
+		roomOverlayVisibility = { primary: true, secondary: true, plan: true, prism: true, labels: true }
 	}: {
 		model: ParsedBuildingModel | null;
 		activeAnalysis: AnalysisKind;
@@ -71,6 +72,7 @@
 		selectedRoomCandidateId?: string | null;
 		onRoomCandidateSelect?: (id: string) => void;
 		roomFocusRequest?: number;
+		roomOverlayVisibility?: RoomDebugVisibility;
 		onQaReady?: (payload: {
 			viewName: string;
 			width: number;
@@ -823,8 +825,6 @@
 	};
 
 	function buildRoomDebugOverlays() {
-		// Remove previous room overlays (tracked in a separate array so they don't
-		// conflict with the analysis-result overlays).
 		if (!model || roomCandidates.length === 0) return;
 
 		const span = Math.max(
@@ -841,12 +841,6 @@
 			const hex = ROOM_STATUS_COLOR[candidate.status] ?? '#22d3ee';
 			const color = new Color(hex);
 			const selected = candidate.id === selectedRoomCandidateId;
-			const candidateGroup = new Group();
-			candidateGroup.userData.roomCandidateId = candidate.id;
-
-			// ------------------------------------------------------------------
-			// Floor cap (at lowerElevation)
-			// ------------------------------------------------------------------
 			const shape2D = polygon.map((p) => new Vector2(p.x, p.z));
 			let tris: number[][];
 			try {
@@ -857,82 +851,52 @@
 
 			const floorY = candidate.lowerElevation;
 			const ceilY = candidate.upperElevation;
+			if (roomOverlayVisibility.plan) {
+				const planGroup = createRoomOverlayGroup(candidate.id, 'plan');
+				const floorPositions = triangulatedPositions(tris, shape2D, floorY);
+				const floorGeo = new BufferGeometry();
+				floorGeo.setAttribute('position', new Float32BufferAttribute(floorPositions, 3));
+				floorGeo.computeVertexNormals();
+				const floorMesh = new Mesh(floorGeo, roomSurfaceMaterial(color, selected ? 0.42 : 0.18));
+				floorMesh.userData.roomCandidateId = candidate.id;
+				floorMesh.renderOrder = 10;
+				planGroup.add(floorMesh);
 
-			// Build floor face geometry
-			const floorGeo = new BufferGeometry();
-			const positions: number[] = [];
-			for (const tri of tris) {
-				const [ia, ib, ic] = tri;
-				const pa = shape2D[ia], pb = shape2D[ib], pc = shape2D[ic];
-				positions.push(pa.x, floorY, pa.y, pb.x, floorY, pb.y, pc.x, floorY, pc.y);
+				const ceilPositions = triangulatedPositions(tris, shape2D, ceilY);
+				const ceilGeo = new BufferGeometry();
+				ceilGeo.setAttribute('position', new Float32BufferAttribute(ceilPositions, 3));
+				ceilGeo.computeVertexNormals();
+				const ceilMesh = new Mesh(ceilGeo, roomSurfaceMaterial(color, selected ? 0.26 : 0.10));
+				ceilMesh.userData.roomCandidateId = candidate.id;
+				ceilMesh.renderOrder = 10;
+				planGroup.add(ceilMesh);
+
+				const edgeGeo = new BufferGeometry();
+				edgeGeo.setAttribute('position', new Float32BufferAttribute(roomBoundaryPositions(polygon, floorY), 3));
+				const wire = new LineSegments(edgeGeo, new LineBasicMaterial({ color: selected ? color.clone().lerp(new Color('#ffffff'), 0.36) : color, linewidth: 1 }));
+				wire.userData.roomCandidateId = candidate.id;
+				wire.renderOrder = 11;
+				planGroup.add(wire);
+				overlayRoot.add(planGroup);
+				overlayObjects.push(planGroup);
 			}
-			floorGeo.setAttribute('position', new Float32BufferAttribute(positions, 3));
-			floorGeo.computeVertexNormals();
 
-			const floorMat = new MeshStandardMaterial({
-				color,
-				transparent: true,
-				opacity: selected ? 0.42 : 0.18,
-				side: DoubleSide,
-				depthWrite: false,
-				roughness: 0.8,
-				metalness: 0
-			});
-			const floorMesh = new Mesh(floorGeo, floorMat);
-			floorMesh.userData.roomCandidateId = candidate.id;
-			floorMesh.renderOrder = 10;
-			candidateGroup.add(floorMesh);
-
-			// ------------------------------------------------------------------
-			// Ceiling cap (at upperElevation)
-			// ------------------------------------------------------------------
-			const ceilGeo = new BufferGeometry();
-			const ceilPositions: number[] = [];
-			for (const tri of tris) {
-				const [ia, ib, ic] = tri;
-				const pa = shape2D[ia], pb = shape2D[ib], pc = shape2D[ic];
-				ceilPositions.push(pa.x, ceilY, pa.y, pb.x, ceilY, pb.y, pc.x, ceilY, pc.y);
+			if (roomOverlayVisibility.prism) {
+				const prismGroup = createRoomOverlayGroup(candidate.id, 'prism');
+				const prismGeo = new BufferGeometry();
+				const prismPositions = roomPrismSidePositions(polygon, floorY, ceilY);
+				if (prismPositions.length !== getPrismSideVertexCount(polygon) * 3) continue;
+				prismGeo.setAttribute('position', new Float32BufferAttribute(prismPositions, 3));
+				prismGeo.computeVertexNormals();
+				const prism = new Mesh(prismGeo, roomSurfaceMaterial(color, selected ? 0.28 : 0.12));
+				prism.userData.roomCandidateId = candidate.id;
+				prism.renderOrder = 9;
+				prismGroup.add(prism);
+				overlayRoot.add(prismGroup);
+				overlayObjects.push(prismGroup);
 			}
-			ceilGeo.setAttribute('position', new Float32BufferAttribute(ceilPositions, 3));
-			ceilGeo.computeVertexNormals();
 
-			const ceilMat = new MeshStandardMaterial({
-				color,
-				transparent: true,
-				opacity: selected ? 0.26 : 0.10,
-				side: DoubleSide,
-				depthWrite: false,
-				roughness: 0.8,
-				metalness: 0
-			});
-			const ceilMesh = new Mesh(ceilGeo, ceilMat);
-			ceilMesh.userData.roomCandidateId = candidate.id;
-			ceilMesh.renderOrder = 10;
-			candidateGroup.add(ceilMesh);
-
-			// ------------------------------------------------------------------
-			// Perimeter wireframe at floor level
-			// ------------------------------------------------------------------
-			const edgePositions: number[] = [];
-			for (let i = 0; i < polygon.length; i++) {
-				const a = polygon[i];
-				const b = polygon[(i + 1) % polygon.length];
-				edgePositions.push(
-					a.x, floorY + 0.01, a.z,
-					b.x, floorY + 0.01, b.z
-				);
-			}
-			const edgeGeo = new BufferGeometry();
-			edgeGeo.setAttribute('position', new Float32BufferAttribute(edgePositions, 3));
-			const edgeMat = new LineBasicMaterial({ color: selected ? color.clone().lerp(new Color('#ffffff'), 0.36) : color, linewidth: 1 });
-			const wire = new LineSegments(edgeGeo, edgeMat);
-			wire.userData.roomCandidateId = candidate.id;
-			wire.renderOrder = 11;
-			candidateGroup.add(wire);
-
-			// ------------------------------------------------------------------
-			// Label at centroid, midway between floor and ceiling
-			// ------------------------------------------------------------------
+			if (!roomOverlayVisibility.labels) continue;
 			const cx = polygon.reduce((s, p) => s + p.x, 0) / polygon.length;
 			const cz = polygon.reduce((s, p) => s + p.z, 0) / polygon.length;
 			const midY = (floorY + ceilY) / 2;
@@ -941,10 +905,52 @@
 			const labelPos = new Vector3(cx, midY + span * 0.015, cz);
 			const lbl = makeRoomLabel(labelText, shortId, hex, labelPos, span, selected);
 			lbl.userData.roomCandidateId = candidate.id;
-			candidateGroup.add(lbl);
-			overlayRoot.add(candidateGroup);
-			overlayObjects.push(candidateGroup);
+			const labelGroup = createRoomOverlayGroup(candidate.id, 'label');
+			labelGroup.add(lbl);
+			overlayRoot.add(labelGroup);
+			overlayObjects.push(labelGroup);
 		}
+	}
+
+	function createRoomOverlayGroup(id: string, kind: 'plan' | 'prism' | 'label') {
+		const group = new Group();
+		group.userData.roomCandidateId = id;
+		group.userData.roomOverlayKind = kind;
+		return group;
+	}
+
+	function roomSurfaceMaterial(color: Color, opacity: number) {
+		return new MeshStandardMaterial({ color, transparent: true, opacity, side: DoubleSide, depthWrite: false, roughness: 0.8, metalness: 0 });
+	}
+
+	function triangulatedPositions(tris: number[][], shape: Vector2[], elevation: number) {
+		const positions: number[] = [];
+		for (const [ia, ib, ic] of tris) {
+			const a = shape[ia], b = shape[ib], c = shape[ic];
+			positions.push(a.x, elevation, a.y, b.x, elevation, b.y, c.x, elevation, c.y);
+		}
+		return positions;
+	}
+
+	function roomBoundaryPositions(polygon: RoomCandidate['planPolygon'], elevation: number) {
+		const positions: number[] = [];
+		for (let index = 0; index < polygon.length; index += 1) {
+			const a = polygon[index], b = polygon[(index + 1) % polygon.length];
+			positions.push(a.x, elevation + 0.01, a.z, b.x, elevation + 0.01, b.z);
+		}
+		return positions;
+	}
+
+	function roomPrismSidePositions(polygon: RoomCandidate['planPolygon'], lowerElevation: number, upperElevation: number) {
+		const positions: number[] = [];
+		for (let index = 0; index < polygon.length; index += 1) {
+			const a = polygon[index], b = polygon[(index + 1) % polygon.length];
+			positions.push(
+				a.x, lowerElevation, a.z, b.x, lowerElevation, b.z, b.x, upperElevation, b.z,
+				a.x, lowerElevation, a.z, b.x, upperElevation, b.z, a.x, upperElevation, a.z
+			);
+		}
+		return positions;
 	}
 
 	function makeRoomLabel(line1: string, line2: string, color: string, position: Vector3, span: number, selected = false) {
@@ -1080,6 +1086,7 @@
 		annotationUnit;
 		roomCandidates;
 		selectedRoomCandidateId;
+		roomOverlayVisibility;
 		if (mounted) {
 			refreshSurfaceMaterials();
 			rebuildAnnotationHighlight();
