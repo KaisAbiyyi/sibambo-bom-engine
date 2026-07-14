@@ -5,3 +5,5 @@ export * from './loops';
 export * from './surfaces';
 export * from './envelopes';
 export * from './candidates';
+export * from './detected-room';
+export * from './closed-room-detection';

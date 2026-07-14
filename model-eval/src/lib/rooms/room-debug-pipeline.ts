@@ -17,7 +17,9 @@ import { assignHorizontalEvidenceToLoops, rankLoopSurfaceAssignments } from './s
 import { buildVerticalEnvelopeCandidates, refineVerticalEnvelopeCandidates } from './envelopes';
 import { assembleRoomCandidates } from './candidates';
 import { buildRoomCandidateTraces, type RoomCandidateTrace } from './room-provenance';
+import { detectClosedRooms, type ClosedRoomDetectionInput } from './closed-room-detection';
 import type { RoomCandidate, RoomCandidateDiagnostics } from './types';
+import type { DetectedRoom, DetectedRoomResult } from './detected-room';
 
 export type RoomDebugResult = {
 	candidates: RoomCandidate[];
@@ -26,7 +28,10 @@ export type RoomDebugResult = {
 	dataQuality?: 'complete' | 'degraded';
 	durationMs: number;
 	error?: string;
+	/** Task 3B.3: Closed rooms detected from validated loop and envelope evidence */
+	detectedRooms?: DetectedRoomResult;
 };
+
 
 export async function runRoomDebugPipeline(scene: RuntimeScene): Promise<RoomDebugResult> {
 	const t0 = performance.now();
@@ -105,12 +110,37 @@ export async function runRoomDebugPipeline(scene: RuntimeScene): Promise<RoomDeb
 
 		const dataQuality = roomsResult.diagnostics.hasQuarantinedEnvelopeInputs ? 'degraded' : 'complete';
 
+		// Task 3B.3 — Detect closed rooms from validated evidence
+		const modelDiagonalM = (() => {
+			let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+			for (const g of allNormalizedGraphs) {
+				for (const n of g.nodes) {
+					if (n.coord.x < minX) minX = n.coord.x;
+					if (n.coord.x > maxX) maxX = n.coord.x;
+					if (n.coord.z < minZ) minZ = n.coord.z;
+					if (n.coord.z > maxZ) maxZ = n.coord.z;
+				}
+			}
+			const dx = maxX - minX, dz = maxZ - minZ;
+			return Number.isFinite(dx + dz) ? Math.sqrt(dx * dx + dz * dz) : 50;
+		})();
+
+		const detectionInput: ClosedRoomDetectionInput = {
+			loops: allRankedCandidates,
+			envelopes: refinementResult.candidates,
+			graphs: allNormalizedGraphs,
+			openings: snapshot.boundaryOpenings ?? [],
+			modelDiagonalM
+		};
+		const detectedRooms = detectClosedRooms(detectionInput);
+
 		return {
 			candidates: roomsResult.candidates,
 			traces,
 			diagnostics: roomsResult.diagnostics,
 			dataQuality,
-			durationMs: performance.now() - t0
+			durationMs: performance.now() - t0,
+			detectedRooms
 		};
 	} catch (err) {
 		return {

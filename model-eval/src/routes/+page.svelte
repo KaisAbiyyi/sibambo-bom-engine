@@ -169,6 +169,7 @@
 	let roomCandidateTraces = $state<RoomCandidateTrace[]>([]);
 	let roomDebugDurationMs = $state(0);
 	let roomDebugDiagnostics = $state<import('$lib/rooms/types').RoomCandidateDiagnostics | undefined>(undefined);
+	let roomDebugDetectedRooms = $state<import('$lib/rooms/detected-room').DetectedRoomResult | undefined>(undefined);
 	let roomDebugError = $state('');
 	let roomDebugSchemaError = $state<{ reason: PersistedAnalysisCompatibilityReason; message: string } | undefined>(undefined);
 	let roomDebugRunning = $state(false);
@@ -467,6 +468,7 @@
 		selectedRoomCandidateId = resolveRoomCandidateSelection(res.candidates, selectedRoomCandidateId);
 		roomDebugDurationMs = res.durationMs;
 		roomDebugDiagnostics = res.diagnostics;
+		roomDebugDetectedRooms = res.detectedRooms;
 		if (res.error) roomDebugError = res.error;
 		} catch (err) {
 			roomDebugError = err instanceof Error ? err.message : String(err);
@@ -1286,6 +1288,34 @@
 									<li>{reason.replace(/_/g, ' ')}: {count}</li>
 								{/each}
 							</ul>
+						</div>
+					{/if}
+					{#if roomDebugDetectedRooms}
+						<div class="room-debug-hud__detected-rooms" aria-label="Detected rooms summary">
+							<div class="room-debug-hud__detected-rooms-header">
+								Detected Rooms:
+								<span class="room-debug-hud__detected-badge room-debug-hud__detected-badge--valid">{roomDebugDetectedRooms.diagnostics.roomsAccepted} valid</span>
+								{#if roomDebugDetectedRooms.diagnostics.roomsAmbiguous > 0}
+									<span class="room-debug-hud__detected-badge room-debug-hud__detected-badge--ambiguous">{roomDebugDetectedRooms.diagnostics.roomsAmbiguous} ambiguous</span>
+								{/if}
+								{#if roomDebugDetectedRooms.diagnostics.roomsRejected > 0}
+									<span class="room-debug-hud__detected-badge room-debug-hud__detected-badge--rejected">{roomDebugDetectedRooms.diagnostics.roomsRejected} rejected</span>
+								{/if}
+							</div>
+							<ul class="room-debug-hud__detected-list">
+								{#each roomDebugDetectedRooms.rooms.slice(0, 8) as dr (dr.id)}
+									<li class="room-debug-hud__detected-item room-debug-hud__detected-item--{dr.status}">
+										<span class="room-debug-hud__detected-status">{dr.status[0].toUpperCase()}</span>
+										<span class="room-debug-hud__detected-area">{dr.floorArea.toFixed(1)} m²</span>
+										<span class="room-debug-hud__detected-height">{dr.height.toFixed(2)} m</span>
+										<span class="room-debug-hud__detected-confidence" title="Confidence: {dr.confidence.level}">{dr.confidence.level[0].toUpperCase()}</span>
+										<span class="room-debug-hud__detected-id" title={dr.id}>{dr.id.slice(-10)}</span>
+									</li>
+								{/each}
+							</ul>
+							{#if roomDebugDetectedRooms.diagnostics.openingBridgesApplied > 0}
+								<div class="room-debug-hud__detected-note">⬡ {roomDebugDetectedRooms.diagnostics.openingBridgesApplied} opening bridge(s) applied</div>
+							{/if}
 						</div>
 					{/if}
 					<ul class="room-debug-hud__list">
@@ -2221,6 +2251,67 @@
 		color: #fcd34d;
 		font-size: 0.72rem;
 		line-height: 1.4;
+	}
+
+	.room-debug-hud__detected-rooms {
+		background: rgba(100, 200, 100, 0.06);
+		border-left: 2px solid #4ade80;
+		padding: 6px 8px;
+		margin-bottom: 8px;
+		font-size: 0.72rem;
+	}
+
+	.room-debug-hud__detected-rooms-header {
+		color: #86efac;
+		font-weight: 600;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		flex-wrap: wrap;
+		margin-bottom: 4px;
+	}
+
+	.room-debug-hud__detected-badge {
+		font-size: 0.65rem;
+		padding: 1px 5px;
+		border-radius: 3px;
+		font-weight: 500;
+	}
+	.room-debug-hud__detected-badge--valid { background: rgba(74, 222, 128, 0.2); color: #86efac; }
+	.room-debug-hud__detected-badge--ambiguous { background: rgba(251, 191, 36, 0.2); color: #fcd34d; }
+	.room-debug-hud__detected-badge--rejected { background: rgba(248, 113, 113, 0.2); color: #fca5a5; }
+
+	.room-debug-hud__detected-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.room-debug-hud__detected-item {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 2px 4px;
+		border-radius: 3px;
+		font-size: 0.68rem;
+	}
+	.room-debug-hud__detected-item--valid { background: rgba(74, 222, 128, 0.08); }
+	.room-debug-hud__detected-item--ambiguous { background: rgba(251, 191, 36, 0.08); }
+	.room-debug-hud__detected-item--rejected { background: rgba(248, 113, 113, 0.06); opacity: 0.65; }
+
+	.room-debug-hud__detected-status { font-weight: 700; width: 12px; text-align: center; color: #94a3b8; }
+	.room-debug-hud__detected-area { color: #e2e8f0; min-width: 50px; }
+	.room-debug-hud__detected-height { color: #94a3b8; }
+	.room-debug-hud__detected-confidence { color: #64748b; font-size: 0.65rem; }
+	.room-debug-hud__detected-id { color: #475569; font-family: monospace; font-size: 0.6rem; overflow: hidden; text-overflow: ellipsis; }
+
+	.room-debug-hud__detected-note {
+		color: #94a3b8;
+		font-size: 0.65rem;
+		margin-top: 4px;
 	}
 
 	.room-debug-hud__controls {
