@@ -10,7 +10,8 @@ import {
 	quantizeCoord,
 	QUANTIZATION_STEP,
 	extractHorizontalSurfaceEvidence,
-	buildStoreyBands
+	buildStoreyBands,
+	extractVerticalBarrierEvidence
 } from './helpers';
 import type {
 	PlanCoord,
@@ -283,5 +284,89 @@ describe('Room evidence types and deterministic IDs', () => {
 		const idRun1 = buildStoreyBands([evUp, evDown])[0].id;
 		const idRun2 = buildStoreyBands([evDown, evUp])[0].id;
 		expect(idRun1).toBe(idRun2);
+	});
+
+	test('9. vertical barrier extraction', () => {
+		const makeWall = (id: string, nx: number, ny: number, nz: number, area: number, minY: number, maxY: number, minX = 0, maxX = 0, minZ = 0, maxZ = 0) => ({
+			id,
+			logicalObjectId: logObjA,
+			dominantNormal: { x: nx, y: ny, z: nz },
+			areaM2: area,
+			worldBounds: {
+				min: { x: minX, y: minY, z: minZ },
+				max: { x: maxX, y: maxY, z: maxZ },
+				size: { x: maxX - minX, y: maxY - minY, z: maxZ - minZ },
+				center: { x: (minX + maxX)/2, y: (minY + maxY)/2, z: (minZ + maxZ)/2 }
+			},
+			centroid: { x: (minX + maxX)/2, y: (minY + maxY)/2, z: (minZ + maxZ)/2 },
+			materialIds: [12]
+		});
+
+		// 1. Vertical surface is accepted
+		const vertWall = makeWall('vert1', 1, 0, 0, 10, 0, 3, 0, 0.2, 0, 4);
+		const vertEvidence = extractVerticalBarrierEvidence([vertWall] as any);
+		expect(vertEvidence.length).toBe(1);
+		expect(vertEvidence[0].thickness).toBe(0.2); // size.x since normal is along X
+
+		// 2. Horizontal surface is rejected
+		const horizFace = makeWall('horiz', 0, 1, 0, 10, 0, 0, 0, 4, 0, 4);
+		const horizEvidence = extractVerticalBarrierEvidence([horizFace] as any);
+		expect(horizEvidence.length).toBe(0);
+
+		// 3. Zero-area surface is rejected
+		const zeroAreaWall = makeWall('zeroArea', 1, 0, 0, 0, 0, 3, 0, 0.2, 0, 4);
+		const zeroAreaEvidence = extractVerticalBarrierEvidence([zeroAreaWall] as any);
+		expect(zeroAreaEvidence.length).toBe(0);
+
+		// 4. Zero-height evidence is rejected
+		const zeroHeightWall = makeWall('zeroHeight', 1, 0, 0, 10, 1.2, 1.2, 0, 0.2, 0, 4);
+		const zeroHeightEvidence = extractVerticalBarrierEvidence([zeroHeightWall] as any);
+		expect(zeroHeightEvidence.length).toBe(0);
+
+		// 5. Zero-length projected segment is rejected
+		const zeroLenWall = makeWall('zeroLen', 1, 0, 0, 10, 0, 3, 0, 0.2, 1.2, 1.2);
+		const zeroLenEvidence = extractVerticalBarrierEvidence([zeroLenWall] as any);
+		expect(zeroLenEvidence.length).toBe(0);
+
+		// 6. Non-finite input is rejected
+		const nonFiniteWall = makeWall('nonfinite', 1, NaN, 0, 10, 0, 3, 0, 0.2, 0, 4);
+		const nonFiniteEvidence = extractVerticalBarrierEvidence([nonFiniteWall] as any);
+		expect(nonFiniteEvidence.length).toBe(0);
+
+		// 7. Elevation range is correct
+		expect(vertEvidence[0].elevationRange.min).toBe(0);
+		expect(vertEvidence[0].elevationRange.max).toBe(3);
+
+		// 8. Projected segment normalization is deterministic
+		const wallSegment = vertEvidence[0].segment;
+		expect(wallSegment.start.z).toBeLessThanOrEqual(wallSegment.end.z);
+
+		// 9. Reversed segment input produces the same ID
+		const wallA = makeWall('w1', 1, 0, 0, 10, 0, 3, 0, 0.2, 0, 4);
+		const idA1 = extractVerticalBarrierEvidence([wallA] as any)[0].id;
+		const idA2 = extractVerticalBarrierEvidence([wallA] as any)[0].id;
+		expect(idA1).toBe(idA2);
+
+		// 10. Shuffled input produces identical ordering
+		const w1 = makeWall('w1', 1, 0, 0, 10, 0, 3, 0, 0.2, 0, 4);
+		const w2 = makeWall('w2', 1, 0, 0, 10, 0, 3, 0, 0.2, 1, 5);
+		const list1 = extractVerticalBarrierEvidence([w1, w2] as any);
+		const list2 = extractVerticalBarrierEvidence([w2, w1] as any);
+		expect(list1).toEqual(list2);
+
+		// 11. Different source ownership produces a different ID
+		const wDiff = makeWall('w1', 1, 0, 0, 10, 0, 3, 0, 0.2, 0, 4);
+		wDiff.logicalObjectId = logObjB;
+		const idDiff = extractVerticalBarrierEvidence([wDiff] as any)[0].id;
+		expect(idA1).not.toBe(idDiff);
+
+		// 12. Source IDs and material IDs are preserved
+		expect(vertEvidence[0].classificationUnitIds).toEqual(['vert1']);
+		expect(vertEvidence[0].materialIds).toEqual([12]);
+
+		// 13. Repeated runs produce identical results
+		const run1 = extractVerticalBarrierEvidence([w1, w2] as any);
+		const run2 = extractVerticalBarrierEvidence([w1, w2] as any);
+		expect(run1).toEqual(run2);
 	});
 });

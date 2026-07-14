@@ -63,6 +63,8 @@ export interface RoomEvidenceDiagnostics {
 	executionTimeMs: number;
 	acceptedHorizontalCount?: number;
 	rejectedHorizontalCount?: number;
+	acceptedVerticalCount?: number;
+	rejectedVerticalCount?: number;
 }
 
 export interface RoomEvidenceSnapshot {

@@ -306,3 +306,91 @@ export function buildStoreyBands(
 
 	return storeyBands.sort((a, b) => a.id.localeCompare(b.id));
 }
+
+export function extractVerticalBarrierEvidence(
+	records: Array<ClassificationUnitRecord | SurfaceClusterRecord>,
+	diagnostics?: { acceptedVerticalCount: number; rejectedVerticalCount: number }
+): VerticalBarrierEvidence[] {
+	const results: VerticalBarrierEvidence[] = [];
+
+	const SIN_VERTICAL = Math.sin((GEOMETRY_TOLERANCES.orientationAngleDeg * Math.PI) / 180);
+
+	for (const record of records) {
+		const area = record.areaM2;
+		const normal = record.dominantNormal;
+		const bounds = record.worldBounds;
+		const centroid = record.centroid;
+
+		const isFinite =
+			Number.isFinite(area) &&
+			Number.isFinite(normal.x) && Number.isFinite(normal.y) && Number.isFinite(normal.z) &&
+			Number.isFinite(bounds.min.x) && Number.isFinite(bounds.min.y) && Number.isFinite(bounds.min.z) &&
+			Number.isFinite(bounds.max.x) && Number.isFinite(bounds.max.y) && Number.isFinite(bounds.max.z) &&
+			Number.isFinite(centroid.x) && Number.isFinite(centroid.y) && Number.isFinite(centroid.z);
+
+		const hasArea = area > 0;
+		const validBounds = bounds.min.x <= bounds.max.x && bounds.min.y <= bounds.max.y && bounds.min.z <= bounds.max.z;
+		const height = bounds.max.y - bounds.min.y;
+		const hasHeight = height > 0;
+
+		if (!isFinite || !hasArea || !validBounds || !hasHeight) {
+			if (diagnostics) diagnostics.rejectedVerticalCount++;
+			continue;
+		}
+
+		const verticalCos = Math.abs(normal.y);
+		if (verticalCos <= SIN_VERTICAL) {
+			let start: PlanCoord;
+			let end: PlanCoord;
+
+			if (Math.abs(normal.x) >= Math.abs(normal.z)) {
+				start = { x: centroid.x, z: bounds.min.z };
+				end = { x: centroid.x, z: bounds.max.z };
+			} else {
+				start = { x: bounds.min.x, z: centroid.z };
+				end = { x: bounds.max.x, z: centroid.z };
+			}
+
+			const dx = end.x - start.x;
+			const dz = end.z - start.z;
+			const len = Math.hypot(dx, dz);
+			if (len <= 0) {
+				if (diagnostics) diagnostics.rejectedVerticalCount++;
+				continue;
+			}
+
+			const [pStart, pEnd] = normalizeSegment(start, end);
+			const segment: PlanSegment = { start: pStart, end: pEnd };
+
+			const sourceIds = [record.id];
+			const id = generateVerticalBarrierId(
+				record.logicalObjectId,
+				sourceIds,
+				bounds.min.y,
+				bounds.max.y,
+				segment
+			);
+
+			const thickness = Math.abs(normal.x) >= Math.abs(normal.z) ? bounds.size.x : bounds.size.z;
+
+			results.push({
+				id,
+				logicalObjectId: record.logicalObjectId,
+				classificationUnitIds: sourceIds,
+				elevationRange: { min: bounds.min.y, max: bounds.max.y },
+				segment,
+				materialIds: record.materialIds,
+				thickness,
+				isExterior: false,
+				quality: 1.0,
+				isAmbiguous: false
+			});
+
+			if (diagnostics) diagnostics.acceptedVerticalCount++;
+		} else {
+			if (diagnostics) diagnostics.rejectedVerticalCount++;
+		}
+	}
+
+	return results.sort((a, b) => a.id.localeCompare(b.id));
+}
