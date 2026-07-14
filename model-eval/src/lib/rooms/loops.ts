@@ -5,7 +5,11 @@ import type {
 	BarrierGraphEdge,
 	BoundaryLoopCandidate,
 	BoundaryLoopDiagnostics,
-	BoundaryLoopResult
+	BoundaryLoopResult,
+	BoundaryLoopQuality,
+	BoundaryLoopStatus,
+	RankedBoundaryLoopCandidate,
+	RankedBoundaryLoopResult
 } from './types';
 import type { NormalizedBarrierGraph } from './helpers';
 
@@ -426,4 +430,208 @@ export function findBoundaryLoopCandidates(graph: NormalizedBarrierGraph): Bound
 		candidates,
 		diagnostics
 	};
+}
+
+export function rankBoundaryLoopCandidates(
+	loopsOrResult: BoundaryLoopCandidate[] | BoundaryLoopResult,
+	graph?: NormalizedBarrierGraph,
+	baseDiagnostics?: BoundaryLoopDiagnostics
+): RankedBoundaryLoopResult {
+	const rawLoops = Array.isArray(loopsOrResult) ? loopsOrResult : loopsOrResult.candidates;
+	let diag: BoundaryLoopDiagnostics;
+	if (baseDiagnostics) {
+		diag = { ...baseDiagnostics };
+	} else if (!Array.isArray(loopsOrResult) && loopsOrResult.diagnostics) {
+		diag = { ...loopsOrResult.diagnostics };
+	} else if (graph) {
+		const res = findBoundaryLoopCandidates(graph);
+		diag = { ...res.diagnostics };
+	} else {
+		diag = {
+			componentsInspected: 0,
+			halfEdgesCreated: 0,
+			traversalsAttempted: 0,
+			closedTraversalsFound: 0,
+			outerFacesExcluded: 0,
+			duplicateLoopsRemoved: 0,
+			zeroAreaLoopsRejected: 0,
+			selfIntersectingLoopsRejected: 0,
+			acceptedCandidates: rawLoops.length
+		};
+	}
+
+	const edgeToLoopIds = new Map<string, string[]>();
+	for (const loop of rawLoops) {
+		for (const edgeId of loop.edgeIds) {
+			let list = edgeToLoopIds.get(edgeId);
+			if (!list) {
+				list = [];
+				edgeToLoopIds.set(edgeId, list);
+			}
+			list.push(loop.id);
+		}
+	}
+
+	const maxArea = rawLoops.reduce((m, l) => Math.max(m, l.area), 0);
+	const maxPerimeter = rawLoops.reduce((m, l) => Math.max(m, l.perimeter), 0);
+	const maxEdgeCount = rawLoops.reduce((m, l) => Math.max(m, l.edgeIds.length), 0);
+
+	const rankedCandidates: RankedBoundaryLoopCandidate[] = rawLoops.map(loop => {
+		const edgeCount = loop.edgeIds.length;
+		const uniqueSourceObjectCount = Array.from(new Set(loop.logicalObjectIds)).length;
+
+		let compactness = 0;
+		if (loop.perimeter > 1e-6 && loop.area > 0) {
+			compactness = Number(((4 * Math.PI * loop.area) / (loop.perimeter * loop.perimeter)).toFixed(6));
+		}
+
+		const w = Math.abs(loop.planBounds.max.x - loop.planBounds.min.x);
+		const h = Math.abs(loop.planBounds.max.z - loop.planBounds.min.z);
+		const maxDim = Math.max(w, h);
+		const minDim = Math.max(Math.min(w, h), 1e-6);
+		const boundsAspectRatio = Number((maxDim / minDim).toFixed(6));
+
+		const sharedEdgeSet = new Set<string>();
+		const adjacentLoopSet = new Set<string>();
+		for (const edgeId of loop.edgeIds) {
+			const sharing = edgeToLoopIds.get(edgeId);
+			if (sharing && sharing.length > 1) {
+				for (const otherId of sharing) {
+					if (otherId !== loop.id) {
+						sharedEdgeSet.add(edgeId);
+						adjacentLoopSet.add(otherId);
+					}
+				}
+			}
+		}
+		const sharedEdgeIds = Array.from(sharedEdgeSet).sort();
+		const adjacentLoopIds = Array.from(adjacentLoopSet).sort();
+
+		let isNested = false;
+		for (const other of rawLoops) {
+			if (other.id === loop.id) continue;
+			if (other.connectedComponentIndex !== loop.connectedComponentIndex) continue;
+			if (
+				loop.planBounds.min.x >= other.planBounds.min.x - 1e-5 &&
+				loop.planBounds.max.x <= other.planBounds.max.x + 1e-5 &&
+				loop.planBounds.min.z >= other.planBounds.min.z - 1e-5 &&
+				loop.planBounds.max.z <= other.planBounds.max.z + 1e-5 &&
+				loop.area < other.area - 1e-5
+			) {
+				isNested = true;
+				break;
+			}
+		}
+
+		const nearZeroArea = loop.area < 0.1 || (maxArea > 0.5 && loop.area < maxArea * 0.005);
+		const extremeAspectRatio = boundsAspectRatio > 10.0;
+		const lowCompactness = compactness < 0.15;
+		const veryShortPerimeter = loop.perimeter < 1.0 || (maxPerimeter > 5.0 && loop.perimeter < maxPerimeter * 0.05);
+		const excessiveEdgeCount = edgeCount >= 40 || (maxEdgeCount > 10 && edgeCount > Math.max(30, maxEdgeCount * 0.8));
+		const weakSourceDiversity = uniqueSourceObjectCount <= 1;
+		const nestedOrOverlapping = isNested || (sharedEdgeIds.length > 0 && isNested);
+		const geometricallyPlausible = !nearZeroArea && !extremeAspectRatio && !lowCompactness && !veryShortPerimeter && !nestedOrOverlapping && loop.area >= 0.5;
+
+		const qualityFlags: BoundaryLoopQuality = {
+			nearZeroArea,
+			extremeAspectRatio,
+			lowCompactness,
+			veryShortPerimeter,
+			excessiveEdgeCount,
+			weakSourceDiversity,
+			nestedOrOverlapping,
+			geometricallyPlausible
+		};
+
+		let status: BoundaryLoopStatus = 'secondary';
+		if (nearZeroArea || veryShortPerimeter || loop.area < 0.15 || (maxArea > 1.0 && loop.area < maxArea * 0.01)) {
+			status = 'noise';
+		} else if (geometricallyPlausible && !extremeAspectRatio && !lowCompactness && !nestedOrOverlapping && (loop.area >= 1.0 || (maxArea <= 2.0 && loop.area >= maxArea * 0.5))) {
+			status = 'primary';
+		}
+
+		let score = (loop.area / Math.max(1, maxArea)) * 50 + compactness * 30 + Math.max(0, 20 - Math.min(20, boundsAspectRatio)) + Math.min(10, uniqueSourceObjectCount * 2);
+		if (nearZeroArea) score -= 50;
+		if (extremeAspectRatio) score -= 20;
+		if (lowCompactness) score -= 15;
+		if (veryShortPerimeter) score -= 30;
+		if (nestedOrOverlapping) score -= 25;
+		score = Number(score.toFixed(6));
+
+		return {
+			...loop,
+			score,
+			status,
+			compactness,
+			boundsAspectRatio,
+			edgeCount,
+			uniqueSourceObjectCount,
+			sharedEdgeIds,
+			adjacentLoopIds,
+			qualityFlags
+		};
+	});
+
+	rankedCandidates.sort((a, b) => {
+		if (a.score !== b.score) {
+			return b.score - a.score;
+		}
+		return a.id.localeCompare(b.id);
+	});
+
+	const rawLoopCount = rawLoops.length;
+	const primaryLoopCount = rankedCandidates.filter(c => c.status === 'primary').length;
+	const secondaryLoopCount = rankedCandidates.filter(c => c.status === 'secondary').length;
+	const noiseLoopCount = rankedCandidates.filter(c => c.status === 'noise').length;
+	const rankedFingerprint = calculateRankedBoundaryLoopFingerprint(rankedCandidates);
+
+	return {
+		candidates: rankedCandidates,
+		diagnostics: {
+			...diag,
+			rawLoopCount,
+			primaryLoopCount,
+			secondaryLoopCount,
+			noiseLoopCount,
+			rankedFingerprint
+		}
+	};
+}
+
+export function calculateRankedBoundaryLoopFingerprint(input: RankedBoundaryLoopResult | RankedBoundaryLoopCandidate[]): string {
+	const candidates = Array.isArray(input) ? input : input.candidates;
+	const sorted = [...candidates].sort((a, b) => {
+		if (a.score !== b.score) return b.score - a.score;
+		return a.id.localeCompare(b.id);
+	});
+
+	const payload = sorted.map(c => ({
+		id: c.id,
+		storeyCandidateId: c.storeyCandidateId,
+		score: Number(c.score.toFixed(6)),
+		status: c.status,
+		compactness: Number(c.compactness.toFixed(6)),
+		boundsAspectRatio: Number(c.boundsAspectRatio.toFixed(6)),
+		edgeCount: c.edgeCount,
+		uniqueSourceObjectCount: c.uniqueSourceObjectCount,
+		sharedEdgeIds: [...c.sharedEdgeIds].sort(),
+		adjacentLoopIds: [...c.adjacentLoopIds].sort(),
+		qualityFlags: c.qualityFlags,
+		area: Number(c.area.toFixed(6)),
+		perimeter: Number(c.perimeter.toFixed(6))
+	}));
+
+	const serialized = JSON.stringify(payload);
+	let sha256: (str: string) => string;
+	if (typeof window === 'undefined') {
+		try {
+			const { createHash } = require('crypto');
+			sha256 = (str: string) => createHash('sha256').update(str).digest('hex');
+		} catch (e) {
+			sha256 = simpleHash;
+		}
+	} else {
+		sha256 = simpleHash;
+	}
+	return sha256(serialized);
 }

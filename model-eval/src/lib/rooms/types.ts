@@ -165,3 +165,39 @@ export interface BoundaryLoopResult {
 	candidates: BoundaryLoopCandidate[];
 	diagnostics: BoundaryLoopDiagnostics;
 }
+
+export type BoundaryLoopStatus = 'primary' | 'secondary' | 'noise';
+
+export interface BoundaryLoopQuality {
+	nearZeroArea: boolean;
+	extremeAspectRatio: boolean;
+	lowCompactness: boolean;
+	veryShortPerimeter: boolean;
+	excessiveEdgeCount: boolean;
+	weakSourceDiversity: boolean;
+	nestedOrOverlapping: boolean;
+	geometricallyPlausible: boolean;
+}
+
+export interface RankedBoundaryLoopCandidate extends BoundaryLoopCandidate {
+	score: number;
+	status: BoundaryLoopStatus;
+	compactness: number;
+	boundsAspectRatio: number;
+	edgeCount: number;
+	uniqueSourceObjectCount: number;
+	sharedEdgeIds: string[];
+	adjacentLoopIds: string[];
+	qualityFlags: BoundaryLoopQuality;
+}
+
+export interface RankedBoundaryLoopResult {
+	candidates: RankedBoundaryLoopCandidate[];
+	diagnostics: BoundaryLoopDiagnostics & {
+		rawLoopCount: number;
+		primaryLoopCount: number;
+		secondaryLoopCount: number;
+		noiseLoopCount: number;
+		rankedFingerprint: string;
+	};
+}

@@ -3,10 +3,22 @@ import { parseModelEvalJsonV1 } from '../src/lib/formats/model-eval-json';
 import { createGeometryFoundation } from '../src/lib/geometry';
 import { createRoomEvidenceProcessor } from '../src/lib/rooms/processor';
 import { calculateRoomEvidenceFingerprint, calculateBarrierGraphFingerprint, normalizeBarrierGraph } from '../src/lib/rooms/helpers';
-import { findBoundaryLoopCandidates, calculateBoundaryLoopFingerprint } from '../src/lib/rooms/loops';
+import { findBoundaryLoopCandidates, calculateBoundaryLoopFingerprint, rankBoundaryLoopCandidates } from '../src/lib/rooms/loops';
 import type { BoundaryLoopDiagnostics } from '../src/lib/rooms/types';
 import { createHash } from 'crypto';
 import { resolve } from 'path';
+
+function computeAreaStats(candidates: Array<{ area: number }>) {
+	if (candidates.length === 0) {
+		return { min: 0, median: 0, max: 0 };
+	}
+	const areas = candidates.map(c => c.area).sort((a, b) => a - b);
+	const min = Number(areas[0].toFixed(6));
+	const max = Number(areas[areas.length - 1].toFixed(6));
+	const mid = Math.floor(areas.length / 2);
+	const median = Number((areas.length % 2 === 0 ? (areas[mid - 1] + areas[mid]) / 2 : areas[mid]).toFixed(6));
+	return { min, median, max };
+}
 
 function parseOptions(args: string[]) {
 	let path: string | undefined;
@@ -112,6 +124,7 @@ try {
 		const normG = normalizeBarrierGraph(g);
 		const nd = normG.normalizationDiagnostics;
 		const loopRes = findBoundaryLoopCandidates(normG);
+		const rankedRes = rankBoundaryLoopCandidates(loopRes.candidates, normG, loopRes.diagnostics);
 		return {
 			// Raw graph
 			nodeCount: g.nodes.length,
@@ -153,7 +166,46 @@ try {
 					orientation: c.orientation,
 					isAmbiguous: c.isAmbiguous,
 					quality: c.quality
-				}))
+				})),
+				ranked: {
+					rawLoopCount: rankedRes.diagnostics.rawLoopCount,
+					primaryLoopCount: rankedRes.diagnostics.primaryLoopCount,
+					secondaryLoopCount: rankedRes.diagnostics.secondaryLoopCount,
+					noiseLoopCount: rankedRes.diagnostics.noiseLoopCount,
+					rankedFingerprint: rankedRes.diagnostics.rankedFingerprint,
+					areaStats: {
+						primary: computeAreaStats(rankedRes.candidates.filter(c => c.status === 'primary')),
+						secondary: computeAreaStats(rankedRes.candidates.filter(c => c.status === 'secondary')),
+						noise: computeAreaStats(rankedRes.candidates.filter(c => c.status === 'noise')),
+						all: computeAreaStats(rankedRes.candidates)
+					},
+					topCandidates: rankedRes.candidates.slice(0, 5).map(c => ({
+						id: c.id,
+						score: Number(c.score.toFixed(6)),
+						status: c.status,
+						area: Number(c.area.toFixed(6)),
+						perimeter: Number(c.perimeter.toFixed(6)),
+						compactness: Number(c.compactness.toFixed(6)),
+						boundsAspectRatio: Number(c.boundsAspectRatio.toFixed(6)),
+						edgeCount: c.edgeCount,
+						uniqueSourceObjectCount: c.uniqueSourceObjectCount,
+						qualityFlags: c.qualityFlags
+					})),
+					candidates: rankedRes.candidates.map(c => ({
+						id: c.id,
+						score: Number(c.score.toFixed(6)),
+						status: c.status,
+						area: Number(c.area.toFixed(6)),
+						perimeter: Number(c.perimeter.toFixed(6)),
+						compactness: Number(c.compactness.toFixed(6)),
+						boundsAspectRatio: Number(c.boundsAspectRatio.toFixed(6)),
+						edgeCount: c.edgeCount,
+						uniqueSourceObjectCount: c.uniqueSourceObjectCount,
+						sharedEdgeIds: c.sharedEdgeIds,
+						adjacentLoopIds: c.adjacentLoopIds,
+						qualityFlags: c.qualityFlags
+					}))
+				}
 			}
 		};
 	};
@@ -191,6 +243,9 @@ try {
 		acceptedCandidates: 0
 	};
 
+	let totalRawLoops = 0, totalPrimaryLoops = 0, totalSecondaryLoops = 0, totalNoiseLoops = 0;
+	const allRankedCandidateList: any[] = [];
+
 	for (const cand of [...primaryCandidatesDetails, ...secondaryCandidatesDetails]) {
 		if (cand.graph && cand.graph.loops) {
 			const l = cand.graph.loops;
@@ -204,8 +259,33 @@ try {
 			aggregateLoopDiagnostics.zeroAreaLoopsRejected += l.diagnostics.zeroAreaLoopsRejected;
 			aggregateLoopDiagnostics.selfIntersectingLoopsRejected += l.diagnostics.selfIntersectingLoopsRejected;
 			aggregateLoopDiagnostics.acceptedCandidates += l.diagnostics.acceptedCandidates;
+			if ((l as any).ranked) {
+				const r = (l as any).ranked;
+				totalRawLoops += r.rawLoopCount;
+				totalPrimaryLoops += r.primaryLoopCount;
+				totalSecondaryLoops += r.secondaryLoopCount;
+				totalNoiseLoops += r.noiseLoopCount;
+				allRankedCandidateList.push(...r.candidates);
+			}
 		}
 	}
+
+	allRankedCandidateList.sort((a, b) => {
+		if (a.score !== b.score) return b.score - a.score;
+		return a.id.localeCompare(b.id);
+	});
+
+	const hashAll = createHash('sha256');
+	for (const cand of allRankedCandidateList) {
+		hashAll.update(cand.id);
+		hashAll.update(cand.status);
+		hashAll.update(cand.score.toFixed(6));
+		hashAll.update(cand.compactness.toFixed(6));
+		hashAll.update(cand.boundsAspectRatio.toFixed(6));
+		hashAll.update(cand.area.toFixed(6));
+		hashAll.update(cand.perimeter.toFixed(6));
+	}
+	const aggregateRankedFingerprint = hashAll.digest('hex');
 
 	const summary = {
 		inputPath: path,
@@ -229,7 +309,32 @@ try {
 		initialFaceRecordExpansion,
 		loops: {
 			totalCandidateCount: totalLoopCandidates,
-			diagnostics: aggregateLoopDiagnostics
+			diagnostics: aggregateLoopDiagnostics,
+			ranked: {
+				totalRawCount: totalRawLoops,
+				totalPrimaryCount: totalPrimaryLoops,
+				totalSecondaryCount: totalSecondaryLoops,
+				totalNoiseCount: totalNoiseLoops,
+				aggregateRankedFingerprint,
+				areaStats: {
+					primary: computeAreaStats(allRankedCandidateList.filter(c => c.status === 'primary')),
+					secondary: computeAreaStats(allRankedCandidateList.filter(c => c.status === 'secondary')),
+					noise: computeAreaStats(allRankedCandidateList.filter(c => c.status === 'noise')),
+					all: computeAreaStats(allRankedCandidateList)
+				},
+				topCandidates: allRankedCandidateList.slice(0, 5).map(c => ({
+					id: c.id,
+					score: Number(c.score.toFixed(6)),
+					status: c.status,
+					area: Number(c.area.toFixed(6)),
+					perimeter: Number(c.perimeter.toFixed(6)),
+					compactness: Number(c.compactness.toFixed(6)),
+					boundsAspectRatio: Number(c.boundsAspectRatio.toFixed(6)),
+					edgeCount: c.edgeCount,
+					uniqueSourceObjectCount: c.uniqueSourceObjectCount,
+					qualityFlags: c.qualityFlags
+				}))
+			}
 		},
 		primaryCandidates: primaryCandidatesDetails,
 		secondaryCandidates: secondaryCandidatesDetails
@@ -294,6 +399,22 @@ try {
 						console.log(`    Loops Found:      ${l.candidateCount}`);
 						console.log(`    Loops FP:         ${l.fingerprint}`);
 						console.log(`    Loop Diagnostics: inspected=${l.diagnostics.componentsInspected} halfEdges=${l.diagnostics.halfEdgesCreated} traversals=${l.diagnostics.traversalsAttempted} closed=${l.diagnostics.closedTraversalsFound} outerExcluded=${l.diagnostics.outerFacesExcluded} dupRemoved=${l.diagnostics.duplicateLoopsRemoved} zeroArea=${l.diagnostics.zeroAreaLoopsRejected} selfInt=${l.diagnostics.selfIntersectingLoopsRejected} accepted=${l.diagnostics.acceptedCandidates}`);
+						if ((l as any).ranked) {
+							const r = (l as any).ranked;
+							console.log(`    Ranked Loops:     raw=${r.rawLoopCount} primary=${r.primaryLoopCount} secondary=${r.secondaryLoopCount} noise=${r.noiseLoopCount}`);
+							console.log(`    Ranked FP:        ${r.rankedFingerprint}`);
+							console.log(`    Area (primary):   min=${r.areaStats.primary.min} median=${r.areaStats.primary.median} max=${r.areaStats.primary.max} m2`);
+							console.log(`    Area (secondary): min=${r.areaStats.secondary.min} median=${r.areaStats.secondary.median} max=${r.areaStats.secondary.max} m2`);
+							console.log(`    Area (noise):     min=${r.areaStats.noise.min} median=${r.areaStats.noise.median} max=${r.areaStats.noise.max} m2`);
+							console.log(`    Top 5 Candidates:`);
+							for (const topC of r.topCandidates) {
+								const flagsStr = Object.entries(topC.qualityFlags)
+									.filter(([_, val]) => val)
+									.map(([k]) => k)
+									.join(',');
+								console.log(`      - [${topC.status.toUpperCase()}] score=${topC.score.toFixed(3)} area=${topC.area.toFixed(3)}m2 flags=[${flagsStr || 'none'}] id=${topC.id.length > 50 ? topC.id.slice(0, 47) + '...' : topC.id}`);
+							}
+						}
 					}
 				}
 			}
@@ -327,6 +448,22 @@ try {
 						console.log(`    Loops Found:      ${l.candidateCount}`);
 						console.log(`    Loops FP:         ${l.fingerprint}`);
 						console.log(`    Loop Diagnostics: inspected=${l.diagnostics.componentsInspected} halfEdges=${l.diagnostics.halfEdgesCreated} traversals=${l.diagnostics.traversalsAttempted} closed=${l.diagnostics.closedTraversalsFound} outerExcluded=${l.diagnostics.outerFacesExcluded} dupRemoved=${l.diagnostics.duplicateLoopsRemoved} zeroArea=${l.diagnostics.zeroAreaLoopsRejected} selfInt=${l.diagnostics.selfIntersectingLoopsRejected} accepted=${l.diagnostics.acceptedCandidates}`);
+						if ((l as any).ranked) {
+							const r = (l as any).ranked;
+							console.log(`    Ranked Loops:     raw=${r.rawLoopCount} primary=${r.primaryLoopCount} secondary=${r.secondaryLoopCount} noise=${r.noiseLoopCount}`);
+							console.log(`    Ranked FP:        ${r.rankedFingerprint}`);
+							console.log(`    Area (primary):   min=${r.areaStats.primary.min} median=${r.areaStats.primary.median} max=${r.areaStats.primary.max} m2`);
+							console.log(`    Area (secondary): min=${r.areaStats.secondary.min} median=${r.areaStats.secondary.median} max=${r.areaStats.secondary.max} m2`);
+							console.log(`    Area (noise):     min=${r.areaStats.noise.min} median=${r.areaStats.noise.median} max=${r.areaStats.noise.max} m2`);
+							console.log(`    Top 5 Candidates:`);
+							for (const topC of r.topCandidates) {
+								const flagsStr = Object.entries(topC.qualityFlags)
+									.filter(([_, val]) => val)
+									.map(([k]) => k)
+									.join(',');
+								console.log(`      - [${topC.status.toUpperCase()}] score=${topC.score.toFixed(3)} area=${topC.area.toFixed(3)}m2 flags=[${flagsStr || 'none'}] id=${topC.id.length > 50 ? topC.id.slice(0, 47) + '...' : topC.id}`);
+							}
+						}
 					}
 				}
 			}
@@ -344,6 +481,26 @@ try {
 			console.log(`Zero-Area Loops Rejected:      ${summary.loops.diagnostics.zeroAreaLoopsRejected}`);
 			console.log(`Self-Intersecting Rejected:    ${summary.loops.diagnostics.selfIntersectingLoopsRejected}`);
 			console.log(`Accepted Candidates:           ${summary.loops.diagnostics.acceptedCandidates}`);
+			if ((summary.loops as any).ranked) {
+				const r = (summary.loops as any).ranked;
+				console.log(`\n=== RANKED LOOPS SUMMARY ===`);
+				console.log(`Total Raw Loops:               ${r.totalRawCount}`);
+				console.log(`Total Primary Loops:           ${r.totalPrimaryCount}`);
+				console.log(`Total Secondary Loops:         ${r.totalSecondaryCount}`);
+				console.log(`Total Noise Loops:             ${r.totalNoiseCount}`);
+				console.log(`Aggregate Ranked FP:           ${r.aggregateRankedFingerprint}`);
+				console.log(`Area (all primary):            min=${r.areaStats.primary.min} median=${r.areaStats.primary.median} max=${r.areaStats.primary.max} m2`);
+				console.log(`Area (all secondary):          min=${r.areaStats.secondary.min} median=${r.areaStats.secondary.median} max=${r.areaStats.secondary.max} m2`);
+				console.log(`Area (all noise):              min=${r.areaStats.noise.min} median=${r.areaStats.noise.median} max=${r.areaStats.noise.max} m2`);
+				console.log(`Overall Top 5 Candidates:`);
+				for (const topC of r.topCandidates) {
+					const flagsStr = Object.entries(topC.qualityFlags)
+						.filter(([_, val]) => val)
+						.map(([k]) => k)
+						.join(',');
+					console.log(`  - [${topC.status.toUpperCase()}] score=${topC.score.toFixed(3)} area=${topC.area.toFixed(3)}m2 flags=[${flagsStr || 'none'}] id=${topC.id.length > 50 ? topC.id.slice(0, 47) + '...' : topC.id}`);
+				}
+			}
 		}
 	}
 } catch (e: any) {

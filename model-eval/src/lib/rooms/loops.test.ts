@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
-import { findBoundaryLoopCandidates, generateBoundaryLoopId, calculateBoundaryLoopFingerprint } from './loops';
-import { normalizeBarrierGraph } from './helpers';
-import type { NormalizedBarrierGraph, BarrierGraph, BarrierGraphEdge, PlanCoord } from './types';
+import { findBoundaryLoopCandidates, generateBoundaryLoopId, calculateBoundaryLoopFingerprint, rankBoundaryLoopCandidates, calculateRankedBoundaryLoopFingerprint } from './loops';
+import { normalizeBarrierGraph, type NormalizedBarrierGraph } from './helpers';
+import type { BarrierGraph, BarrierGraphEdge, PlanCoord } from './types';
 
 function makeGraph(
 	nodes: Array<{ id: string; x: number; z: number }>,
@@ -343,5 +343,169 @@ describe('findBoundaryLoopCandidates synthetic tests', () => {
 			min: { x: 0, z: 0 },
 			max: { x: 6, z: 4 }
 		});
+	});
+});
+
+describe('rankBoundaryLoopCandidates synthetic tests', () => {
+	test('1. normal rectangle ranks above a tiny sliver', () => {
+		const g1 = makeGraph([
+			{ id: 'n1', x: 0, z: 0 }, { id: 'n2', x: 4, z: 0 },
+			{ id: 'n3', x: 4, z: 3 }, { id: 'n4', x: 0, z: 3 }
+		], [{ a: 'n1', b: 'n2', objId: 'o1' }, { a: 'n2', b: 'n3', objId: 'o2' }, { a: 'n3', b: 'n4', objId: 'o3' }, { a: 'n4', b: 'n1', objId: 'o4' }]);
+		const g2 = makeGraph([
+			{ id: 'm1', x: 10, z: 10 }, { id: 'm2', x: 12, z: 10 },
+			{ id: 'm3', x: 12, z: 10.05 }, { id: 'm4', x: 10, z: 10.05 }
+		], [{ a: 'm1', b: 'm2', objId: 'o5' }, { a: 'm2', b: 'm3', objId: 'o5' }, { a: 'm3', b: 'm4', objId: 'o5' }, { a: 'm4', b: 'm1', objId: 'o5' }]);
+
+		const c1 = findBoundaryLoopCandidates(g1).candidates[0];
+		const c2 = findBoundaryLoopCandidates(g2).candidates[0];
+		const ranked = rankBoundaryLoopCandidates([c1, c2]);
+		expect(ranked.candidates[0].id).toBe(c1.id);
+		expect(ranked.candidates[1].id).toBe(c2.id);
+		expect(ranked.candidates[0].score).toBeGreaterThan(ranked.candidates[1].score);
+	});
+
+	test('2. compact loop ranks above an extremely narrow loop', () => {
+		const g1 = makeGraph([
+			{ id: 'n1', x: 0, z: 0 }, { id: 'n2', x: 2, z: 0 },
+			{ id: 'n3', x: 2, z: 2 }, { id: 'n4', x: 0, z: 2 }
+		], [{ a: 'n1', b: 'n2', objId: 'o1' }, { a: 'n2', b: 'n3', objId: 'o2' }, { a: 'n3', b: 'n4', objId: 'o3' }, { a: 'n4', b: 'n1', objId: 'o4' }]);
+		const g2 = makeGraph([
+			{ id: 'm1', x: 10, z: 10 }, { id: 'm2', x: 18, z: 10 },
+			{ id: 'm3', x: 18, z: 10.5 }, { id: 'm4', x: 10, z: 10.5 }
+		], [{ a: 'm1', b: 'm2', objId: 'o5' }, { a: 'm2', b: 'm3', objId: 'o6' }, { a: 'm3', b: 'm4', objId: 'o7' }, { a: 'm4', b: 'm1', objId: 'o8' }]);
+
+		const c1 = findBoundaryLoopCandidates(g1).candidates[0];
+		const c2 = findBoundaryLoopCandidates(g2).candidates[0];
+		const ranked = rankBoundaryLoopCandidates([c1, c2]);
+		expect(ranked.candidates[0].id).toBe(c1.id);
+		expect(ranked.candidates[1].id).toBe(c2.id);
+		expect(ranked.candidates[0].compactness).toBeGreaterThan(ranked.candidates[1].compactness);
+		expect(ranked.candidates[0].score).toBeGreaterThan(ranked.candidates[1].score);
+	});
+
+	test('3. tiny loops remain preserved but receive noise status', () => {
+		const g1 = makeGraph([
+			{ id: 'n1', x: 0, z: 0 }, { id: 'n2', x: 4, z: 0 },
+			{ id: 'n3', x: 4, z: 3 }, { id: 'n4', x: 0, z: 3 }
+		], [{ a: 'n1', b: 'n2', objId: 'o1' }, { a: 'n2', b: 'n3', objId: 'o2' }, { a: 'n3', b: 'n4', objId: 'o3' }, { a: 'n4', b: 'n1', objId: 'o4' }]);
+		const g2 = makeGraph([
+			{ id: 'm1', x: 10, z: 10 }, { id: 'm2', x: 10.2, z: 10 },
+			{ id: 'm3', x: 10.2, z: 10.2 }, { id: 'm4', x: 10, z: 10.2 }
+		], [{ a: 'm1', b: 'm2' }, { a: 'm2', b: 'm3' }, { a: 'm3', b: 'm4' }, { a: 'm4', b: 'm1' }]);
+
+		const c1 = findBoundaryLoopCandidates(g1).candidates[0];
+		const c2 = findBoundaryLoopCandidates(g2).candidates[0];
+		const ranked = rankBoundaryLoopCandidates([c1, c2]);
+		expect(ranked.candidates.length).toBe(2);
+		const noiseCand = ranked.candidates.find(c => c.id === c2.id)!;
+		expect(noiseCand.status).toBe('noise');
+		expect(ranked.diagnostics.noiseLoopCount).toBe(1);
+	});
+
+	test('4. shuffled input produces identical ranking', () => {
+		const g1 = makeGraph([
+			{ id: 'n1', x: 0, z: 0 }, { id: 'n2', x: 4, z: 0 },
+			{ id: 'n3', x: 4, z: 3 }, { id: 'n4', x: 0, z: 3 }
+		], [{ a: 'n1', b: 'n2', objId: 'o1' }, { a: 'n2', b: 'n3', objId: 'o2' }, { a: 'n3', b: 'n4', objId: 'o3' }, { a: 'n4', b: 'n1', objId: 'o4' }]);
+		const g2 = makeGraph([
+			{ id: 'm1', x: 10, z: 10 }, { id: 'm2', x: 12, z: 10 },
+			{ id: 'm3', x: 12, z: 12 }, { id: 'm4', x: 10, z: 12 }
+		], [{ a: 'm1', b: 'm2', objId: 'o5' }, { a: 'm2', b: 'm3', objId: 'o6' }, { a: 'm3', b: 'm4', objId: 'o7' }, { a: 'm4', b: 'm1', objId: 'o8' }]);
+
+		const c1 = findBoundaryLoopCandidates(g1).candidates[0];
+		const c2 = findBoundaryLoopCandidates(g2).candidates[0];
+
+		const r1 = rankBoundaryLoopCandidates([c1, c2]);
+		const r2 = rankBoundaryLoopCandidates([c2, c1]);
+		expect(r1.candidates.map(c => c.id)).toEqual(r2.candidates.map(c => c.id));
+		expect(r1.diagnostics.rankedFingerprint).toBe(r2.diagnostics.rankedFingerprint);
+	});
+
+	test('5. repeated execution produces identical scores and statuses', () => {
+		const g = makeGraph([
+			{ id: 'n1', x: 0, z: 0 }, { id: 'n2', x: 5, z: 0 },
+			{ id: 'n3', x: 5, z: 4 }, { id: 'n4', x: 0, z: 4 }
+		], [{ a: 'n1', b: 'n2', objId: 'o1' }, { a: 'n2', b: 'n3', objId: 'o2' }, { a: 'n3', b: 'n4', objId: 'o3' }, { a: 'n4', b: 'n1', objId: 'o4' }]);
+		const c = findBoundaryLoopCandidates(g).candidates[0];
+
+		const r1 = rankBoundaryLoopCandidates([c]);
+		for (let i = 0; i < 5; i++) {
+			const r2 = rankBoundaryLoopCandidates([c]);
+			expect(r2.candidates[0].score).toBe(r1.candidates[0].score);
+			expect(r2.candidates[0].status).toBe(r1.candidates[0].status);
+			expect(r2.diagnostics.rankedFingerprint).toBe(r1.diagnostics.rankedFingerprint);
+		}
+	});
+
+	test('6. deterministic tie-breaking works', () => {
+		const g1 = makeGraph([
+			{ id: 'a1', x: 0, z: 0 }, { id: 'a2', x: 3, z: 0 },
+			{ id: 'a3', x: 3, z: 3 }, { id: 'a4', x: 0, z: 3 }
+		], [{ a: 'a1', b: 'a2', objId: 'o1' }, { a: 'a2', b: 'a3', objId: 'o2' }, { a: 'a3', b: 'a4', objId: 'o3' }, { a: 'a4', b: 'a1', objId: 'o4' }]);
+		const g2 = makeGraph([
+			{ id: 'b1', x: 10, z: 10 }, { id: 'b2', x: 13, z: 10 },
+			{ id: 'b3', x: 13, z: 13 }, { id: 'b4', x: 10, z: 13 }
+		], [{ a: 'b1', b: 'b2', objId: 'o1' }, { a: 'b2', b: 'b3', objId: 'o2' }, { a: 'b3', b: 'b4', objId: 'o3' }, { a: 'b4', b: 'b1', objId: 'o4' }]);
+
+		const c1 = findBoundaryLoopCandidates(g1).candidates[0];
+		const c2 = findBoundaryLoopCandidates(g2).candidates[0];
+		const r = rankBoundaryLoopCandidates([c2, c1]);
+		expect(r.candidates[0].score).toBe(r.candidates[1].score);
+		expect(r.candidates[0].id.localeCompare(r.candidates[1].id)).toBe(-1);
+	});
+
+	test('7. area and perimeter remain unchanged', () => {
+		const g = makeGraph([
+			{ id: 'n1', x: 0, z: 0 }, { id: 'n2', x: 4, z: 0 },
+			{ id: 'n3', x: 4, z: 3 }, { id: 'n4', x: 0, z: 3 }
+		], [{ a: 'n1', b: 'n2' }, { a: 'n2', b: 'n3' }, { a: 'n3', b: 'n4' }, { a: 'n4', b: 'n1' }]);
+		const c = findBoundaryLoopCandidates(g).candidates[0];
+		const r = rankBoundaryLoopCandidates([c]);
+		expect(r.candidates[0].area).toBe(c.area);
+		expect(r.candidates[0].perimeter).toBe(c.perimeter);
+	});
+
+	test('8. raw candidate IDs and ownership remain preserved', () => {
+		const g = makeGraph([
+			{ id: 'n1', x: 0, z: 0 }, { id: 'n2', x: 4, z: 0 },
+			{ id: 'n3', x: 4, z: 3 }, { id: 'n4', x: 0, z: 3 }
+		], [{ a: 'n1', b: 'n2', veIds: ['ve1'], objId: 'obj1', cuIds: ['cu1'], mats: [10] }, { a: 'n2', b: 'n3', veIds: ['ve2'], objId: 'obj2', cuIds: ['cu2'], mats: [20] }, { a: 'n3', b: 'n4' }, { a: 'n4', b: 'n1' }]);
+		const c = findBoundaryLoopCandidates(g).candidates[0];
+		const r = rankBoundaryLoopCandidates([c]);
+		expect(r.candidates[0].id).toBe(c.id);
+		expect(r.candidates[0].verticalEvidenceIds).toEqual(c.verticalEvidenceIds);
+		expect(r.candidates[0].logicalObjectIds).toEqual(c.logicalObjectIds);
+		expect(r.candidates[0].classificationUnitIds).toEqual(c.classificationUnitIds);
+		expect(r.candidates[0].materialIds).toEqual(c.materialIds);
+	});
+
+	test('9. no semantic room label is created', () => {
+		const g = makeGraph([
+			{ id: 'n1', x: 0, z: 0 }, { id: 'n2', x: 4, z: 0 },
+			{ id: 'n3', x: 4, z: 3 }, { id: 'n4', x: 0, z: 3 }
+		], [{ a: 'n1', b: 'n2' }, { a: 'n2', b: 'n3' }, { a: 'n3', b: 'n4' }, { a: 'n4', b: 'n1' }]);
+		const c = findBoundaryLoopCandidates(g).candidates[0];
+		const r = rankBoundaryLoopCandidates([c]);
+		expect((r.candidates[0] as any).label).toBeUndefined();
+		expect((r.candidates[0] as any).roomName).toBeUndefined();
+		expect((r.candidates[0] as any).room).toBeUndefined();
+	});
+
+	test('10. all candidates remain available in the result', () => {
+		const g1 = makeGraph([
+			{ id: 'n1', x: 0, z: 0 }, { id: 'n2', x: 4, z: 0 },
+			{ id: 'n3', x: 4, z: 3 }, { id: 'n4', x: 0, z: 3 }
+		], [{ a: 'n1', b: 'n2' }, { a: 'n2', b: 'n3' }, { a: 'n3', b: 'n4' }, { a: 'n4', b: 'n1' }]);
+		const g2 = makeGraph([
+			{ id: 'm1', x: 10, z: 10 }, { id: 'm2', x: 12, z: 10 },
+			{ id: 'm3', x: 12, z: 12 }, { id: 'm4', x: 10, z: 12 }
+		], [{ a: 'm1', b: 'm2' }, { a: 'm2', b: 'm3' }, { a: 'm3', b: 'm4' }, { a: 'm4', b: 'm1' }]);
+		const c1 = findBoundaryLoopCandidates(g1).candidates[0];
+		const c2 = findBoundaryLoopCandidates(g2).candidates[0];
+		const r = rankBoundaryLoopCandidates([c1, c2]);
+		expect(r.candidates.length).toBe(2);
+		expect(r.diagnostics.acceptedCandidates).toBe(2);
+		expect(r.diagnostics.rawLoopCount).toBe(2);
 	});
 });
