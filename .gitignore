@@ -24,3 +24,5 @@ artifacts/**/exported/*.json.gz
 artifacts/_workflow/logs/
 artifacts/_workflow/backups/
 artifacts/_workflow/staging/
+model-eval/static/dev-models/
+artifacts/iteration-3a5-benchmark/

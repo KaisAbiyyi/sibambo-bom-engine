@@ -109,6 +109,76 @@ describe('world geometry foundation', () => {
 		expect(evidence.orientation.horizontalAreaRatio).toBeGreaterThan(0.99);
 		expect(foundation.modelContext.levelBands).toHaveLength(0);
 	});
+
+	test('cache correctness: translation reuse', () => {
+		const transA = translate(2, 3, 4);
+		const transB = translate(10, 20, 30);
+		const foundation = createGeometryFoundation(scene([I, transA, transB]));
+		const nodes = foundation.instanceGraph.nodes.filter((node) => node.meshId === 0);
+		expect(nodes).toHaveLength(2);
+
+		const geomA = foundation.getWorldGeometry(nodes[0].nodeId);
+		const geomB = foundation.getWorldGeometry(nodes[1].nodeId);
+
+		expect(geomA.worldBounds.min.x).toBeCloseTo(2, 6);
+		expect(geomB.worldBounds.min.x).toBeCloseTo(10, 6);
+		expect(geomA.centroid.y).toBeCloseTo(4, 6);
+		expect(geomB.centroid.y).toBeCloseTo(30, 6);
+		expect(geomA.minElevation).toBeCloseTo(4, 6);
+		expect(geomB.minElevation).toBeCloseTo(30, 6);
+		expect(geomA.nodeId).toBe(nodes[0].nodeId);
+		expect(geomB.nodeId).toBe(nodes[1].nodeId);
+	});
+
+	test('cache correctness: rotation separation', () => {
+		const foundation = createGeometryFoundation(scene([I, rotateX90, rotateY90]));
+		const nodes = foundation.instanceGraph.nodes.filter((node) => node.meshId === 0);
+		const geomA = foundation.getWorldGeometry(nodes[0].nodeId);
+		const geomB = foundation.getWorldGeometry(nodes[1].nodeId);
+
+		expect(geomA.verticalAreaRatio).toBeCloseTo(1, 6);
+		expect(geomB.verticalAreaRatio).toBeCloseTo(1, 6);
+		expect(geomA.orientationDistribution.dominantNormal.y).toBeCloseTo(0, 6);
+		expect(geomB.orientationDistribution.dominantNormal.y).toBeCloseTo(0, 6);
+	});
+
+	test('cache correctness: mirror separation', () => {
+		const scalePos = scale(2, 2, 2);
+		const scaleNeg = scale(-2, 2, 2);
+		const foundation = createGeometryFoundation(scene([I, scalePos, scaleNeg]));
+		const nodes = foundation.instanceGraph.nodes.filter((node) => node.meshId === 0);
+		const geomA = foundation.getWorldGeometry(nodes[0].nodeId);
+		const geomB = foundation.getWorldGeometry(nodes[1].nodeId);
+
+		expect(geomA.worldAreaM2).toBeCloseTo(2.0, 6);
+		expect(geomB.worldAreaM2).toBeCloseTo(2.0, 6);
+		expect(geomA.orientationDistribution.dominantNormal.z).toBeCloseTo(geomB.orientationDistribution.dominantNormal.z, 6);
+	});
+
+	test('cache correctness: non-uniform scale separation', () => {
+		const s1 = scale(2, 1, 1);
+		const s2 = scale(1, 3, 1);
+		const foundation = createGeometryFoundation(scene([I, s1, s2]));
+		const nodes = foundation.instanceGraph.nodes.filter((node) => node.meshId === 0);
+		const geomA = foundation.getWorldGeometry(nodes[0].nodeId);
+		const geomB = foundation.getWorldGeometry(nodes[1].nodeId);
+
+		expect(geomA.worldAreaM2).not.toBe(geomB.worldAreaM2);
+	});
+
+	test('cache correctness: lazy FaceMetric values', () => {
+		const foundation = createGeometryFoundation(scene([I, I]));
+		const node = foundation.instanceGraph.nodes.find((n) => n.meshId === 0)!;
+		const metric = (foundation as any).faceMetric(node, 0);
+
+		const points1 = metric.points;
+		const points2 = metric.points;
+		expect(points1).toBe(points2);
+
+		const edges1 = metric.edges;
+		const edges2 = metric.edges;
+		expect(edges1).toBe(edges2);
+	});
 });
 
 type Variant = { rootMesh?: boolean; disconnected?: boolean; twoFaces?: 'coplanar' | 'sharp' | 'material' | 'near'; shape?: 'vertical' | 'sloped'; offset?: number };

@@ -471,29 +471,126 @@ function shareEdge(left: FaceMetric, right: FaceMetric) {
 }
 function forEachSharedEdgePair(metrics: FaceMetric[], visit: (left: number, right: number) => void, diagnostics?: GeometryDiagnostics) {
 	type IndexedEdge = { faceIndex: number; a: Vec3; b: Vec3 };
-	const byEdgeCell = new Map<string, IndexedEdge[]>();
-	const seenPairs = new Set<string>();
+	const byEdgeCell = new Map<number, IndexedEdge[]>();
+	const seenPairs = new Set<number>();
+	const size = GEOMETRY_TOLERANCES.positionM * 2;
+	const invSize = 1 / size;
+	const tol2 = GEOMETRY_TOLERANCES.positionM * GEOMETRY_TOLERANCES.positionM;
+
 	metrics.forEach((metric, right) => {
-		for (let index = 0; index < metric.points.length; index += 1) {
-			const edge = { faceIndex: right, a: metric.points[index], b: metric.points[(index + 1) % metric.points.length] };
-			for (const previous of byEdgeCell.get(edgeCell(edge.a, edge.b)) || []) {
-				if (diagnostics) diagnostics.sharedEdgeCandidateComparisons += 1;
-				const pair = `${previous.faceIndex}:${right}`;
-				if (!seenPairs.has(pair) && edgesNear(previous, edge)) { seenPairs.add(pair); if (diagnostics) diagnostics.sharedEdgePairs += 1; visit(previous.faceIndex, right); }
-			}
-			const key = edgeCell(edge.a, edge.b);
+		const points = metric.points;
+		const len = points.length;
+		for (let index = 0; index < len; index += 1) {
+			const p1 = points[index];
+			const p2 = points[(index + 1) % len];
+
+			// Inline pointHash for p1
+			const cx1 = Math.round(p1.x * invSize);
+			const cy1 = Math.round(p1.y * invSize);
+			const cz1 = Math.round(p1.z * invSize);
+			const h1 = ((cx1 * 73856093) ^ (cy1 * 19349663) ^ (cz1 * 83492791)) >>> 0;
+
+			// Inline pointHash for p2
+			const cx2 = Math.round(p2.x * invSize);
+			const cy2 = Math.round(p2.y * invSize);
+			const cz2 = Math.round(p2.z * invSize);
+			const h2 = ((cx2 * 73856093) ^ (cy2 * 19349663) ^ (cz2 * 83492791)) >>> 0;
+
+			const key = h1 < h2 ? ((h1 * 31 + h2) >>> 0) : ((h2 * 31 + h1) >>> 0);
 			const bucket = byEdgeCell.get(key);
-			if (bucket) bucket.push(edge);
-			else byEdgeCell.set(key, [edge]);
+			const edge = { faceIndex: right, a: p1, b: p2 };
+
+			if (bucket) {
+				for (let bIdx = 0; bIdx < bucket.length; bIdx++) {
+					const previous = bucket[bIdx];
+					if (diagnostics) diagnostics.sharedEdgeCandidateComparisons += 1;
+					const pairKey = previous.faceIndex * 1048576 + right;
+					if (!seenPairs.has(pairKey)) {
+						const leftA = previous.a;
+						const leftB = previous.b;
+
+						const tol = GEOMETRY_TOLERANCES.positionM;
+						let match = false;
+
+						const dx1 = leftA.x - p1.x;
+						if (Math.abs(dx1) <= tol) {
+							const dy1 = leftA.y - p1.y;
+							if (Math.abs(dy1) <= tol) {
+								const dz1 = leftA.z - p1.z;
+								if (dx1*dx1 + dy1*dy1 + dz1*dz1 <= tol2) {
+									const dx2 = leftB.x - p2.x;
+									if (Math.abs(dx2) <= tol) {
+										const dy2 = leftB.y - p2.y;
+										if (Math.abs(dy2) <= tol) {
+											const dz2 = leftB.z - p2.z;
+											if (dx2*dx2 + dy2*dy2 + dz2*dz2 <= tol2) {
+												match = true;
+											}
+										}
+									}
+								}
+							}
+						}
+
+						if (!match) {
+							const dx3 = leftA.x - p2.x;
+							if (Math.abs(dx3) <= tol) {
+								const dy3 = leftA.y - p2.y;
+								if (Math.abs(dy3) <= tol) {
+									const dz3 = leftA.z - p2.z;
+									if (dx3*dx3 + dy3*dy3 + dz3*dz3 <= tol2) {
+										const dx4 = leftB.x - p1.x;
+										if (Math.abs(dx4) <= tol) {
+											const dy4 = leftB.y - p1.y;
+											if (Math.abs(dy4) <= tol) {
+												const dz4 = leftB.z - p1.z;
+												if (dx4*dx4 + dy4*dy4 + dz4*dz4 <= tol2) {
+													match = true;
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+
+						if (match) {
+							seenPairs.add(pairKey);
+							if (diagnostics) diagnostics.sharedEdgePairs += 1;
+							visit(previous.faceIndex, right);
+						}
+					}
+				}
+				bucket.push(edge);
+			} else {
+				byEdgeCell.set(key, [edge]);
+			}
 		}
 	});
 }
-function pointCell(point: Vec3) { const size = GEOMETRY_TOLERANCES.positionM * 2; return `${Math.round(point.x / size)},${Math.round(point.y / size)},${Math.round(point.z / size)}`; }
-function edgeCell(a: Vec3, b: Vec3) { const left = pointCell(a); const right = pointCell(b); return left < right ? `${left}|${right}` : `${right}|${left}`; }
-function edgesNear(left: { a: Vec3; b: Vec3 }, right: { a: Vec3; b: Vec3 }) {
-	return (near(left.a, right.a) && near(left.b, right.b)) || (near(left.a, right.b) && near(left.b, right.a));
-}
 function near(left: Vec3, right: Vec3) { return Math.hypot(left.x - right.x, left.y - right.y, left.z - right.z) <= GEOMETRY_TOLERANCES.positionM; }
-function coplanarity(left: FaceMetric, right: FaceMetric) { const normal = left.normal; return Math.max(...right.points.map((point) => Math.abs(dot(normal, subtract(point, left.points[0]))))); }
+function coplanarity(left: FaceMetric, right: FaceMetric): number {
+	const nx = left.normal.x;
+	const ny = left.normal.y;
+	const nz = left.normal.z;
+	const p0 = left.points[0];
+	const p0x = p0.x;
+	const p0y = p0.y;
+	const p0z = p0.z;
+
+	const pts = right.points;
+	let maxDist = 0;
+	for (let i = 0; i < pts.length; i++) {
+		const pt = pts[i];
+		const dx = pt.x - p0x;
+		const dy = pt.y - p0y;
+		const dz = pt.z - p0z;
+		const dist = Math.abs(dx * nx + dy * ny + dz * nz);
+		if (dist > maxDist) {
+			maxDist = dist;
+		}
+	}
+	return maxDist;
+}
 function nearPlanPerimeter(inner: Bounds3, outer: Bounds3) { const tolerance = GEOMETRY_TOLERANCES.positionM * 2; return Math.abs(inner.min.x - outer.min.x) <= tolerance || Math.abs(inner.max.x - outer.max.x) <= tolerance || Math.abs(inner.min.z - outer.min.z) <= tolerance || Math.abs(inner.max.z - outer.max.z) <= tolerance; }
 function byId(left: { id: string }, right: { id: string }) { return left.id.localeCompare(right.id); }
