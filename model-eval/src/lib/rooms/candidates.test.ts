@@ -93,8 +93,9 @@ function createMockEnvelope(
 			weakLowerSupport: false,
 			weakUpperCover: false,
 			geometricallyPlausible: true
-		}
-	};
+		},
+		eligibleForRoomAssembly: true
+	} as unknown as any;
 }
 
 

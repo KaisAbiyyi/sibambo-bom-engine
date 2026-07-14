@@ -13,11 +13,10 @@ describe('Downstream Refinement Integration Tests', () => {
 			area: 10,
 			perimeter: 12,
 			bounds: { min: { x: 0, z: 0 }, max: { x: 3, z: 3 } },
-			sourceObjectIds: ['obj-loop'],
 			materialIds: [100],
 			status: 'primary',
 			score: 90
-		};
+		} as unknown as RankedBoundaryLoopCandidate;
 	}
 
 	function createMockAssignment(id: string, loopId: string, role: 'lower-support' | 'upper-cover', minZ: number, score = 90): LoopSurfaceAssignment {
@@ -33,13 +32,11 @@ describe('Downstream Refinement Integration Tests', () => {
 			materialIds: [200],
 			qualityFlags: {
 				approximateOverlap: false,
-				orientationConflict: false,
-				elevationMismatch: false,
-				multiplePlausibleSurfaces: false
+				elevationMismatch: false
 			},
 			status: 'primary',
 			score
-		};
+		} as unknown as LoopSurfaceAssignment;
 	}
 
 	function createMockBarrier(id: string, maxZ: number): VerticalBarrierEvidence {
@@ -92,7 +89,7 @@ describe('Downstream Refinement Integration Tests', () => {
 		expect(cand.status).toBe('noise');
 
 		// Downstream room assembly should not produce a room candidate
-		const rooms = assembleRoomCandidates([loop], [], refinedResult, []);
+		const rooms = assembleRoomCandidates([loop], [], refinedResult.candidates, []);
 		expect(rooms.candidates.length).toBe(0);
 	});
 
@@ -115,7 +112,7 @@ describe('Downstream Refinement Integration Tests', () => {
 		expect(cand.status).toBe('noise');
 
 		// Downstream room assembly should ignore it completely
-		const rooms = assembleRoomCandidates([loop], [], refinedResult, []);
+		const rooms = assembleRoomCandidates([loop], [], refinedResult.candidates, []);
 		expect(rooms.candidates.length).toBe(0);
 	});
 
@@ -139,7 +136,7 @@ describe('Downstream Refinement Integration Tests', () => {
 		expect(cand.relativeBaseTolerance).toBeGreaterThan(0);
 		expect(cand.relativeTopTolerance).toBeGreaterThan(0);
 
-		const rooms = assembleRoomCandidates([loop], [], refinedResult, []);
+		const rooms = assembleRoomCandidates([loop], [], refinedResult.candidates, []);
 		if (rooms.candidates.length === 0) {
 			console.log('Test C failed. Diagnostics:', rooms.diagnostics);
 			console.log('loop.id:', loop.id);
@@ -202,5 +199,89 @@ describe('Downstream Refinement Integration Tests', () => {
 		
 		expect(cand.ineligibilityReasons).toBeInstanceOf(Array);
 		expect(typeof cand.eligibleForRoomAssembly).toBe('boolean');
+	});
+
+	test('F. Missing eligibility rejected', () => {
+		const loop = createMockLoop('loopF');
+		const lower = createMockAssignment('lowerF', 'loopF', 'lower-support', 0.0);
+		const upper = createMockAssignment('upperF', 'loopF', 'upper-cover', 3.0);
+		
+		const rawEnvs = buildVerticalEnvelopeCandidates([loop], [lower, upper]).candidates;
+		const barrier = createMockBarrier('barrierF', 3.0);
+		const storey = createMockStorey();
+
+		const refinedResult = refineVerticalEnvelopeCandidates(rawEnvs, [loop], [barrier], [storey]);
+		const cand = refinedResult.candidates[0] as any;
+		
+		// Remove eligibility explicitly
+		delete cand.eligibleForRoomAssembly;
+		
+		const rooms = assembleRoomCandidates([loop], [], [cand], []);
+		expect(rooms.candidates.length).toBe(0);
+	});
+
+	test('G. Status cannot override eligibility (false eligibility, primary status)', () => {
+		const loop = createMockLoop('loopG');
+		const lower = createMockAssignment('lowerG', 'loopG', 'lower-support', 0.0);
+		const upper = createMockAssignment('upperG', 'loopG', 'upper-cover', 3.0);
+		
+		const rawEnvs = buildVerticalEnvelopeCandidates([loop], [lower, upper]).candidates;
+		const barrier = createMockBarrier('barrierG', 3.0);
+		const storey = createMockStorey();
+
+		const refinedResult = refineVerticalEnvelopeCandidates(rawEnvs, [loop], [barrier], [storey]);
+		const cand = refinedResult.candidates[0];
+		
+		cand.status = 'primary';
+		cand.eligibleForRoomAssembly = false;
+		
+		const rooms = assembleRoomCandidates([loop], [], [cand], []);
+		expect(rooms.candidates.length).toBe(0);
+	});
+
+	test('H. Eligibility cannot override invalid status (true eligibility, noise status)', () => {
+		const loop = createMockLoop('loopH');
+		const lower = createMockAssignment('lowerH', 'loopH', 'lower-support', 0.0);
+		const upper = createMockAssignment('upperH', 'loopH', 'upper-cover', 3.0);
+		
+		const rawEnvs = buildVerticalEnvelopeCandidates([loop], [lower, upper]).candidates;
+		const barrier = createMockBarrier('barrierH', 3.0);
+		const storey = createMockStorey();
+
+		const refinedResult = refineVerticalEnvelopeCandidates(rawEnvs, [loop], [barrier], [storey]);
+		const cand = refinedResult.candidates[0];
+		
+		cand.status = 'noise';
+		cand.eligibleForRoomAssembly = true;
+		
+		const rooms = assembleRoomCandidates([loop], [], [cand], []);
+		expect(rooms.candidates.length).toBe(0);
+	});
+
+	test('I. Serialization preservation', () => {
+		const loop = createMockLoop('loopI');
+		const lower = createMockAssignment('lowerI', 'loopI', 'lower-support', 0.0);
+		const upper = createMockAssignment('upperI', 'loopI', 'upper-cover', 3.0);
+		
+		const rawEnvs = buildVerticalEnvelopeCandidates([loop], [lower, upper]).candidates;
+		const barrier = createMockBarrier('barrierI', 3.0);
+		const storey = createMockStorey();
+
+		const refinedResult = refineVerticalEnvelopeCandidates(rawEnvs, [loop], [barrier], [storey]);
+		
+		const validCand = refinedResult.candidates[0];
+		validCand.eligibleForRoomAssembly = true;
+		
+		const invalidCand = { ...validCand, id: 'invalid', eligibleForRoomAssembly: false };
+		const missingCand = { ...validCand, id: 'missing' } as any;
+		delete missingCand.eligibleForRoomAssembly;
+
+		// Serialize and deserialize
+		const json = JSON.stringify([validCand, invalidCand, missingCand]);
+		const parsed = JSON.parse(json);
+
+		expect(parsed[0].eligibleForRoomAssembly).toBe(true);
+		expect(parsed[1].eligibleForRoomAssembly).toBe(false);
+		expect(parsed[2].eligibleForRoomAssembly).toBeUndefined();
 	});
 });

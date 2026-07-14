@@ -126,7 +126,7 @@ export function assembleRoomCandidates(
 		const loopEnvelopes = envelopes.filter((e) => {
 			if (e.loopCandidateId !== loop.id) return false;
 			if (e.status === 'noise') return false;
-			if ('eligibleForRoomAssembly' in e && (e as any).eligibleForRoomAssembly === false) return false;
+			if ((e as any).eligibleForRoomAssembly !== true) return false;
 			return true;
 		});
 
