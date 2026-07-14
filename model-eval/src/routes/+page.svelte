@@ -57,6 +57,7 @@
 	import { runRoomDebugPipeline } from '$lib/rooms/room-debug-pipeline';
 	import { serializeRoomCandidateTrace, type RoomCandidateTrace } from '$lib/rooms/room-provenance';
 	import { getVisibleRoomCandidates, resolveRoomCandidateSelection, type RoomDebugVisibility } from '$lib/rooms/debug-selection';
+	import { compatibilityMessage, type PersistedAnalysisCompatibilityReason } from '$lib/rooms/room-analysis-schema';
 
 
 	type NumberInputKey = 'peopleCount' | 'operationHours' | 'setPointC' | 'orientationDeg' | 'glassRatio' | 'roomHeightM';
@@ -169,6 +170,7 @@
 	let roomDebugDurationMs = $state(0);
 	let roomDebugDiagnostics = $state<import('$lib/rooms/types').RoomCandidateDiagnostics | undefined>(undefined);
 	let roomDebugError = $state('');
+	let roomDebugSchemaError = $state<{ reason: PersistedAnalysisCompatibilityReason; message: string } | undefined>(undefined);
 	let roomDebugRunning = $state(false);
 	let selectedRoomCandidateId = $state<string | null>(null);
 	let roomFocusRequest = $state(0);
@@ -1260,6 +1262,11 @@
 				{#if roomDebugError}
 					<p class="room-debug-hud__error">{roomDebugError}</p>
 				{/if}
+				{#if roomDebugSchemaError}
+					<p class="room-debug-hud__schema-error" aria-label="Schema compatibility error">
+						⚠️ {roomDebugSchemaError.message}
+					</p>
+				{/if}
 				<div class="room-debug-hud__controls" aria-label="Room debug visibility">
 					<button class:room-debug-hud__control--active={roomOverlayVisibility.primary} class="room-debug-hud__control" type="button" aria-pressed={roomOverlayVisibility.primary} onclick={() => toggleRoomOverlayVisibility('primary')}>Show primary</button>
 					<button class:room-debug-hud__control--active={roomOverlayVisibility.secondary} class="room-debug-hud__control" type="button" aria-pressed={roomOverlayVisibility.secondary} onclick={() => toggleRoomOverlayVisibility('secondary')}>Show secondary</button>
@@ -2259,6 +2266,16 @@
 		font-size: 0.72rem;
 		word-break: break-all;
 		margin: 4px 0 6px;
+	}
+
+	.room-debug-hud__schema-error {
+		background: rgba(239, 68, 68, 0.08);
+		border-left: 2px solid #ef4444;
+		padding: 6px 8px;
+		margin-bottom: 8px;
+		color: #fca5a5;
+		font-size: 0.72rem;
+		line-height: 1.4;
 	}
 
 	.room-debug-hud__list {

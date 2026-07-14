@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { assembleRoomCandidates, mergeRoomCandidateResults } from './candidates';
-import type { RankedBoundaryLoopCandidate, VerticalEnvelopeCandidate, LoopSurfaceAssignment, RoomCandidateResult } from './types';
+import { serializeRoomAnalysis, parsePersistedRoomAnalysisJson } from './room-analysis-schema';
+import type { RankedBoundaryLoopCandidate, VerticalEnvelopeCandidate, LoopSurfaceAssignment } from './types';
 
 describe('Pipeline Diagnostics', () => {
 	const mockLoop: RankedBoundaryLoopCandidate = {
@@ -125,17 +126,22 @@ describe('Pipeline Diagnostics', () => {
 		expect(merged.diagnostics.hasQuarantinedEnvelopeInputs).toBe(true);
 	});
 
-	test('F. Serialization round trip', () => {
+	test('F. Serialization round trip (versioned)', () => {
 		const env1 = createEnv('clean1', { eligibleForRoomAssembly: true });
 		const env2 = createEnv('clean2'); // missing eligibility
 		const res = assembleRoomCandidates([mockLoop], [mockAssignment], [env1, env2]);
 
-		const serialized = JSON.stringify(res);
-		const deserialized = JSON.parse(serialized) as RoomCandidateResult;
+		// Use the versioned serializer — not a direct JSON.stringify + unsafe cast
+		const json = serializeRoomAnalysis({ candidates: res.candidates, traces: [], diagnostics: res.diagnostics, dataQuality: 'degraded' });
+		const parsed = parsePersistedRoomAnalysisJson(json);
 
-		expect(deserialized.diagnostics.envelopeValidation.quarantined).toBe(1);
-		expect(deserialized.diagnostics.envelopeValidation.reasons['missing_eligibility']).toBe(1);
-		expect(deserialized.diagnostics.hasQuarantinedEnvelopeInputs).toBe(true);
+		expect(parsed.ok).toBe(true);
+		if (!parsed.ok) throw new Error('Expected ok');
+		const diag = parsed.value.payload.diagnostics;
+		expect(diag?.envelopeValidation.quarantined).toBe(1);
+		expect(diag?.envelopeValidation.reasons['missing_eligibility']).toBe(1);
+		expect(diag?.hasQuarantinedEnvelopeInputs).toBe(true);
+		expect(parsed.value.payload.dataQuality).toBe('degraded');
 	});
 
 	test('G. Geometry regression', () => {
