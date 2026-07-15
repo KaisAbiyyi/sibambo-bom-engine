@@ -71,6 +71,9 @@
 		toRoomAnalysisConfiguration,
 		updateProjectConfiguration,
 		validateProjectConfiguration,
+		buildCalibrationValidationSummary,
+		filterCalibrationWarnings,
+		compareScenarios,
 		type ProjectConfiguration,
 		type RoomAnalysisConfiguration,
 		type BuildingAnalysisResult,
@@ -209,6 +212,12 @@
 	let projectConfiguration = $state<ProjectConfiguration>(createDefaultProjectConfiguration());
 	let projectConfigurationMessage = $state('');
 	let projectConfigurationFileInput = $state<HTMLInputElement>();
+	let defaultProjectAnalysis = $state<BuildingAnalysisResult | undefined>(undefined);
+	let calibrationWarningRoomId = $state('');
+	let calibrationWarningModule = $state<'all' | 'thermal' | 'ventilation' | 'cooling' | 'lighting' | 'ottv'>('all');
+	let calibrationValidation = $derived(roomDebugIntelligence?.analysis ? buildCalibrationValidationSummary(projectConfiguration, roomDebugIntelligence.analysis) : undefined);
+	let calibrationComparison = $derived(defaultProjectAnalysis && roomDebugIntelligence?.analysis ? compareScenarios(defaultProjectAnalysis, roomDebugIntelligence.analysis, 'default', 'calibrated') : undefined);
+	let filteredCalibrationWarnings = $derived(calibrationValidation ? filterCalibrationWarnings(calibrationValidation, calibrationWarningRoomId, calibrationWarningModule) : []);
 
 	let annotationQueue = $derived(buildAnnotationReviewQueue(annotationUnits, annotationRecords, annotationFilters, annotationSort));
 	let selectedAnnotationUnit = $derived(annotationQueue.find((unit) => unit.id === selectedAnnotationUnitId) || annotationQueue[0] || null);
@@ -506,6 +515,7 @@
 		roomDebugTopology = res.topology;
 		roomDebugSemantics = res.semantics;
 		roomDebugIntelligence = res.intelligence;
+		defaultProjectAnalysis = res.intelligence?.analysis;
 		if (res.error) roomDebugError = res.error;
 		} catch (err) {
 			roomDebugError = err instanceof Error ? err.message : String(err);
@@ -1361,6 +1371,23 @@
 					<button type="button" onclick={() => projectConfigurationFileInput?.click()}>Import JSON</button>
 					<input bind:this={projectConfigurationFileInput} type="file" accept="application/json" onchange={importProjectConfigurationFile} hidden />
 					{#if projectConfigurationMessage}<p class="room-debug-hud__error">{projectConfigurationMessage}</p>{/if}
+					{#if calibrationValidation}
+						<p>Rooms: {calibrationValidation.roomCounts.complete} complete, {calibrationValidation.roomCounts.partial} partial, {calibrationValidation.roomCounts.insufficient} insufficient.</p>
+						{#if calibrationValidation.invalidFields.length}<p class="room-debug-hud__error">Invalid: {calibrationValidation.invalidFields.join(', ')}</p>{/if}
+						{#if calibrationValidation.fallbackFields.length}<p>Fallback: {calibrationValidation.fallbackFields.join(', ')}</p>{/if}
+						<select value={calibrationWarningRoomId} onchange={(event) => calibrationWarningRoomId = (event.currentTarget as HTMLSelectElement).value} aria-label="Validation room filter"><option value="">All rooms</option>{#each roomDebugIntelligence?.analysis?.rooms ?? [] as room}<option value={room.roomId}>{room.roomId}</option>{/each}</select>
+						<select value={calibrationWarningModule} onchange={(event) => calibrationWarningModule = (event.currentTarget as HTMLSelectElement).value as typeof calibrationWarningModule} aria-label="Validation module filter"><option value="all">All modules</option><option value="thermal">Thermal</option><option value="ventilation">Ventilation</option><option value="cooling">Cooling</option><option value="lighting">Lighting</option><option value="ottv">OTTV</option></select>
+						{#each filteredCalibrationWarnings as warning}<p class="muted small">{warning.roomId ?? 'building'} · {warning.module} · {warning.category}: {warning.message}</p>{/each}
+					{/if}
+					{#if calibrationComparison}
+						<p><strong>Default → calibrated</strong></p>
+						<p class="muted small">Cooling: {calibrationComparison.buildingSummaryDelta.totalEstimatedCoolingCapacityKwDelta.baselineValue} → {calibrationComparison.buildingSummaryDelta.totalEstimatedCoolingCapacityKwDelta.proposedValue} kW; Δ {calibrationComparison.buildingSummaryDelta.totalEstimatedCoolingCapacityKwDelta.absoluteDifference} ({calibrationComparison.buildingSummaryDelta.totalEstimatedCoolingCapacityKwDelta.percentageDifference}%); {calibrationComparison.buildingSummaryDelta.totalEstimatedCoolingCapacityKwDelta.status}</p>
+						<p class="muted small">Luminaires: {calibrationComparison.buildingSummaryDelta.totalEstimatedLuminairesDelta.baselineValue} → {calibrationComparison.buildingSummaryDelta.totalEstimatedLuminairesDelta.proposedValue}; Δ {calibrationComparison.buildingSummaryDelta.totalEstimatedLuminairesDelta.absoluteDifference} ({calibrationComparison.buildingSummaryDelta.totalEstimatedLuminairesDelta.percentageDifference}%); {calibrationComparison.buildingSummaryDelta.totalEstimatedLuminairesDelta.status}</p>
+						<p class="muted small">OTTV: {calibrationComparison.ottvDelta.buildingOttvWm2Delta.baselineValue} → {calibrationComparison.ottvDelta.buildingOttvWm2Delta.proposedValue} W/m²; Δ {calibrationComparison.ottvDelta.buildingOttvWm2Delta.absoluteDifference} ({calibrationComparison.ottvDelta.buildingOttvWm2Delta.percentageDifference}%); {calibrationComparison.ottvDelta.buildingOttvWm2Delta.status}</p>
+						{#each calibrationComparison.rooms.filter(room => !calibrationWarningRoomId || room.roomId === calibrationWarningRoomId) as room}
+							<p class="muted small">{room.roomId}: thermal {room.thermalComfortStatusChange.status}; ACH Δ {room.airflowAchDelta.absoluteDifference}; cooling Δ {room.coolingCapacityWDelta.absoluteDifference} W; luminaires Δ {room.luminaireCountDelta.absoluteDifference}.</p>
+						{/each}
+					{/if}
 				</div>
 				{#if roomDebugSchemaError}
 					<p class="room-debug-hud__schema-error" aria-label="Schema compatibility error">
