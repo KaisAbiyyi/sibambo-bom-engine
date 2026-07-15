@@ -57,18 +57,347 @@ function getMatIds(item?: { materialIds?: number[] }): number[] {
 }
 
 
+function compareIds(a: string, b: string): number {
+	return a < b ? -1 : (a > b ? 1 : 0);
+}
+
+function compareCandidateIds(
+	a: { id: string; loopCandidateId: string; lowerAssignmentId: string; upperAssignmentId: string },
+	b: { id: string; loopCandidateId: string; lowerAssignmentId: string; upperAssignmentId: string }
+): number {
+	if (a.loopCandidateId !== b.loopCandidateId) {
+		return a.loopCandidateId < b.loopCandidateId ? -1 : 1;
+	}
+	if (a.lowerAssignmentId !== b.lowerAssignmentId) {
+		return a.lowerAssignmentId < b.lowerAssignmentId ? -1 : 1;
+	}
+	if (a.upperAssignmentId !== b.upperAssignmentId) {
+		return a.upperAssignmentId < b.upperAssignmentId ? -1 : 1;
+	}
+	return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
+}
+
+function statusRank(status: string): number {
+	return status === 'primary' ? 0 : (status === 'secondary' ? 1 : 2);
+}
+
 export function calculateVerticalEnvelopeCandidateFingerprint(
 	candidates: VerticalEnvelopeCandidate[]
 ): string {
-	const sorted = [...candidates].sort((a, b) => a.id.localeCompare(b.id));
+	const sorted = [...candidates].sort(compareCandidateIds);
 	const hash = createHash('sha256');
-	for (const cand of sorted) {
-		hash.update(
-			`${cand.id}:${cand.status}:${cand.rank}:${cand.score.toFixed(6)}:${cand.loopCandidateId}:${cand.lowerAssignmentId}:${cand.upperAssignmentId}:${cand.clearHeight.toFixed(6)}:${cand.estimatedVolume.toFixed(6)}|`
-		);
+	for (let i = 0; i < sorted.length; i++) {
+		const cand = sorted[i];
+		hash.update(cand.id);
+		hash.update(':');
+		hash.update(cand.status);
+		hash.update(':');
+		hash.update(cand.rank.toString());
+		hash.update(':');
+		hash.update(cand.score.toFixed(6));
+		hash.update(':');
+		hash.update(cand.loopCandidateId);
+		hash.update(':');
+		hash.update(cand.lowerAssignmentId);
+		hash.update(':');
+		hash.update(cand.upperAssignmentId);
+		hash.update(':');
+		hash.update(cand.clearHeight.toFixed(6));
+		hash.update(':');
+		hash.update(cand.estimatedVolume.toFixed(6));
+		hash.update('|');
 	}
 	return hash.digest('hex');
 }
+
+function round6(x: number): number {
+	return Math.round(x * 1e6) / 1e6;
+}
+
+function mergeUniqueStrings(a: string[], b: string[], c: string[]): string[] {
+	if (a.length === 0 && b.length === 0 && c.length === 0) return [];
+	if (a.length === 0 && b.length === 0) return c;
+	if (a.length === 0 && c.length === 0) return b;
+	if (b.length === 0 && c.length === 0) return a;
+	const set = new Set<string>();
+	for (let i = 0; i < a.length; i++) set.add(a[i]);
+	for (let i = 0; i < b.length; i++) set.add(b[i]);
+	for (let i = 0; i < c.length; i++) set.add(c[i]);
+	const res = Array.from(set);
+	res.sort();
+	return res;
+}
+function mergeUniqueNumbers(a: number[], b: number[], c: number[]): number[] {
+	if (a.length === 0 && b.length === 0 && c.length === 0) return [];
+	if (a.length === 0 && b.length === 0) return c;
+	if (a.length === 0 && c.length === 0) return b;
+	if (b.length === 0 && c.length === 0) return a;
+	const set = new Set<number>();
+	for (let i = 0; i < a.length; i++) set.add(a[i]);
+	for (let i = 0; i < b.length; i++) set.add(b[i]);
+	for (let i = 0; i < c.length; i++) set.add(c[i]);
+	const res = Array.from(set);
+	res.sort((x, y) => x - y);
+	return res;
+}
+
+class LazyEnvelopeCandidate implements VerticalEnvelopeCandidate {
+	id: string;
+	loopCandidateId: string;
+	storeyCandidateId: string;
+	lowerAssignmentId: string;
+	upperAssignmentId: string;
+	lowerHorizontalEvidenceId: string;
+	upperHorizontalEvidenceId: string;
+	lowerElevation: number;
+	upperElevation: number;
+	clearHeight: number;
+	loopArea: number;
+	estimatedVolume: number;
+	score: number;
+	status: VerticalEnvelopeStatus;
+	rank: number;
+	qualityFlags: VerticalEnvelopeQualityFlags;
+
+	_logA: string[];
+	_logB: string[];
+	_logC: string[];
+	_classA: string[];
+	_classB: string[];
+	_classC: string[];
+	_matA: number[];
+	_matB: number[];
+	_matC: number[];
+
+	_logicalObjectIds?: string[];
+	_classificationUnitIds?: string[];
+	_materialIds?: number[];
+
+	constructor(
+		id: string,
+		loopCandidateId: string,
+		storeyCandidateId: string,
+		lowerAssignmentId: string,
+		upperAssignmentId: string,
+		lowerHorizontalEvidenceId: string,
+		upperHorizontalEvidenceId: string,
+		lowerElevation: number,
+		upperElevation: number,
+		clearHeight: number,
+		loopArea: number,
+		estimatedVolume: number,
+		score: number,
+		status: VerticalEnvelopeStatus,
+		rank: number,
+		qualityFlags: VerticalEnvelopeQualityFlags,
+		logA: string[], logB: string[], logC: string[],
+		classA: string[], classB: string[], classC: string[],
+		matA: number[], matB: number[], matC: number[]
+	) {
+		this.id = id;
+		this.loopCandidateId = loopCandidateId;
+		this.storeyCandidateId = storeyCandidateId;
+		this.lowerAssignmentId = lowerAssignmentId;
+		this.upperAssignmentId = upperAssignmentId;
+		this.lowerHorizontalEvidenceId = lowerHorizontalEvidenceId;
+		this.upperHorizontalEvidenceId = upperHorizontalEvidenceId;
+		this.lowerElevation = lowerElevation;
+		this.upperElevation = upperElevation;
+		this.clearHeight = clearHeight;
+		this.loopArea = loopArea;
+		this.estimatedVolume = estimatedVolume;
+		this.score = score;
+		this.status = status;
+		this.rank = rank;
+		this.qualityFlags = qualityFlags;
+		this._logA = logA;
+		this._logB = logB;
+		this._logC = logC;
+		this._classA = classA;
+		this._classB = classB;
+		this._classC = classC;
+		this._matA = matA;
+		this._matB = matB;
+		this._matC = matC;
+	}
+
+	get logicalObjectIds(): string[] {
+		if (!this._logicalObjectIds) {
+			this._logicalObjectIds = mergeUniqueStrings(this._logA, this._logB, this._logC);
+		}
+		return this._logicalObjectIds;
+	}
+
+	get classificationUnitIds(): string[] {
+		if (!this._classificationUnitIds) {
+			this._classificationUnitIds = mergeUniqueStrings(this._classA, this._classB, this._classC);
+		}
+		return this._classificationUnitIds;
+	}
+
+	get materialIds(): number[] {
+		if (!this._materialIds) {
+			this._materialIds = mergeUniqueNumbers(this._matA, this._matB, this._matC);
+		}
+		return this._materialIds;
+	}
+
+	toJSON() {
+		return {
+			...this,
+			logicalObjectIds: this.logicalObjectIds,
+			classificationUnitIds: this.classificationUnitIds,
+			materialIds: this.materialIds
+		};
+	}
+
+	toRefined(
+		rawScore: number,
+		rawStatus: VerticalEnvelopeStatus,
+		refinedScore: number,
+		refinedStatus: VerticalEnvelopeStatus,
+		refinedRank: number,
+		baseAlignment: number,
+		topAlignment: number,
+		barrierSpanCoverage: number,
+		refinementReasons: string[] | undefined,
+		verticalExtentProfile: LoopVerticalExtentProfile,
+		eligibleForRoomAssembly: boolean,
+		ineligibilityReasons: string[] | undefined,
+		relativeBaseTolerance: number,
+		relativeTopTolerance: number
+	): RefinedVerticalEnvelopeCandidate {
+		const cand = new LazyRefinedEnvelopeCandidate(
+			this.id,
+			this.loopCandidateId,
+			this.storeyCandidateId,
+			this.lowerAssignmentId,
+			this.upperAssignmentId,
+			this.lowerHorizontalEvidenceId,
+			this.upperHorizontalEvidenceId,
+			this.lowerElevation,
+			this.upperElevation,
+			this.clearHeight,
+			this.loopArea,
+			this.estimatedVolume,
+			refinedScore,
+			refinedStatus,
+			refinedRank,
+			this.qualityFlags,
+			this._logA, this._logB, this._logC,
+			this._classA, this._classB, this._classC,
+			this._matA, this._matB, this._matC
+		);
+		cand.rawScore = rawScore;
+		cand.rawStatus = rawStatus;
+		cand.refinedScore = refinedScore;
+		cand.refinedStatus = refinedStatus;
+		cand.refinedRank = refinedRank;
+		cand.baseAlignment = baseAlignment;
+		cand.topAlignment = topAlignment;
+		cand.barrierSpanCoverage = barrierSpanCoverage;
+		if (refinementReasons) cand._refinementReasons = refinementReasons;
+		cand.verticalExtentProfile = verticalExtentProfile;
+		cand.eligibleForRoomAssembly = eligibleForRoomAssembly;
+		if (ineligibilityReasons) cand._ineligibilityReasons = ineligibilityReasons;
+		cand.relativeBaseTolerance = relativeBaseTolerance;
+		cand.relativeTopTolerance = relativeTopTolerance;
+		return cand;
+	}
+}
+
+class LazyRefinedEnvelopeCandidate extends LazyEnvelopeCandidate implements RefinedVerticalEnvelopeCandidate {
+	rawScore!: number;
+	rawStatus!: VerticalEnvelopeStatus;
+	refinedScore!: number;
+	refinedStatus!: VerticalEnvelopeStatus;
+	refinedRank!: number;
+	baseAlignment!: number;
+	topAlignment!: number;
+	barrierSpanCoverage!: number;
+	verticalExtentProfile!: LoopVerticalExtentProfile;
+	eligibleForRoomAssembly!: boolean;
+	relativeBaseTolerance!: number;
+	relativeTopTolerance!: number;
+
+	_refinementReasons?: string[];
+	get refinementReasons(): string[] {
+		if (!this._refinementReasons) {
+			const reasons: string[] = [];
+			const isInsuff = !this.verticalExtentProfile || this.verticalExtentProfile.flags.insufficientEvidence;
+			if (isInsuff) {
+				reasons.push('insufficient-evidence');
+			} else if (this.rawScore <= 0 || this.qualityFlags?.nonPositiveHeight) {
+				reasons.push('zero-score-or-non-positive-height');
+			} else {
+				const profile = this.verticalExtentProfile;
+				const baseDiff = Math.abs(this.lowerElevation - profile.robustBase);
+				const topDiff = Math.abs(this.upperElevation - profile.robustTop);
+				const baseAligned = baseDiff <= this.relativeBaseTolerance;
+				const topAligned = topDiff <= this.relativeTopTolerance;
+
+				if (baseAligned) {
+					reasons.push('base-aligned');
+				} else {
+					reasons.push(`base-displaced-${baseDiff.toFixed(3)}m`);
+				}
+
+				if (topAligned) {
+					reasons.push('top-aligned');
+				} else {
+					reasons.push(`top-displaced-${topDiff.toFixed(3)}m`);
+				}
+
+				const clearHeightRatio = this.clearHeight / profile.robustSpan;
+				if (clearHeightRatio < 0.8) {
+					reasons.push(`insufficient-span-coverage-${(clearHeightRatio * 100).toFixed(0)}%`);
+				} else {
+					reasons.push('substantial-span-coverage');
+				}
+
+				if (this.qualityFlags?.weakUpperCover) reasons.push('weak-upper-support');
+				if (this.qualityFlags?.weakLowerSupport) reasons.push('weak-lower-support');
+				if (this.qualityFlags?.approximateOverlap) reasons.push('approximate-overlap');
+			}
+			this._refinementReasons = reasons;
+		}
+		return this._refinementReasons;
+	}
+	set refinementReasons(val: string[]) {
+		this._refinementReasons = val;
+	}
+
+	_ineligibilityReasons?: string[];
+	get ineligibilityReasons(): string[] {
+		if (!this._ineligibilityReasons) {
+			const reasons: string[] = [];
+			const isInsuff = !this.verticalExtentProfile || this.verticalExtentProfile.flags.insufficientEvidence;
+			if (isInsuff) {
+				reasons.push('insufficient-evidence');
+			} else {
+				if (this.qualityFlags?.missingLower) reasons.push('missing-lower-support');
+				if (this.qualityFlags?.missingUpper) reasons.push('missing-upper-cover');
+				if (this.qualityFlags?.nonPositiveHeight) reasons.push('non-positive-height');
+				if (this.refinedScore < 30) reasons.push('refined-score-below-threshold');
+				else if (this.refinedScore <= 0) reasons.push('refined-score-zero');
+			}
+			this._ineligibilityReasons = reasons;
+		}
+		return this._ineligibilityReasons;
+	}
+	set ineligibilityReasons(val: string[]) {
+		this._ineligibilityReasons = val;
+	}
+
+	override toJSON() {
+		return {
+			...super.toJSON(),
+			refinementReasons: this.refinementReasons,
+			ineligibilityReasons: this.ineligibilityReasons
+		};
+	}
+}
+
 
 export function buildVerticalEnvelopeCandidates(
 	loops: RankedBoundaryLoopCandidate[],
@@ -99,6 +428,43 @@ export function buildVerticalEnvelopeCandidates(
 		};
 	});
 
+	const assignmentById = new Map<string, RankedLoopSurfaceAssignment>();
+	const assignmentsByLoopLower = new Map<string, Array<{
+		assign: RankedLoopSurfaceAssignment;
+		logIds: string[];
+		classIds: string[];
+		matIds: number[];
+	}>>();
+	const assignmentsByLoopUpper = new Map<string, Array<{
+		assign: RankedLoopSurfaceAssignment;
+		logIds: string[];
+		classIds: string[];
+		matIds: number[];
+	}>>();
+
+	for (const a of assignments) {
+		assignmentById.set(a.id, a);
+		if (a.role === 'lower-support') {
+			let list = assignmentsByLoopLower.get(a.loopCandidateId);
+			if (!list) { list = []; assignmentsByLoopLower.set(a.loopCandidateId, list); }
+			list.push({
+				assign: a,
+				logIds: Array.from(new Set(getLogicalIds(a))).sort(),
+				classIds: Array.from(new Set(getClassIds(a))).sort(),
+				matIds: Array.from(new Set(getMatIds(a))).sort((x, y) => x - y)
+			});
+		} else if (a.role === 'upper-cover') {
+			let list = assignmentsByLoopUpper.get(a.loopCandidateId);
+			if (!list) { list = []; assignmentsByLoopUpper.set(a.loopCandidateId, list); }
+			list.push({
+				assign: a,
+				logIds: Array.from(new Set(getLogicalIds(a))).sort(),
+				classIds: Array.from(new Set(getClassIds(a))).sort(),
+				matIds: Array.from(new Set(getMatIds(a))).sort((x, y) => x - y)
+			});
+		}
+	}
+
 
 
 	const candidates: VerticalEnvelopeCandidate[] = [];
@@ -115,12 +481,8 @@ export function buildVerticalEnvelopeCandidates(
 		}
 		loopsInspected++;
 
-		const lowerList = assignments.filter(
-			(a) => a.loopCandidateId === loop.id && a.role === 'lower-support'
-		);
-		const upperList = assignments.filter(
-			(a) => a.loopCandidateId === loop.id && a.role === 'upper-cover'
-		);
+		const lowerList = assignmentsByLoopLower.get(loop.id) || [];
+		const upperList = assignmentsByLoopUpper.get(loop.id) || [];
 
 		if (lowerList.length === 0) {
 			loopsMissingLowerSupport++;
@@ -130,40 +492,30 @@ export function buildVerticalEnvelopeCandidates(
 		}
 
 		const loopCandidates: VerticalEnvelopeCandidate[] = [];
+		const loopLogIds = Array.from(new Set(getLogicalIds(loop))).sort();
+		const loopClassIds = Array.from(new Set(getClassIds(loop))).sort();
+		const loopMatIds = Array.from(new Set(getMatIds(loop))).sort((a, b) => a - b);
 
 		if (lowerList.length === 0 && upperList.length > 0) {
-			for (const upper of upperList) {
-				const logicalIds = Array.from(
-					new Set([...getLogicalIds(loop), ...getLogicalIds(upper)])
-				).sort();
-				const classificationIds = Array.from(
-					new Set([...getClassIds(loop), ...getClassIds(upper)])
-				).sort();
-				const matIds = Array.from(
-					new Set([...getMatIds(loop), ...getMatIds(upper)])
-				).sort((a, b) => a - b);
-
-
-				const cand: VerticalEnvelopeCandidate = {
-					id: `env:${loop.id}|no-lower|${upper.id}`,
-					loopCandidateId: loop.id,
-					storeyCandidateId: loop.storeyCandidateId,
-					lowerAssignmentId: '',
-					upperAssignmentId: upper.id,
-					lowerHorizontalEvidenceId: '',
-					upperHorizontalEvidenceId: upper.horizontalEvidenceId,
-					logicalObjectIds: logicalIds,
-					classificationUnitIds: classificationIds,
-					materialIds: matIds,
-					lowerElevation: 0,
-					upperElevation: Number(upper.elevation.toFixed(6)),
-					clearHeight: 0,
-					loopArea: Number(loop.area.toFixed(6)),
-					estimatedVolume: 0,
-					score: 0,
-					status: 'noise',
-					rank: 1,
-					qualityFlags: {
+			for (const upperEntry of upperList) {
+				const upper = upperEntry.assign;
+				const cand = new LazyEnvelopeCandidate(
+					`env:${loop.id}|no-lower|${upper.id}`,
+					loop.id,
+					loop.storeyCandidateId,
+					'',
+					upper.id,
+					'',
+					upper.horizontalEvidenceId,
+					0,
+					round6(upper.elevation),
+					0,
+					round6(loop.area),
+					0,
+					0,
+					'noise',
+					1,
+					{
 						missingLower: true,
 						missingUpper: false,
 						nonPositiveHeight: true,
@@ -174,43 +526,33 @@ export function buildVerticalEnvelopeCandidates(
 						weakLowerSupport: true,
 						weakUpperCover: upper.status !== 'primary' || upper.score < 60,
 						geometricallyPlausible: false
-					}
-				};
+					},
+					loopLogIds, [], upperEntry.logIds,
+					loopClassIds, [], upperEntry.classIds,
+					loopMatIds, [], upperEntry.matIds
+				);
 				loopCandidates.push(cand);
 			}
 		} else if (lowerList.length > 0 && upperList.length === 0) {
-			for (const lower of lowerList) {
-				const logicalIds = Array.from(
-					new Set([...getLogicalIds(loop), ...getLogicalIds(lower)])
-				).sort();
-				const classificationIds = Array.from(
-					new Set([...getClassIds(loop), ...getClassIds(lower)])
-				).sort();
-				const matIds = Array.from(
-					new Set([...getMatIds(loop), ...getMatIds(lower)])
-				).sort((a, b) => a - b);
-
-
-				const cand: VerticalEnvelopeCandidate = {
-					id: `env:${loop.id}|${lower.id}|no-upper`,
-					loopCandidateId: loop.id,
-					storeyCandidateId: loop.storeyCandidateId,
-					lowerAssignmentId: lower.id,
-					upperAssignmentId: '',
-					lowerHorizontalEvidenceId: lower.horizontalEvidenceId,
-					upperHorizontalEvidenceId: '',
-					logicalObjectIds: logicalIds,
-					classificationUnitIds: classificationIds,
-					materialIds: matIds,
-					lowerElevation: Number(lower.elevation.toFixed(6)),
-					upperElevation: Number(lower.elevation.toFixed(6)),
-					clearHeight: 0,
-					loopArea: Number(loop.area.toFixed(6)),
-					estimatedVolume: 0,
-					score: 0,
-					status: 'noise',
-					rank: 1,
-					qualityFlags: {
+			for (const lowerEntry of lowerList) {
+				const lower = lowerEntry.assign;
+				const cand = new LazyEnvelopeCandidate(
+					`env:${loop.id}|${lower.id}|no-upper`,
+					loop.id,
+					loop.storeyCandidateId,
+					lower.id,
+					'',
+					lower.horizontalEvidenceId,
+					'',
+					round6(lower.elevation),
+					round6(lower.elevation),
+					0,
+					round6(loop.area),
+					0,
+					0,
+					'noise',
+					1,
+					{
 						missingLower: false,
 						missingUpper: true,
 						nonPositiveHeight: true,
@@ -221,32 +563,31 @@ export function buildVerticalEnvelopeCandidates(
 						weakLowerSupport: lower.status !== 'primary' || lower.score < 60,
 						weakUpperCover: true,
 						geometricallyPlausible: false
-					}
-				};
+					},
+					loopLogIds, lowerEntry.logIds, [],
+					loopClassIds, lowerEntry.classIds, [],
+					loopMatIds, lowerEntry.matIds, []
+				);
 				loopCandidates.push(cand);
 			}
 		} else if (lowerList.length === 0 && upperList.length === 0) {
-			const cand: VerticalEnvelopeCandidate = {
-				id: `env:${loop.id}|no-lower|no-upper`,
-				loopCandidateId: loop.id,
-				storeyCandidateId: loop.storeyCandidateId,
-				lowerAssignmentId: '',
-				upperAssignmentId: '',
-				lowerHorizontalEvidenceId: '',
-				upperHorizontalEvidenceId: '',
-				logicalObjectIds: getLogicalIds(loop).sort(),
-				classificationUnitIds: getClassIds(loop).sort(),
-				materialIds: getMatIds(loop).sort((a, b) => a - b),
-
-				lowerElevation: 0,
-				upperElevation: 0,
-				clearHeight: 0,
-				loopArea: Number(loop.area.toFixed(6)),
-				estimatedVolume: 0,
-				score: 0,
-				status: 'noise',
-				rank: 1,
-				qualityFlags: {
+			const cand = new LazyEnvelopeCandidate(
+				`env:${loop.id}|no-lower|no-upper`,
+				loop.id,
+				loop.storeyCandidateId,
+				'',
+				'',
+				'',
+				'',
+				0,
+				0,
+				0,
+				round6(loop.area),
+				0,
+				0,
+				'noise',
+				1,
+				{
 					missingLower: true,
 					missingUpper: true,
 					nonPositiveHeight: true,
@@ -257,34 +598,24 @@ export function buildVerticalEnvelopeCandidates(
 					weakLowerSupport: true,
 					weakUpperCover: true,
 					geometricallyPlausible: false
-				}
-			};
+				},
+				loopLogIds, [], [],
+				loopClassIds, [], [],
+				loopMatIds, [], []
+			);
 			loopCandidates.push(cand);
 		} else {
-			for (const lower of lowerList) {
-				for (const upper of upperList) {
+			for (const lowerEntry of lowerList) {
+				const lower = lowerEntry.assign;
+				for (const upperEntry of upperList) {
+					const upper = upperEntry.assign;
 					const diff = upper.elevation - lower.elevation;
-					const clearHeight = Number(Math.max(0, diff).toFixed(6));
+					const clearHeight = round6(Math.max(0, diff));
 					const nonPositiveHeight = diff <= 0;
 
 					if (nonPositiveHeight) {
 						rejectedNonPositiveHeights++;
 					}
-
-					const logicalIds = Array.from(
-						new Set([...getLogicalIds(loop), ...getLogicalIds(lower), ...getLogicalIds(upper)])
-					).sort();
-					const classificationIds = Array.from(
-						new Set([
-							...getClassIds(loop),
-							...getClassIds(lower),
-							...getClassIds(upper)
-						])
-					).sort();
-					const matIds = Array.from(
-						new Set([...getMatIds(loop), ...getMatIds(lower), ...getMatIds(upper)])
-					).sort((a, b) => a - b);
-
 
 					const unusuallyLowHeight = !nonPositiveHeight && clearHeight < 2.0;
 					const unusuallyHighHeight = !nonPositiveHeight && clearHeight > 6.0;
@@ -336,28 +667,25 @@ export function buildVerticalEnvelopeCandidates(
 
 					const score = nonPositiveHeight
 						? 0
-						: Number(Math.max(0, Math.min(100, baseScore)).toFixed(6));
+						: round6(Math.max(0, Math.min(100, baseScore)));
 
-					const cand: VerticalEnvelopeCandidate = {
-						id: `env:${loop.id}|${lower.id}|${upper.id}`,
-						loopCandidateId: loop.id,
-						storeyCandidateId: loop.storeyCandidateId,
-						lowerAssignmentId: lower.id,
-						upperAssignmentId: upper.id,
-						lowerHorizontalEvidenceId: lower.horizontalEvidenceId,
-						upperHorizontalEvidenceId: upper.horizontalEvidenceId,
-						logicalObjectIds: logicalIds,
-						classificationUnitIds: classificationIds,
-						materialIds: matIds,
-						lowerElevation: Number(lower.elevation.toFixed(6)),
-						upperElevation: Number(upper.elevation.toFixed(6)),
+					const cand = new LazyEnvelopeCandidate(
+						`env:${loop.id}|${lower.id}|${upper.id}`,
+						loop.id,
+						loop.storeyCandidateId,
+						lower.id,
+						upper.id,
+						lower.horizontalEvidenceId,
+						upper.horizontalEvidenceId,
+						round6(lower.elevation),
+						round6(upper.elevation),
 						clearHeight,
-						loopArea: Number(loop.area.toFixed(6)),
-						estimatedVolume: Number((loop.area * clearHeight).toFixed(6)),
+						round6(loop.area),
+						round6(loop.area * clearHeight),
 						score,
-						status: 'noise',
-						rank: 1,
-						qualityFlags: {
+						'noise',
+						1,
+						{
 							missingLower: false,
 							missingUpper: false,
 							nonPositiveHeight,
@@ -368,8 +696,11 @@ export function buildVerticalEnvelopeCandidates(
 							weakLowerSupport,
 							weakUpperCover,
 							geometricallyPlausible
-						}
-					};
+						},
+						loopLogIds, lowerEntry.logIds, upperEntry.logIds,
+						loopClassIds, lowerEntry.classIds, upperEntry.classIds,
+						loopMatIds, lowerEntry.matIds, upperEntry.matIds
+					);
 					loopCandidates.push(cand);
 				}
 			}
@@ -388,7 +719,7 @@ export function buildVerticalEnvelopeCandidates(
 			validCandidates.sort((a, b) => {
 				if (b.score !== a.score) return b.score - a.score;
 				if (a.clearHeight !== b.clearHeight) return a.clearHeight - b.clearHeight;
-				return a.id.localeCompare(b.id);
+				return compareCandidateIds(a, b);
 			});
 
 			const topCandidate = validCandidates[0];
@@ -403,8 +734,8 @@ export function buildVerticalEnvelopeCandidates(
 					continue;
 				}
 
-				const lowerAssign = assignments.find((a) => a.id === cand.lowerAssignmentId);
-				const upperAssign = assignments.find((a) => a.id === cand.upperAssignmentId);
+				const lowerAssign = assignmentById.get(cand.lowerAssignmentId);
+				const upperAssign = assignmentById.get(cand.upperAssignmentId);
 				const eitherNoise =
 					lowerAssign?.status === 'noise' || upperAssign?.status === 'noise';
 
@@ -432,12 +763,10 @@ export function buildVerticalEnvelopeCandidates(
 
 		// Sort all loopCandidates: primary -> secondary -> noise, then by score desc, then id asc
 		loopCandidates.sort((a, b) => {
-			const statusOrder = { primary: 0, secondary: 1, noise: 2 };
-			if (statusOrder[a.status] !== statusOrder[b.status]) {
-				return statusOrder[a.status] - statusOrder[b.status];
-			}
+			const sd = statusRank(a.status) - statusRank(b.status);
+			if (sd !== 0) return sd;
 			if (b.score !== a.score) return b.score - a.score;
-			return a.id.localeCompare(b.id);
+			return compareCandidateIds(a, b);
 		});
 
 		const plausibleCount = loopCandidates.filter(
@@ -488,6 +817,15 @@ export function refineVerticalEnvelopeCandidates(
 	verticalBarrierEvidence: VerticalBarrierEvidence[],
 	storeyBands: StoreyBandEvidence[]
 ): RefinedVerticalEnvelopeResult {
+	const storeyBandById = new Map<string, StoreyBandEvidence>();
+	for (const s of storeyBands) {
+		storeyBandById.set(s.id, s);
+	}
+	const barrierEvidenceById = new Map<string, VerticalBarrierEvidence>();
+	for (const ev of verticalBarrierEvidence) {
+		barrierEvidenceById.set(ev.id, ev);
+	}
+
 	const profiles: LoopVerticalExtentProfile[] = [];
 	const refinedCandidates: RefinedVerticalEnvelopeCandidate[] = [];
 
@@ -546,7 +884,7 @@ export function refineVerticalEnvelopeCandidates(
 		if (loop.status === 'noise') continue;
 		loopsInspected++;
 
-		const storeyBand = storeyBands.find((s) => s.id === loop.storeyCandidateId);
+		const storeyBand = storeyBandById.get(loop.storeyCandidateId);
 		const storeyFloor = storeyBand ? storeyBand.elevationRange.min : 0.0;
 
 		const referencedEvidenceCount = loop.verticalEvidenceIds.length;
@@ -554,7 +892,7 @@ export function refineVerticalEnvelopeCandidates(
 		const barriers: VerticalBarrierEvidence[] = [];
 
 		for (const id of loop.verticalEvidenceIds) {
-			const v = verticalBarrierEvidence.find(ev => ev.id === id);
+			const v = barrierEvidenceById.get(id);
 			if (v) {
 				barriers.push(v);
 			} else {
@@ -719,10 +1057,10 @@ export function refineVerticalEnvelopeCandidates(
 		// Old selection sorting
 		const rawValid = list.filter((c) => c.status === 'primary' || c.status === 'secondary');
 		rawValid.sort((a, b) => {
-			const statusOrder = { primary: 0, secondary: 1, noise: 2 };
-			if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
+			const sd = statusRank(a.status) - statusRank(b.status);
+			if (sd !== 0) return sd;
 			if (b.score !== a.score) return b.score - a.score;
-			return a.id.localeCompare(b.id);
+			return compareCandidateIds(a, b);
 		});
 		if (rawValid.length > 0) {
 			oldSelectedMap.set(loopId, rawValid[0].id);
@@ -736,61 +1074,71 @@ export function refineVerticalEnvelopeCandidates(
 	for (const [loopId, list] of envelopesByLoop.entries()) {
 		const profile = profileMap.get(loopId);
 		const loopCandidates: RefinedVerticalEnvelopeCandidate[] = [];
+		let eligibleCountInLoop = 0;
 
 		for (const env of list) {
 			let refinedScore = env.score;
 			let baseAlignment = 0;
 			let topAlignment = 0;
 			let barrierSpanCoverage = 0;
-			const refinementReasons: string[] = [];
 
 			if (env.status === 'primary') rawPrimaryCount++;
 			else if (env.status === 'secondary') rawSecondaryCount++;
 			else if (env.status === 'noise') rawNoiseCount++;
 
-			if (!profile || profile.flags.insufficientEvidence) {
-				refinementReasons.push('insufficient-evidence');
-				const refinedCand: RefinedVerticalEnvelopeCandidate = {
-					...env,
-					rawScore: env.score,
-					rawStatus: env.status,
-					refinedScore: env.score,
-					refinedStatus: env.status,
-					refinedRank: env.rank,
-					baseAlignment,
-					topAlignment,
-					barrierSpanCoverage,
-					refinementReasons,
-					verticalExtentProfile: profile || {
-						loopId,
-						evidenceIds: [],
-						evidenceCount: 0,
-						referencedEvidenceCount: 0,
-						referencedEvidenceFound: 0,
-						rejectedReferencedEvidence: 0,
-						missingReferencedEvidenceIds: [],
-						minObservedBase: 0,
-						maxObservedTop: 0,
-						robustBase: 0,
-						robustTop: 0,
-						robustSpan: 0,
-						dispersion: 0,
-						consistency: 0,
-						confidence: 0,
-						flags: {
-							insufficientEvidence: true,
-							inconsistentBases: false,
-							inconsistentTops: false,
-							fragmentedVerticalEvidence: false,
-							approximateExtent: false
-						}
-					},
-					eligibleForRoomAssembly: false,
-					ineligibilityReasons: ['insufficient-evidence'],
-					relativeBaseTolerance: 0.15,
-					relativeTopTolerance: 0.30
+			if (!profile || profile.flags.insufficientEvidence || env.score <= 0 || env.qualityFlags.nonPositiveHeight) {
+				const isInsuff = !profile || profile.flags.insufficientEvidence;
+				const baseAlignment = profile ? Math.abs(env.lowerElevation - profile.robustBase) : 0;
+				const topAlignment = profile ? Math.abs(env.upperElevation - profile.robustTop) : 0;
+				const prof = profile || {
+					loopId,
+					evidenceIds: [],
+					evidenceCount: 0,
+					referencedEvidenceCount: 0,
+					referencedEvidenceFound: 0,
+					rejectedReferencedEvidence: 0,
+					missingReferencedEvidenceIds: [],
+					minObservedBase: 0,
+					maxObservedTop: 0,
+					robustBase: 0,
+					robustTop: 0,
+					robustSpan: 0,
+					dispersion: 0,
+					consistency: 0,
+					confidence: 0,
+					flags: {
+						insufficientEvidence: true,
+						inconsistentBases: false,
+						inconsistentTops: false,
+						fragmentedVerticalEvidence: false,
+						approximateExtent: false
+					}
 				};
-				loopCandidates.push(refinedCand);
+
+				if (env instanceof LazyEnvelopeCandidate) {
+					loopCandidates.push(env.toRefined(
+						env.score, env.status, isInsuff ? env.score : 0, isInsuff ? env.status : 'noise', env.rank,
+						baseAlignment, topAlignment, 0, undefined, prof, false, undefined, 0.15, 0.30
+					));
+				} else {
+					const refinementReasons = isInsuff ? ['insufficient-evidence'] : ['zero-score-or-non-positive-height'];
+					const ineligibilityReasons: string[] = [];
+					if (isInsuff) {
+						ineligibilityReasons.push('insufficient-evidence');
+					} else {
+						if (env.qualityFlags?.missingLower) ineligibilityReasons.push('missing-lower-support');
+						if (env.qualityFlags?.missingUpper) ineligibilityReasons.push('missing-upper-cover');
+						if (env.qualityFlags?.nonPositiveHeight) ineligibilityReasons.push('non-positive-height');
+						if (env.score < 30) ineligibilityReasons.push('refined-score-below-threshold');
+						else if (env.score <= 0) ineligibilityReasons.push('refined-score-zero');
+					}
+					loopCandidates.push({
+						...env, rawScore: env.score, rawStatus: env.status, refinedScore: isInsuff ? env.score : 0,
+						refinedStatus: isInsuff ? env.status : 'noise', refinedRank: env.rank, baseAlignment, topAlignment,
+						barrierSpanCoverage: 0, refinementReasons, verticalExtentProfile: prof, eligibleForRoomAssembly: false,
+						ineligibilityReasons, relativeBaseTolerance: 0.15, relativeTopTolerance: 0.30
+					});
+				}
 			} else {
 				const baseDiff = Math.abs(env.lowerElevation - profile.robustBase);
 				const topDiff = Math.abs(env.upperElevation - profile.robustTop);
@@ -809,85 +1157,58 @@ export function refineVerticalEnvelopeCandidates(
 				barrierSpanCoverage = profile.robustSpan > 0 ? coveredSpan / profile.robustSpan : 0.0;
 
 				let penalty = 0.0;
-
-				if (baseAligned) {
-					refinementReasons.push('base-aligned');
-				} else {
-					const basePenalty = Math.min(30, (baseDiff - relativeBaseTolerance) * 30);
-					penalty += basePenalty;
-					refinementReasons.push(`base-displaced-${baseDiff.toFixed(3)}m`);
+				if (!baseAligned) {
+					penalty += Math.min(30, (baseDiff - relativeBaseTolerance) * 30);
 				}
-
-				if (topAligned) {
-					refinementReasons.push('top-aligned');
-				} else {
-					const topPenalty = Math.min(30, (topDiff - relativeTopTolerance) * 30);
-					penalty += topPenalty;
-					refinementReasons.push(`top-displaced-${topDiff.toFixed(3)}m`);
+				if (!topAligned) {
+					penalty += Math.min(30, (topDiff - relativeTopTolerance) * 30);
 				}
-
 				const clearHeightRatio = env.clearHeight / profile.robustSpan;
 				if (clearHeightRatio < 0.8) {
-					const deficitPenalty = (0.8 - clearHeightRatio) * 60;
-					penalty += deficitPenalty;
-					refinementReasons.push(`insufficient-span-coverage-${(clearHeightRatio * 100).toFixed(0)}%`);
-				} else {
-					refinementReasons.push('substantial-span-coverage');
+					penalty += (0.8 - clearHeightRatio) * 60;
 				}
-
-				if (env.qualityFlags?.weakUpperCover) {
-					penalty += 15.0;
-					refinementReasons.push('weak-upper-support');
-				}
-				if (env.qualityFlags?.weakLowerSupport) {
-					penalty += 15.0;
-					refinementReasons.push('weak-lower-support');
-				}
-				if (env.qualityFlags?.approximateOverlap) {
-					penalty += 5.0;
-					refinementReasons.push('approximate-overlap');
-				}
+				if (env.qualityFlags?.weakUpperCover) penalty += 15.0;
+				if (env.qualityFlags?.weakLowerSupport) penalty += 15.0;
+				if (env.qualityFlags?.approximateOverlap) penalty += 5.0;
 
 				refinedScore = Math.max(0, Math.min(100, env.score - penalty));
-				refinedScore = Number(refinedScore.toFixed(6));
+				refinedScore = round6(refinedScore);
 
-				const refinedCand: RefinedVerticalEnvelopeCandidate = {
-					...env,
-					score: refinedScore,
-					rawScore: env.score,
-					rawStatus: env.status,
-					refinedScore,
-					refinedStatus: 'noise',
-					refinedRank: 1,
-					baseAlignment,
-					topAlignment,
-					barrierSpanCoverage,
-					refinementReasons,
-					verticalExtentProfile: profile,
-					eligibleForRoomAssembly: false,
-					ineligibilityReasons: [],
-					relativeBaseTolerance,
-					relativeTopTolerance
-				};
-				loopCandidates.push(refinedCand);
-			}
-		}
+				const isEligible = !env.qualityFlags.missingLower && !env.qualityFlags.missingUpper && !env.qualityFlags.nonPositiveHeight && refinedScore >= 30;
+				if (isEligible) eligibleCountInLoop++;
 
-		let eligibleCountInLoop = 0;
-		for (const cand of loopCandidates) {
-			const ineligibilityReasons: string[] = [];
-			if (cand.qualityFlags.missingLower) ineligibilityReasons.push('missing-lower-support');
-			if (cand.qualityFlags.missingUpper) ineligibilityReasons.push('missing-upper-cover');
-			if (cand.qualityFlags.nonPositiveHeight) ineligibilityReasons.push('non-positive-height');
-			if (cand.refinedScore < 30) ineligibilityReasons.push('refined-score-below-threshold');
-			else if (cand.refinedScore <= 0) ineligibilityReasons.push('refined-score-zero');
-			
-			if (ineligibilityReasons.length === 0) {
-				cand.eligibleForRoomAssembly = true;
-				eligibleCountInLoop++;
-			} else {
-				cand.eligibleForRoomAssembly = false;
-				cand.ineligibilityReasons = ineligibilityReasons;
+				if (env instanceof LazyEnvelopeCandidate) {
+					loopCandidates.push(env.toRefined(
+						env.score, env.status, refinedScore, 'noise', 1,
+						baseAlignment, topAlignment, barrierSpanCoverage, undefined, profile,
+						isEligible, undefined, relativeBaseTolerance, relativeTopTolerance
+					));
+				} else {
+					const refinementReasons: string[] = [];
+					if (baseAligned) refinementReasons.push('base-aligned');
+					else refinementReasons.push(`base-displaced-${baseDiff.toFixed(3)}m`);
+					if (topAligned) refinementReasons.push('top-aligned');
+					else refinementReasons.push(`top-displaced-${topDiff.toFixed(3)}m`);
+					if (clearHeightRatio < 0.8) refinementReasons.push(`insufficient-span-coverage-${(clearHeightRatio * 100).toFixed(0)}%`);
+					else refinementReasons.push('substantial-span-coverage');
+					if (env.qualityFlags?.weakUpperCover) refinementReasons.push('weak-upper-support');
+					if (env.qualityFlags?.weakLowerSupport) refinementReasons.push('weak-lower-support');
+					if (env.qualityFlags?.approximateOverlap) refinementReasons.push('approximate-overlap');
+
+					const ineligibilityReasons: string[] = [];
+					if (env.qualityFlags.missingLower) ineligibilityReasons.push('missing-lower-support');
+					if (env.qualityFlags.missingUpper) ineligibilityReasons.push('missing-upper-cover');
+					if (env.qualityFlags.nonPositiveHeight) ineligibilityReasons.push('non-positive-height');
+					if (refinedScore < 30) ineligibilityReasons.push('refined-score-below-threshold');
+					else if (refinedScore <= 0) ineligibilityReasons.push('refined-score-zero');
+
+					loopCandidates.push({
+						...env, score: refinedScore, rawScore: env.score, rawStatus: env.status,
+						refinedScore, refinedStatus: 'noise', refinedRank: 1, baseAlignment, topAlignment,
+						barrierSpanCoverage, refinementReasons, verticalExtentProfile: profile,
+						eligibleForRoomAssembly: isEligible, ineligibilityReasons, relativeBaseTolerance, relativeTopTolerance
+					});
+				}
 			}
 		}
 
@@ -901,7 +1222,7 @@ export function refineVerticalEnvelopeCandidates(
 		if (validCandidates.length > 0) {
 			validCandidates.sort((a, b) => {
 				if (Math.abs(b.refinedScore - a.refinedScore) >= 1e-6) return b.refinedScore - a.refinedScore;
-				return a.id.localeCompare(b.id);
+				return compareCandidateIds(a, b);
 			});
 
 			const topCandidate = validCandidates[0];
@@ -946,12 +1267,10 @@ export function refineVerticalEnvelopeCandidates(
 
 		// Sort all candidates: primary -> secondary -> noise, score desc, id
 		loopCandidates.sort((a, b) => {
-			const statusOrder = { primary: 0, secondary: 1, noise: 2 };
-			if (statusOrder[a.refinedStatus] !== statusOrder[b.refinedStatus]) {
-				return statusOrder[a.refinedStatus] - statusOrder[b.refinedStatus];
-			}
+			const sd = statusRank(a.refinedStatus) - statusRank(b.refinedStatus);
+			if (sd !== 0) return sd;
 			if (Math.abs(b.refinedScore - a.refinedScore) >= 1e-6) return b.refinedScore - a.refinedScore;
-			return a.id.localeCompare(b.id);
+			return compareCandidateIds(a, b);
 		});
 
 		const plausibleCount = loopCandidates.filter(
@@ -993,6 +1312,11 @@ export function refineVerticalEnvelopeCandidates(
 	let weakUpperSelectionsAfter = 0;
 	let barrierAlignedSelections = 0;
 
+	const refinedCandidateById = new Map<string, RefinedVerticalEnvelopeCandidate>();
+	for (const c of refinedCandidates) {
+		refinedCandidateById.set(c.id, c);
+	}
+
 	for (const loopId of oldSelectedMap.keys()) {
 		const oldSel = oldSelectedMap.get(loopId);
 		const newSel = newSelectedMap.get(loopId);
@@ -1004,7 +1328,7 @@ export function refineVerticalEnvelopeCandidates(
 		if (oldWeakUpperMap.get(loopId)) weakUpperSelectionsBefore++;
 		if (newWeakUpperMap.get(loopId)) weakUpperSelectionsAfter++;
 
-		const selectedEnv = refinedCandidates.find((c) => c.id === newSel);
+		const selectedEnv = newSel ? refinedCandidateById.get(newSel) : undefined;
 		if (selectedEnv && selectedEnv.verticalExtentProfile) {
 			const profile = selectedEnv.verticalExtentProfile;
 			if (!profile.flags.insufficientEvidence) {
@@ -1057,12 +1381,30 @@ export function refineVerticalEnvelopeCandidates(
 export function calculateRefinedVerticalEnvelopeCandidateFingerprint(
 	candidates: RefinedVerticalEnvelopeCandidate[]
 ): string {
-	const sorted = [...candidates].sort((a, b) => a.id.localeCompare(b.id));
+	const sorted = [...candidates].sort(compareCandidateIds);
 	const hash = createHash('sha256');
-	for (const cand of sorted) {
-		hash.update(
-			`${cand.id}:${cand.status}:${cand.rank}:${cand.score.toFixed(6)}:${cand.refinedScore.toFixed(6)}:${cand.refinedStatus}:${cand.refinedRank}:${cand.baseAlignment.toFixed(6)}:${cand.topAlignment.toFixed(6)}:${cand.barrierSpanCoverage.toFixed(6)}|`
-		);
+	for (let i = 0; i < sorted.length; i++) {
+		const cand = sorted[i];
+		hash.update(cand.id);
+		hash.update(':');
+		hash.update(cand.status);
+		hash.update(':');
+		hash.update(cand.rank.toString());
+		hash.update(':');
+		hash.update(cand.score.toFixed(6));
+		hash.update(':');
+		hash.update(cand.refinedScore.toFixed(6));
+		hash.update(':');
+		hash.update(cand.refinedStatus);
+		hash.update(':');
+		hash.update(cand.refinedRank.toString());
+		hash.update(':');
+		hash.update(cand.baseAlignment.toFixed(6));
+		hash.update(':');
+		hash.update(cand.topAlignment.toFixed(6));
+		hash.update(':');
+		hash.update(cand.barrierSpanCoverage.toFixed(6));
+		hash.update('|');
 	}
 	return hash.digest('hex');
 }

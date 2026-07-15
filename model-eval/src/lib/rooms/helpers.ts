@@ -114,10 +114,10 @@ export function createDeterministicSnapshot(
 	startTime: number = performance.now()
 ): RoomEvidenceSnapshot {
 	// Deterministic sorting of all lists by ID
-	const storeyBands = [...input.storeyBands].sort((a, b) => a.id.localeCompare(b.id));
-	const horizontalSurfaces = [...input.horizontalSurfaces].sort((a, b) => a.id.localeCompare(b.id));
-	const verticalBarriers = [...input.verticalBarriers].sort((a, b) => a.id.localeCompare(b.id));
-	const boundaryOpenings = [...input.boundaryOpenings].sort((a, b) => a.id.localeCompare(b.id));
+	const storeyBands = [...input.storeyBands].sort((a, b) => a.id < b.id ? -1 : (a.id > b.id ? 1 : 0));
+	const horizontalSurfaces = [...input.horizontalSurfaces].sort((a, b) => a.id < b.id ? -1 : (a.id > b.id ? 1 : 0));
+	const verticalBarriers = [...input.verticalBarriers].sort((a, b) => a.id < b.id ? -1 : (a.id > b.id ? 1 : 0));
+	const boundaryOpenings = [...input.boundaryOpenings].sort((a, b) => a.id < b.id ? -1 : (a.id > b.id ? 1 : 0));
 
 	// Count duplicates
 	const seenIds = new Set<string>();
@@ -223,7 +223,7 @@ export function extractHorizontalSurfaceEvidence(
 		}
 	}
 
-	return results.sort((a, b) => a.id.localeCompare(b.id));
+	return results.sort((a, b) => a.id < b.id ? -1 : (a.id > b.id ? 1 : 0));
 }
 
 export function buildStoreyBands(
@@ -235,7 +235,7 @@ export function buildStoreyBands(
 		if (a.elevation !== b.elevation) {
 			return a.elevation - b.elevation;
 		}
-		return a.id.localeCompare(b.id);
+		return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
 	});
 
 	const groups: HorizontalSurfaceEvidence[][] = [];
@@ -308,7 +308,7 @@ export function buildStoreyBands(
 		});
 	}
 
-	return storeyBands.sort((a, b) => a.id.localeCompare(b.id));
+	return storeyBands.sort((a, b) => a.id < b.id ? -1 : (a.id > b.id ? 1 : 0));
 }
 
 export function extractVerticalBarrierEvidence(
@@ -396,7 +396,7 @@ export function extractVerticalBarrierEvidence(
 		}
 	}
 
-	return results.sort((a, b) => a.id.localeCompare(b.id));
+	return results.sort((a, b) => a.id < b.id ? -1 : (a.id > b.id ? 1 : 0));
 }
 
 export function calculateRoomEvidenceFingerprint(snapshot: RoomEvidenceSnapshot): string {
@@ -546,7 +546,7 @@ export function rankStoreyBandCandidates(
 		if (Math.abs(a.score - b.score) > 1e-7) {
 			return b.score - a.score;
 		}
-		return a.id.localeCompare(b.id);
+		return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
 	});
 }
 
@@ -627,11 +627,14 @@ export function buildBarrierGraph(
 
 	const tol = GEOMETRY_TOLERANCES.positionM;
 	for (let i = 0; i < n; i++) {
+		const pi = sortedPoints[i];
 		for (let j = i + 1; j < n; j++) {
-			if (sortedPoints[j].x - sortedPoints[i].x > tol) {
+			const pj = sortedPoints[j];
+			if (pj.x - pi.x > tol) {
 				break;
 			}
-			if (Math.hypot(sortedPoints[i].x - sortedPoints[j].x, sortedPoints[i].z - sortedPoints[j].z) <= tol) {
+			if (Math.abs(pi.z - pj.z) > tol) continue;
+			if (Math.hypot(pi.x - pj.x, pi.z - pj.z) <= tol) {
 				union(i, j);
 			}
 		}
@@ -796,10 +799,10 @@ export function buildBarrierGraph(
 		list.sort();
 		components.push(list);
 	}
-	components.sort((a, b) => a[0].localeCompare(b[0]));
+	components.sort((a, b) => a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0));
 
-	const nodes = [...nodeMap.values()].sort((a, b) => a.id.localeCompare(b.id));
-	const edges = [...edgeMap.values()].sort((a, b) => a.id.localeCompare(b.id));
+	const nodes = [...nodeMap.values()].sort((a, b) => a.id < b.id ? -1 : (a.id > b.id ? 1 : 0));
+	const edges = [...edgeMap.values()].sort((a, b) => a.id < b.id ? -1 : (a.id > b.id ? 1 : 0));
 
 	return {
 		storeyCandidateId: storeyId,
@@ -1432,7 +1435,7 @@ export function normalizeBarrierGraph(graph: BarrierGraph): NormalizedBarrierGra
 
 	const components: string[][] = [];
 	for (const list of compGroups.values()) { list.sort(); components.push(list); }
-	components.sort((a, b) => a[0].localeCompare(b[0]));
+	components.sort((a, b) => a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0));
 
 	// Compute degree
 	const degree = new Map<string, number>();
@@ -1448,8 +1451,8 @@ export function normalizeBarrierGraph(graph: BarrierGraph): NormalizedBarrierGra
 		else degree3PlusNodes++;
 	}
 
-	const nodes = [...nodeMap.values()].sort((a, b) => a.id.localeCompare(b.id));
-	const sortedEdges = [...finalEdges].sort((a, b) => a.id.localeCompare(b.id));
+	const nodes = [...nodeMap.values()].sort((a, b) => a.id < b.id ? -1 : (a.id > b.id ? 1 : 0));
+	const sortedEdges = [...finalEdges].sort((a, b) => a.id < b.id ? -1 : (a.id > b.id ? 1 : 0));
 
 	const normDiag: BarrierGraphNormalizationDiagnostics = {
 		nodesBefore,

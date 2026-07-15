@@ -130,7 +130,7 @@ function computePolygonArea(poly: PlanCoord[]): number {
 export function calculateLoopSurfaceAssignmentFingerprint(assignments: LoopSurfaceAssignment[]): string {
 	const sorted = [...assignments].sort((a, b) => {
 		if (a.score !== b.score) return b.score - a.score;
-		return a.id.localeCompare(b.id);
+		return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
 	});
 	const hash = createHash('sha256');
 	for (const a of sorted) {
@@ -165,6 +165,22 @@ export function assignHorizontalEvidenceToLoops(
 
 	const assignments: LoopSurfaceAssignment[] = [];
 
+	const nodeMapById = new Map<string, { id: string; coord: PlanCoord }>();
+	if (graph && 'nodes' in graph && graph.nodes) {
+		for (const n of graph.nodes) {
+			nodeMapById.set(n.id, n);
+		}
+	}
+
+	const storeyArrayMap = new Map<string, { min: number; max: number }>();
+	if (storeyContexts && Array.isArray(storeyContexts)) {
+		for (const b of storeyContexts) {
+			if (Number.isFinite(b.elevationRange.min) && Number.isFinite(b.elevationRange.max)) {
+				storeyArrayMap.set(b.id, { min: b.elevationRange.min, max: b.elevationRange.max });
+			}
+		}
+	}
+
 	for (const loop of loops) {
 		if (loop.status === 'noise') {
 			diagnostics.noiseLoopsSkipped++;
@@ -186,11 +202,11 @@ export function assignHorizontalEvidenceToLoops(
 
 		// Build loop polygon if graph is provided
 		let loopPolygon: PlanCoord[] | undefined;
-		if (graph && graph.nodes && loop.nodeIds) {
+		if (graph && 'nodes' in graph && graph.nodes && loop.nodeIds) {
 			const coords: PlanCoord[] = [];
 			let allFinite = true;
 			for (const nid of loop.nodeIds) {
-				const node = graph.nodes.find(n => n.id === nid);
+				const node = nodeMapById.get(nid);
 				if (!node || !Number.isFinite(node.coord.x) || !Number.isFinite(node.coord.z)) {
 					allFinite = false;
 					break;
@@ -208,9 +224,9 @@ export function assignHorizontalEvidenceToLoops(
 		let storeyRange = { min: 0, max: 3 };
 		if (storeyContexts) {
 			if (Array.isArray(storeyContexts)) {
-				const band = storeyContexts.find(b => b.id === loop.storeyCandidateId);
-				if (band && Number.isFinite(band.elevationRange.min) && Number.isFinite(band.elevationRange.max)) {
-					storeyRange = { min: band.elevationRange.min, max: band.elevationRange.max };
+				const band = storeyArrayMap.get(loop.storeyCandidateId);
+				if (band) {
+					storeyRange = { min: band.min, max: band.max };
 				}
 			} else if ('min' in storeyContexts && typeof storeyContexts.min === 'number' && 'max' in storeyContexts && typeof storeyContexts.max === 'number') {
 				if (Number.isFinite(storeyContexts.min) && Number.isFinite(storeyContexts.max)) {
@@ -252,13 +268,16 @@ export function assignHorizontalEvidenceToLoops(
 			const isApproximate = !(ev as any).polygon && !(ev as any).planPolygon;
 			let effectiveOverlap = overlapBoundsArea;
 
-			if (loopPolygon && isApproximate) {
-				const clipped = clipPolygonToAxisAlignedBox(loopPolygon, ev.planBounds);
-				effectiveOverlap = computePolygonArea(clipped);
-			} else if (!isApproximate && (ev as any).polygon) {
-				if (loopPolygon) {
+			// Skip polygon clipping if elevation is clearly outside potential support/cover range
+			if (ev.elevation >= storeyRange.min - 0.6 && ev.elevation <= storeyRange.min + 4.5) {
+				if (loopPolygon && isApproximate) {
 					const clipped = clipPolygonToAxisAlignedBox(loopPolygon, ev.planBounds);
 					effectiveOverlap = computePolygonArea(clipped);
+				} else if (!isApproximate && (ev as any).polygon) {
+					if (loopPolygon) {
+						const clipped = clipPolygonToAxisAlignedBox(loopPolygon, ev.planBounds);
+						effectiveOverlap = computePolygonArea(clipped);
+					}
 				}
 			}
 
@@ -316,7 +335,7 @@ export function assignHorizontalEvidenceToLoops(
 			else verticalDistance = Math.min(ev.elevation - storeyRange.min, storeyRange.max - ev.elevation);
 			verticalDistance = Number(verticalDistance.toFixed(6));
 
-			const idHash = createHash('sha256').update(loop.id).update(ev.id).digest('hex').slice(0, 16);
+			const idHash = simpleHashStr(loop.id + '|' + ev.id).slice(0, 16);
 			const assignmentId = `assign:surface:${idHash}`;
 
 			let score = (loopCoverageRatio * 0.6 + evidenceCoverageRatio * 0.4) * (role === 'lower-support' || role === 'upper-cover' ? 100 : role === 'intersecting' ? 50 : 20);
@@ -333,31 +352,36 @@ export function assignHorizontalEvidenceToLoops(
 				logicalObjectId: ev.logicalObjectId,
 				logicalObjectIds: [ev.logicalObjectId],
 				sourceEvidenceIds: [ev.id],
-				classificationUnitIds: [...(ev.classificationUnitIds || [])],
-				materialIds: [...(ev.materialIds || [])],
-				orientation,
-
+				classificationUnitIds: ev.classificationUnitIds,
+				materialIds: ev.materialIds ?? [],
 				elevation: ev.elevation,
-				loopArea: loop.area,
-				overlapArea,
-				overlapProxy: isApproximate ? overlapProxy : undefined,
-				loopCoverageRatio,
-				evidenceCoverageRatio,
-				verticalDistance,
 				role,
 				score,
+				loopArea: loop.area,
+				evidenceCoverageRatio,
+				loopCoverageRatio,
+				overlapArea,
+				verticalDistance,
+				orientation,
 				qualityFlags: {
 					approximateOverlap: isApproximate,
-					weakPlanOverlap: loopCoverageRatio < 0.2 && evidenceCoverageRatio < 0.2,
-					strongPlanOverlap: loopCoverageRatio >= 0.7 || evidenceCoverageRatio >= 0.7,
+					weakPlanOverlap: evidenceCoverageRatio < 0.3 || loopCoverageRatio < 0.3,
+					strongPlanOverlap: evidenceCoverageRatio >= 0.7 && loopCoverageRatio >= 0.7,
 					elevationMismatch,
 					orientationConflict,
+					ambiguousRole,
 					multipleLowerCandidates: false,
 					multipleUpperCandidates: false,
-					noHorizontalSupport: false,
-					ambiguousRole
+					noHorizontalSupport: false
 				}
 			});
+
+			if (role === 'ambiguous') {
+				diagnostics.ambiguousAssignments++;
+			}
+			if (isApproximate) {
+				diagnostics.approximateOverlapAssignments++;
+			}
 		}
 
 		const lowerCount = loopAssignments.filter(a => a.role === 'lower-support').length;
@@ -371,7 +395,7 @@ export function assignHorizontalEvidenceToLoops(
 
 		loopAssignments.sort((a, b) => {
 			if (a.score !== b.score) return b.score - a.score;
-			return a.id.localeCompare(b.id);
+			return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
 		});
 
 		if (loopAssignments.length === 0) {
@@ -381,8 +405,6 @@ export function assignHorizontalEvidenceToLoops(
 				diagnostics.assignmentsAccepted++;
 				if (a.role === 'lower-support') diagnostics.lowerSupportCandidates++;
 				else if (a.role === 'upper-cover') diagnostics.upperCoverCandidates++;
-				else if (a.role === 'ambiguous') diagnostics.ambiguousAssignments++;
-				if (a.qualityFlags.approximateOverlap) diagnostics.approximateOverlapAssignments++;
 			}
 		}
 
@@ -401,7 +423,7 @@ export function assignHorizontalEvidenceToLoops(
 }
 
 export function calculateRankedLoopSurfaceAssignmentFingerprint(assignments: RankedLoopSurfaceAssignment[]): string {
-	const sorted = [...assignments].sort((a, b) => a.id.localeCompare(b.id));
+	const sorted = [...assignments].sort((a, b) => a.id < b.id ? -1 : (a.id > b.id ? 1 : 0));
 	const hash = createHash('sha256');
 	for (const a of sorted) {
 		hash.update(a.id);
@@ -430,8 +452,13 @@ export function rankLoopSurfaceAssignments(
 	for (const l of loops) {
 		if (l.status !== 'noise') loopIdSet.add(l.id);
 	}
+	const assignmentsByLoop = new Map<string, LoopSurfaceAssignment[]>();
 	for (const a of assignments) {
 		loopIdSet.add(a.loopCandidateId);
+		if (!assignmentsByLoop.has(a.loopCandidateId)) {
+			assignmentsByLoop.set(a.loopCandidateId, []);
+		}
+		assignmentsByLoop.get(a.loopCandidateId)!.push(a);
 	}
 	const loopIds = Array.from(loopIdSet).sort();
 
@@ -459,7 +486,7 @@ export function rankLoopSurfaceAssignments(
 	const loopSelections: LoopSurfaceRoleSelection[] = [];
 
 	for (const loopId of loopIds) {
-		const rawLoopAssignments = assignments.filter(a => a.loopCandidateId === loopId);
+		const rawLoopAssignments = assignmentsByLoop.get(loopId) || [];
 
 		const candidateObjects: RankedLoopSurfaceAssignment[] = rawLoopAssignments.map(raw => {
 			const normalizedOverlapScore = Number((raw.loopCoverageRatio * 0.6 + raw.evidenceCoverageRatio * 0.4).toFixed(6));

@@ -48,6 +48,8 @@ export function createRoomEvidenceProcessor(): RoomEvidenceProcessor {
 
 	const startTime = performance.now();
 
+	let storeyBandsDirty = false;
+
 	function processOne(unit: ClassificationUnitRecord | SurfaceClusterRecord): void {
 		if (cancelled) return;
 
@@ -67,18 +69,14 @@ export function createRoomEvidenceProcessor(): RoomEvidenceProcessor {
 		if (extractedH.length > 0) {
 			horizontalSurfaces.push(...extractedH);
 			accepted = true;
+			storeyBandsDirty = true;
 		}
 		if (extractedV.length > 0) {
 			verticalBarriers.push(...extractedV);
 			accepted = true;
 		}
 
-		if (accepted) {
-			if (extractedH.length > 0) {
-				// Rebuild storey bands deterministically when horizontal evidence arrives
-				storeyBands = buildStoreyBands(horizontalSurfaces);
-			}
-		} else {
+		if (!accepted) {
 			rejected++;
 		}
 	}
@@ -86,8 +84,41 @@ export function createRoomEvidenceProcessor(): RoomEvidenceProcessor {
 	function processBatch(units: Array<ClassificationUnitRecord | SurfaceClusterRecord>): void {
 		if (cancelled) return;
 		batchesProcessed++;
+		const newUnits: Array<ClassificationUnitRecord | SurfaceClusterRecord> = [];
 		for (const unit of units) {
-			processOne(unit);
+			if (cancelled) break;
+			if (processedUnitIds.has(unit.id)) {
+				duplicatesSkipped++;
+				continue;
+			}
+			processedUnitIds.add(unit.id);
+			unitsInspected++;
+			newUnits.push(unit);
+		}
+		if (newUnits.length === 0) return;
+
+		const extractedH = extractHorizontalSurfaceEvidence(newUnits as any);
+		const extractedV = extractVerticalBarrierEvidence(newUnits as any);
+
+		if (extractedH.length > 0) {
+			horizontalSurfaces.push(...extractedH);
+			storeyBandsDirty = true;
+		}
+		if (extractedV.length > 0) {
+			verticalBarriers.push(...extractedV);
+		}
+
+		const acceptedRecordIds = new Set<string>();
+		for (const h of extractedH) {
+			for (const id of h.classificationUnitIds) acceptedRecordIds.add(id);
+		}
+		for (const v of extractedV) {
+			for (const id of v.classificationUnitIds) acceptedRecordIds.add(id);
+		}
+		for (const unit of newUnits) {
+			if (!acceptedRecordIds.has(unit.id)) {
+				rejected++;
+			}
 		}
 	}
 
@@ -97,6 +128,12 @@ export function createRoomEvidenceProcessor(): RoomEvidenceProcessor {
 	}
 
 	function snapshot(): RoomEvidenceSnapshot {
+		if (storeyBandsDirty) {
+			horizontalSurfaces.sort((a, b) => a.id.localeCompare(b.id));
+			verticalBarriers.sort((a, b) => a.id.localeCompare(b.id));
+			storeyBands = buildStoreyBands(horizontalSurfaces);
+			storeyBandsDirty = false;
+		}
 		const rankedBands = rankStoreyBandCandidates(storeyBands, horizontalSurfaces);
 		const candidates = rankedBands.filter(b => b.status === 'primary' || b.status === 'secondary');
 		const barrierGraphs = candidates.map(c => buildBarrierGraph(verticalBarriers, c));
@@ -126,6 +163,7 @@ export function createRoomEvidenceProcessor(): RoomEvidenceProcessor {
 		horizontalSurfaces = [];
 		verticalBarriers = [];
 		storeyBands = [];
+		storeyBandsDirty = false;
 		processedUnitIds.clear();
 		unitsInspected = 0;
 		rejected = 0;
