@@ -64,6 +64,14 @@
 	import {
 		DEFAULT_ANALYSIS_CONFIGURATION,
 		runBuildingAnalysisPipeline,
+		createDefaultProjectConfiguration,
+		exportProjectConfiguration,
+		importProjectConfiguration,
+		resetProjectConfigurationField,
+		toRoomAnalysisConfiguration,
+		updateProjectConfiguration,
+		validateProjectConfiguration,
+		type ProjectConfiguration,
 		type RoomAnalysisConfiguration,
 		type BuildingAnalysisResult,
 		type RoomAnalysisResult
@@ -198,6 +206,9 @@
 	let roomOverlayVisibility = $state<RoomDebugVisibility>({ primary: true, secondary: true, plan: true, prism: true, labels: true, topology: true, analysisOverlay: 'none' });
 	let showSelectedRoomEvidence = $state(false);
 	let roomTraceCopyMessage = $state('');
+	let projectConfiguration = $state<ProjectConfiguration>(createDefaultProjectConfiguration());
+	let projectConfigurationMessage = $state('');
+	let projectConfigurationFileInput = $state<HTMLInputElement>();
 
 	let annotationQueue = $derived(buildAnnotationReviewQueue(annotationUnits, annotationRecords, annotationFilters, annotationSort));
 	let selectedAnnotationUnit = $derived(annotationQueue.find((unit) => unit.id === selectedAnnotationUnitId) || annotationQueue[0] || null);
@@ -501,6 +512,33 @@
 		} finally {
 			roomDebugRunning = false;
 		}
+	}
+
+	function recalculateProjectAnalysis() {
+		if (!roomDebugDetectedRooms || !roomDebugTopology || !roomDebugSemantics || !roomDebugIntelligence) return;
+		const validation = validateProjectConfiguration(projectConfiguration);
+		if (!validation.ok) { projectConfigurationMessage = validation.issues.join('. '); return; }
+		const start = performance.now();
+		roomDebugIntelligence = { ...roomDebugIntelligence, analysis: runBuildingAnalysisPipeline(roomDebugDetectedRooms.rooms, roomDebugTopology.graph, roomDebugSemantics.inferences, toRoomAnalysisConfiguration(projectConfiguration)) };
+		projectConfigurationMessage = `Analysis-only recalculation: ${(performance.now() - start).toFixed(1)} ms`;
+	}
+
+	function updateProjectConfigurationField(key: keyof RoomAnalysisConfiguration, event: Event) {
+		projectConfiguration = updateProjectConfiguration(projectConfiguration, key, Number((event.currentTarget as HTMLInputElement).value));
+		projectConfigurationMessage = '';
+	}
+
+	function exportProjectConfigurationFile() {
+		const blob = new Blob([exportProjectConfiguration(projectConfiguration)], { type: 'application/json' });
+		const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'model-eval-project-configuration.json'; anchor.click(); URL.revokeObjectURL(url);
+	}
+
+	async function importProjectConfigurationFile(event: Event) {
+		const file = (event.currentTarget as HTMLInputElement).files?.[0]; if (!file) return;
+		const parsed = importProjectConfiguration(await file.text());
+		if (parsed.ok) { projectConfiguration = parsed.value; projectConfigurationMessage = 'Configuration imported. Apply to recalculate.'; }
+		else projectConfigurationMessage = parsed.issues.join('. ');
+		if (projectConfigurationFileInput) projectConfigurationFileInput.value = '';
 	}
 
 	function selectRoomCandidate(id: string) {
@@ -1308,6 +1346,22 @@
 				{#if roomDebugError}
 					<p class="room-debug-hud__error">{roomDebugError}</p>
 				{/if}
+				<div class="room-debug-hud__controls" aria-label="Project calibration">
+					<strong>Project calibration</strong>
+					{#each Object.entries(projectConfiguration.values) as [key, field]}
+						<label class="room-debug-hud__control">
+							{key} ({field.unit})
+							<input type="number" value={field.value} aria-invalid={field.validation === 'invalid'} oninput={(event) => updateProjectConfigurationField(key as keyof RoomAnalysisConfiguration, event)} />
+							<button type="button" onclick={() => projectConfiguration = resetProjectConfigurationField(projectConfiguration, key as keyof RoomAnalysisConfiguration)}>Reset</button>
+						</label>
+					{/each}
+					<button type="button" onclick={() => { projectConfiguration = createDefaultProjectConfiguration(); projectConfigurationMessage = 'Default profile restored'; }}>Reset all</button>
+					<button type="button" onclick={recalculateProjectAnalysis} disabled={!validateProjectConfiguration(projectConfiguration).ok}>Apply calibration</button>
+					<button type="button" onclick={exportProjectConfigurationFile}>Export JSON</button>
+					<button type="button" onclick={() => projectConfigurationFileInput?.click()}>Import JSON</button>
+					<input bind:this={projectConfigurationFileInput} type="file" accept="application/json" onchange={importProjectConfigurationFile} hidden />
+					{#if projectConfigurationMessage}<p class="room-debug-hud__error">{projectConfigurationMessage}</p>{/if}
+				</div>
 				{#if roomDebugSchemaError}
 					<p class="room-debug-hud__schema-error" aria-label="Schema compatibility error">
 						⚠️ {roomDebugSchemaError.message}

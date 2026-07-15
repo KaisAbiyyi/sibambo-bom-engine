@@ -18,6 +18,7 @@ export * from './artificial-lighting';
 export * from './ottv';
 export * from './scenarios';
 export * from './reporting';
+export * from './project-configuration';
 
 import type { DetectedRoom } from '../detected-room';
 import type { RoomTopologyGraph } from '../topology';
