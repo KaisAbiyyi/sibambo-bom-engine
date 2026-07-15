@@ -12,45 +12,58 @@ import {
 } from './scenarios';
 import { exportScenarioAnalysisReportJson, generateBuildingAnalysisHtmlReport } from './reporting';
 
-function makeMockRoom(id: string, name: string, floorArea: number, storeyId = 'storey-1'): DetectedRoom {
+function makeMockRoom(id: string, name: string, floorArea: number, storeyId = 'storey_1'): DetectedRoom {
+	const side = Math.sqrt(floorArea);
 	return {
 		id,
 		storeyId,
+		boundary2D: [
+			{ x: 0, z: 0 },
+			{ x: side, z: 0 },
+			{ x: side, z: side },
+			{ x: 0, z: side }
+		],
+		holes2D: [],
 		floorElevation: 0,
 		ceilingElevation: 3.0,
 		height: 3.0,
 		floorArea,
-		perimeter: 4 * Math.sqrt(floorArea),
+		perimeter: 4 * side,
 		estimatedVolume: floorArea * 3.0,
-		centroid: { x: 5, y: 1.5, z: 5 },
-		confidence: { level: 'high', score: 0.9, factors: [] },
-		planBounds: {
+		centroid: { x: side / 2, y: 1.5, z: side / 2 },
+		boundingBox: {
 			min: { x: 0, y: 0, z: 0 },
-			max: { x: Math.sqrt(floorArea), y: 3.0, z: Math.sqrt(floorArea) }
+			max: { x: side, y: 3.0, z: side }
 		},
-		surfaces: [
-			{
-				id: `${id}-wall-1`,
-				type: 'wall',
-				plane: { normal: { x: 0, y: 0, z: 1 }, distance: 0 },
-				boundaryPolygon: [{ x: 0, y: 0, z: 0 }, { x: 4, y: 0, z: 0 }, { x: 4, y: 3, z: 0 }, { x: 0, y: 3, z: 0 }],
-				holes: [],
-				area: 12.0
-			}
-		],
-		boundaries: [
-			{
-				id: `${id}-b-1`,
-				surfaceId: `${id}-wall-1`,
-				plane: { normal: { x: 0, y: 0, z: 1 }, distance: 0 },
-				polygon2D: [{ x: 0, z: 0 }, { x: 4, z: 0 }, { x: 4, z: 3 }, { x: 0, z: 3 }],
-				area: 12.0,
-				height: 3.0,
-				role: 'exterior_wall'
-			}
-		],
-		openings: []
-	} as any;
+		planBounds: {
+			min: { x: 0, z: 0 },
+			max: { x: side, z: side }
+		},
+		sourceEnvelopeIds: ['env_1'],
+		sourceBoundaryIds: ['bnd_1'],
+		confidence: { score: 0.9, level: 'high', penalties: [] },
+		status: 'valid',
+		evidence: {
+			sourceLoopId: 'loop_1',
+			sourceEnvelopeIds: ['env_1'],
+			sourceBoundaryEdgeIds: ['edge_1'],
+			boundarySegments: [
+				{
+					id: `${id}_wall_n`,
+					kind: 'wall',
+					start: { x: 0, z: side },
+					end: { x: side, z: side },
+					sourceEvidenceIds: ['ev_1'],
+					confidence: 0.9
+				}
+			],
+			hasOpeningBridges: false,
+			inferredSegmentCount: 0,
+			directSegmentCount: 1,
+			directBoundaryFraction: 1.0
+		},
+		diagnostics: []
+	};
 }
 
 function makeMockTopology(rooms: DetectedRoom[]): RoomTopologyGraph {
@@ -59,31 +72,37 @@ function makeMockTopology(rooms: DetectedRoom[]): RoomTopologyGraph {
 			roomId: r.id,
 			storeyId: r.storeyId,
 			centroid: r.centroid,
-			boundaryIds: r.boundaries.map((b) => b.id),
+			floorArea: r.floorArea,
+			boundaryRoomIds: [],
 			connectionIds: [],
 			exteriorConnectionIds: []
 		})),
 		connections: [],
 		sharedBoundaries: [],
-		exteriorBoundaries: rooms.map((r) => ({
-			id: `${r.id}-ext-bound`,
-			roomId: r.id,
-			segment: { id: `${r.id}-seg-1`, start: { x: 0, z: 0 }, end: { x: 4, z: 0 } },
-			role: 'exterior_wall' as const,
-			length: 4.0
-		})),
 		exteriorConnections: rooms.map((r) => ({
 			id: `${r.id}-ext-win`,
 			roomId: r.id,
-			boundaryId: r.boundaries[0].id,
+			storeyId: r.storeyId,
 			openingId: `${r.id}-win-1`,
-			openingType: 'window' as const,
-			area: 2.0,
+			type: 'window' as const,
 			width: 1.5,
-			height: 1.33,
 			sillElevation: 0.9,
-			headElevation: 2.23
-		}))
+			headElevation: 2.23,
+			sourceEvidenceIds: ['ev_1'],
+			traversable: false,
+			confidence: 0.9
+		})),
+		diagnostics: {
+			openingsWithoutSupportingWalls: 0,
+			openingsAssociatedWithMoreThanTwoRooms: 0,
+			adjacentRoomsWithoutSideAssignment: 0,
+			duplicateRoomConnections: 0,
+			isolatedRooms: 0,
+			roomsWithoutAccess: 0,
+			overlappingRoomPolygons: 0,
+			crossStoreyAdjacencyAttempts: 0,
+			unresolvedExteriorFacingBoundaries: 0
+		}
 	};
 }
 
@@ -92,8 +111,9 @@ function makeMockSemantics(rooms: DetectedRoom[]): RoomSemanticInference[] {
 		roomId: r.id,
 		storeyId: r.storeyId,
 		primaryFunction: 'office',
-		confidence: 0.9,
-		evidence: ['desk', 'chair']
+		confidence: 0.85,
+		candidates: [{ function: 'office', confidence: 0.85, evidence: { geometricScores: {}, topologicalScores: {}, objectScores: {}, tagScores: {}, classificationUnitScores: {}, appliedRules: [] } }],
+		diagnostics: []
 	}));
 }
 
@@ -132,16 +152,16 @@ describe('Task 3E: Design-Scenario Comparison & Reporting', () => {
 
 			// Save initial values
 			const origArea = rooms[0].floorArea;
-			const origBoundArea = rooms[0].boundaries[0].area;
-			const origExtArea = topology.exteriorConnections[0].area;
+			const origPerimeter = rooms[0].perimeter;
+			const origExtWidth = topology.exteriorConnections[0].width;
 
 			const baseRes = runScenarioAnalysis(DEFAULT_BASELINE_SCENARIO, rooms, topology, semantics);
 			const propRes = runScenarioAnalysis(DEFAULT_PROPOSED_SCENARIO, rooms, topology, semantics);
 
 			// Check immutability
 			expect(rooms[0].floorArea).toBe(origArea);
-			expect(rooms[0].boundaries[0].area).toBe(origBoundArea);
-			expect(topology.exteriorConnections[0].area).toBe(origExtArea);
+			expect(rooms[0].perimeter).toBe(origPerimeter);
+			expect(topology.exteriorConnections[0].width).toBe(origExtWidth);
 
 			// Proposed efficiency should have lower cooling load and lower or equal luminaire count
 			const baseCoolingPk = baseRes.summary.totalEstimatedCoolingCapacityPk;
