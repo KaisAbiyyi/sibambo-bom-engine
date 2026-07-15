@@ -39,6 +39,32 @@ Out of scope:
 | People flow | Occupancy capacity and circulation score. |
 | Wind flow | Ventilation-crossflow score from dominant wind and openings. |
 
+Room Debug also exposes seven room/building analysis modules: thermal comfort, human flow,
+natural ventilation, cooling capacity, illuminance requirement, artificial lighting, and OTTV.
+
+## Calibration workflow
+
+Open Room Debug after loading a model, then use **Project calibration** to edit project north,
+indoor/outdoor temperature, humidity, wind, envelope U-values, SHGC/shading, lighting CU/LLF/
+flux, AC margin, and OTTV threshold. Every value records unit, source, and validation state.
+Invalid values block recalculation. Reset field/all restores default profile.
+
+Calibration recalculates analysis only. It does not reparse model geometry or rerun room detection,
+topology, or semantic inference. Default-versus-calibrated values show deltas for thermal state,
+ACH, cooling, luminaires, and OTTV. Configuration JSON uses schema
+`model-eval-project-configuration`, version 1; invalid or unsupported files are rejected before
+they change active settings.
+
+Exports: configuration JSON, scenario JSON, and printable HTML analysis reports. Reports retain
+units, calculation traces, and degraded/insufficient-data warnings.
+
+## Bounded benchmarking
+
+Use `bun run benchmark:profile -- --phase fingerprint --max-candidates 5000 --time-budget-ms 30000`.
+Default benchmark uses safe house2 input and bounded candidates. `--full` is explicit. Do not use
+`presentation20_model-eval.json` as a normal validation fixture. Large source extraction remains
+uninterruptible before evidence setup, so do not run it until pre-phase cancellation is available.
+
 ## Project Structure
 
 ```text

@@ -26,3 +26,10 @@ artifacts/_workflow/backups/
 artifacts/_workflow/staging/
 model-eval/static/dev-models/
 artifacts/iteration-3a5-benchmark/
+artifacts/compact-model-eval/
+artifacts/iteration2/
+artifacts/room-debug-smoke/
+artifacts/tier1-annotation-smoke/
+artifacts/validation/
+**/graphify-out/
+tools/
