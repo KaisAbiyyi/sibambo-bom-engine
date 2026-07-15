@@ -116,7 +116,7 @@ export function calculateHumanFlow(
 	let entranceCount = 0;
 
 	if (topologyNode) {
-		connectionDegree = topologyNode.connectionIds.length + topologyNode.exteriorConnectionIds.length;
+		connectionDegree = (topologyNode.connectionIds || []).length + (topologyNode.exteriorConnectionIds || []).length;
 	}
 
 	// Count traversable openings

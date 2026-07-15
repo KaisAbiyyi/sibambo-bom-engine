@@ -46,7 +46,7 @@ export function buildRoomAnalysisInputs(
 	};
 
 	return rooms.map((room) => {
-		const topologyNode = topology.rooms.find((n) => n.roomId === room.id);
+		const topologyNode = (topology.rooms || []).find((n) => n.roomId === room.id);
 		const semantic = semantics.find((s) => s.roomId === room.id);
 		const usageProfile = getRoomUsageProfile(semantic?.primaryFunction);
 
@@ -78,7 +78,7 @@ export function buildRoomAnalysisInputs(
 		const openings: RoomOpeningAnalysisInput[] = [];
 
 		// Interior connections
-		for (const conn of topology.connections) {
+		for (const conn of (topology.connections || [])) {
 			if (conn.fromRoomId === room.id || conn.toRoomId === room.id) {
 				const isFrom = conn.fromRoomId === room.id;
 				const otherRoomId = isFrom ? conn.toRoomId : conn.fromRoomId;
@@ -129,7 +129,7 @@ export function buildRoomAnalysisInputs(
 		const envelopeSurfaces: RoomEnvelopeSurfaceInput[] = [];
 
 		// Shared interior boundaries
-		for (const sb of topology.sharedBoundaries) {
+		for (const sb of (topology.sharedBoundaries || [])) {
 			if (sb.roomAId === room.id || sb.roomBId === room.id) {
 				const area = sb.length * room.height;
 				envelopeSurfaces.push({
@@ -172,7 +172,7 @@ export function buildRoomAnalysisInputs(
 		// Exterior wall boundary segments
 		// Find boundary segments of this room that are not accounted for in sharedBoundaries
 		const sharedSegmentIds = new Set(
-			topology.sharedBoundaries
+			(topology.sharedBoundaries || [])
 				.filter((sb) => sb.roomAId === room.id || sb.roomBId === room.id)
 				.map((sb) => sb.segment.id)
 		);
@@ -335,7 +335,7 @@ export function buildRoomAnalysisInputs(
 
 		// 6. Data Quality
 		let dataQuality: RoomAnalysisDataQuality = 'complete';
-		if (!topologyNode || !semantic || room.confidence.level === 'low') {
+		if (!topologyNode || !semantic || room.confidence?.level === 'low') {
 			dataQuality = 'partial';
 		}
 		if (room.floorArea < 1.0 || room.height < 1.5) {
