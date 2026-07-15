@@ -74,12 +74,15 @@
 		buildCalibrationValidationSummary,
 		filterCalibrationWarnings,
 		compareScenarios,
+		generateRecommendations,
 		type ProjectConfiguration,
 		type RoomAnalysisConfiguration,
 		type BuildingAnalysisResult,
-		type RoomAnalysisResult
+		type RoomAnalysisResult,
+		type BuildingDesignRecommendation
 	} from '$lib/rooms/analysis';
-
+	import RecommendationsPanel from '$lib/rooms/ui/RecommendationsPanel.svelte';
+	import OptimizationPanel from '$lib/rooms/ui/OptimizationPanel.svelte';
 
 	type NumberInputKey = 'peopleCount' | 'operationHours' | 'setPointC' | 'orientationDeg' | 'glassRatio' | 'roomHeightM';
 	type ModelCanvasProps = {
@@ -218,6 +221,9 @@
 	let calibrationValidation = $derived(roomDebugIntelligence?.analysis ? buildCalibrationValidationSummary(projectConfiguration, roomDebugIntelligence.analysis) : undefined);
 	let calibrationComparison = $derived(defaultProjectAnalysis && roomDebugIntelligence?.analysis ? compareScenarios(defaultProjectAnalysis, roomDebugIntelligence.analysis, 'default', 'calibrated') : undefined);
 	let filteredCalibrationWarnings = $derived(calibrationValidation ? filterCalibrationWarnings(calibrationValidation, calibrationWarningRoomId, calibrationWarningModule) : []);
+
+	let designRecommendations = $derived((roomDebugDetectedRooms && roomDebugTopology && roomDebugSemantics && roomDebugIntelligence?.analysis) ? generateRecommendations(roomDebugDetectedRooms.rooms, roomDebugTopology.graph, roomDebugSemantics.inferences, roomDebugIntelligence.analysis, toRoomAnalysisConfiguration(projectConfiguration)) : []);
+	let selectedRecommendation = $state<BuildingDesignRecommendation | null>(null);
 
 	let annotationQueue = $derived(buildAnnotationReviewQueue(annotationUnits, annotationRecords, annotationFilters, annotationSort));
 	let selectedAnnotationUnit = $derived(annotationQueue.find((unit) => unit.id === selectedAnnotationUnitId) || annotationQueue[0] || null);
@@ -1389,6 +1395,54 @@
 						{/each}
 					{/if}
 				</div>
+
+				<div class="room-debug-hud__controls" aria-label="Design Recommendations">
+					<strong>Design Recommendations</strong>
+					<div style="max-height: 400px; overflow-y: auto; margin-top: 8px;">
+						<RecommendationsPanel
+							recommendations={designRecommendations}
+							{selectedRecommendation}
+							onSelect={(rec) => selectedRecommendation = rec}
+							onApplyScenario={(rec) => {
+								for (const [k, v] of Object.entries(rec.suggestedOverrides)) {
+									if (k === 'projectNorthDeg') projectConfiguration = updateProjectConfiguration(projectConfiguration, 'projectNorthDeg', v as number);
+									if (k === 'wallUValueMultiplier') projectConfiguration = updateProjectConfiguration(projectConfiguration, 'defaultWallUValue', projectConfiguration.values.defaultWallUValue.value * (v as number));
+									if (k === 'glazingUValueMultiplier') projectConfiguration = updateProjectConfiguration(projectConfiguration, 'defaultGlazingUValue', projectConfiguration.values.defaultGlazingUValue.value * (v as number));
+									if (k === 'shadingCoefficientMultiplier') projectConfiguration = updateProjectConfiguration(projectConfiguration, 'defaultShadingCoefficient', projectConfiguration.values.defaultShadingCoefficient.value * (v as number));
+									if (k === 'solarFactorMultiplier') projectConfiguration = updateProjectConfiguration(projectConfiguration, 'defaultSolarFactor', projectConfiguration.values.defaultSolarFactor.value * (v as number));
+								}
+								recalculateProjectAnalysis();
+							}}
+						/>
+					</div>
+				</div>
+
+				<div class="room-debug-hud__controls" aria-label="Optimization">
+					<OptimizationPanel
+						rooms={roomDebugDetectedRooms?.rooms || []}
+						topology={roomDebugTopology?.graph!}
+						semantics={roomDebugSemantics?.inferences || []}
+						analysis={defaultProjectAnalysis!}
+						config={toRoomAnalysisConfiguration(projectConfiguration)}
+						onApplyScenario={(overrides) => {
+							for (const [k, v] of Object.entries(overrides)) {
+								if (k === 'projectNorthDeg') projectConfiguration = updateProjectConfiguration(projectConfiguration, 'projectNorthDeg', v as number);
+								if (k === 'wallUValueMultiplier') projectConfiguration = updateProjectConfiguration(projectConfiguration, 'defaultWallUValue', projectConfiguration.values.defaultWallUValue.value * (v as number));
+								if (k === 'glazingUValueMultiplier') projectConfiguration = updateProjectConfiguration(projectConfiguration, 'defaultGlazingUValue', projectConfiguration.values.defaultGlazingUValue.value * (v as number));
+								if (k === 'shadingCoefficientMultiplier') projectConfiguration = updateProjectConfiguration(projectConfiguration, 'defaultShadingCoefficient', projectConfiguration.values.defaultShadingCoefficient.value * (v as number));
+								if (k === 'solarFactorMultiplier') projectConfiguration = updateProjectConfiguration(projectConfiguration, 'defaultSolarFactor', projectConfiguration.values.defaultSolarFactor.value * (v as number));
+								// Other simple replacements if configured
+								if (k === 'indoorDesignTempC') projectConfiguration = updateProjectConfiguration(projectConfiguration, 'indoorDesignTempC', v as number);
+								if (k === 'acSafetyMargin') projectConfiguration = updateProjectConfiguration(projectConfiguration, 'acSafetyMargin', v as number);
+								if (k === 'defaultLuminaireFluxLm') projectConfiguration = updateProjectConfiguration(projectConfiguration, 'defaultLuminaireFluxLm', v as number);
+								if (k === 'coefficientOfUtilization') projectConfiguration = updateProjectConfiguration(projectConfiguration, 'coefficientOfUtilization', v as number);
+								if (k === 'lightLossFactor') projectConfiguration = updateProjectConfiguration(projectConfiguration, 'lightLossFactor', v as number);
+							}
+							recalculateProjectAnalysis();
+						}}
+					/>
+				</div>
+
 				{#if roomDebugSchemaError}
 					<p class="room-debug-hud__schema-error" aria-label="Schema compatibility error">
 						⚠️ {roomDebugSchemaError.message}

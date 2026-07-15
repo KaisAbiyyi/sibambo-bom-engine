@@ -20,6 +20,8 @@ export * from './scenarios';
 export * from './reporting';
 export * from './project-configuration';
 export * from './calibration-validation';
+export * from './recommendations';
+export * from './optimization';
 
 import type { DetectedRoom } from '../detected-room';
 import type { RoomTopologyGraph } from '../topology';
