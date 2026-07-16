@@ -25,7 +25,9 @@ describe('model_eval_json_v1', () => {
 		expect(data.entities).toBeUndefined();
 		const parsed = parseBomModelJson(data, file.name);
 		expect(parsed.runtimeScene?.format).toBe('model_eval_json_v1');
-		expect(parsed.faces).toEqual([]);
+		expect(parsed.faces).toHaveLength(1);
+		expect(parsed.faces[0].sourceFaceIds).toEqual(['face:1']);
+		expect(parsed.faces[0].dominantOrientation).toBe('horizontal');
 		expect(parsed.faceCount).toBe(1);
 		expect(parsed.vertexCount).toBe(4);
 		expect(parsed.bounds.size.x).toBeCloseTo(1, 5);

@@ -63,6 +63,43 @@ function bomeGzipFile(header: Record<string, unknown>, positions: Int32Array, fa
 }
 
 describe('parseBomModelJson room detection', () => {
+	test('builds validation from connected floor, wall, and ceiling boundaries', () => {
+		const shell = roomShellEntities(10);
+		const parsed = parseBomModelJson({ entities: shell }, 'elevated-room-shell.json');
+		expect(parsed.roomDetection.state).toBe('valid');
+		expect(parsed.spaces).toHaveLength(1);
+		expect(parsed.spaces[0].areaM2).toBeCloseTo(20, 4);
+		expect(parsed.spaces[0].volumeM3).toBeCloseTo(60, 4);
+		expect(parsed.validation.wallCount).toBe(4);
+		expect(parsed.validation.floorCount).toBe(1);
+		expect(parsed.validation.ceilingCount).toBe(1);
+		expect(parsed.validation.downstreamAnalysisAllowed).toBe(true);
+	});
+
+	test('blocks downstream analysis and returns explicit room failure reason', () => {
+		const parsed = parseBomModelJson({ entities: [face('Orphan floor', [[0, 0], [4, 0], [4, 4], [0, 4]], 16, 0, 'floor')] }, 'open-floor.json');
+		expect(parsed.spaces).toEqual([]);
+		expect(parsed.validation.detectedRoomCount).toBe(0);
+		expect(parsed.roomDetection.state).toBe('insufficient surfaces');
+		expect(parsed.roomDetection.reason.length).toBeGreaterThan(0);
+		expect(parsed.validation.downstreamAnalysisAllowed).toBe(false);
+		expect(parsed.validation.warnings.some((warning) => warning.includes(parsed.roomDetection.reason))).toBe(true);
+	});
+
+	test('uses stable unique face IDs and a disjoint Lainnya partition', () => {
+		const wallA = roomShellEntities(0)[2];
+		const wallB = roomShellEntities(0)[3];
+		wallA.id = 'duplicate-source-id';
+		wallB.id = 'duplicate-source-id';
+		const unknown = face3d('Unknown panel', [[8, 8, 0], [8.2, 8, 0], [8.2, 8.2, 0.2]], 0.04, 'other');
+		const parsed = parseBomModelJson({ entities: [wallA, wallB, unknown] }, 'partition.json');
+		expect(new Set(parsed.faces.map((item) => item.id)).size).toBe(parsed.faces.length);
+		const wallIds = new Set(parsed.faces.filter((item) => item.partKey === 'walls').map((item) => item.id));
+		const otherIds = parsed.faces.filter((item) => item.partKey === 'other').map((item) => item.id);
+		expect(otherIds.every((id) => !wallIds.has(id))).toBe(true);
+		expect(parsed.partStats.every((stat) => stat.count > 0)).toBe(true);
+	});
+
 	test('reads compressed .json.gz model files', async () => {
 		const json = JSON.stringify({
 			entities: [
@@ -538,7 +575,7 @@ describe('parseBomModelJson room detection', () => {
 		expect(parsed.faces[0].vertices).toHaveLength(300);
 	});
 
-	test('detects rectangular and L-shaped rooms while excluding roof and foundation floors', () => {
+	test('rejects rectangular and L-shaped floor evidence without wall boundaries', () => {
 		const parsed = parseBomModelJson(
 			{
 				entities: [
@@ -611,13 +648,12 @@ describe('parseBomModelJson room detection', () => {
 			'synthetic-room-shapes.json'
 		);
 
-		expect(parsed.spaces).toHaveLength(2);
-		expect(parsed.spaces.map((space) => space.shape).sort()).toEqual(['l_shape', 'rectangle']);
-		expect(parsed.spaces.every((space) => Math.abs(space.detectedHeightM - 3) < 0.01)).toBe(true);
-		expect(parsed.spaces.every((space) => !/atap|pondasi/i.test(space.name))).toBe(true);
+		expect(parsed.spaces).toEqual([]);
+		expect(parsed.roomDetection.state).toBe('insufficient surfaces');
+		expect(parsed.roomDetection.reason).toContain('wall');
 	});
 
-	test('uses geometry-detected wall height before roof or whole-model height', () => {
+	test('does not fabricate room height from walls when ceiling boundary is missing', () => {
 		const parsed = parseBomModelJson(
 			{
 				entities: [
@@ -669,8 +705,19 @@ describe('parseBomModelJson room detection', () => {
 		);
 
 		expect(parsed.partStats.find((part) => part.key === 'walls')?.count).toBe(4);
-		expect(parsed.spaces).toHaveLength(1);
-		expect(parsed.spaces[0].detectedHeightM).toBeCloseTo(3.2, 1);
-		expect(parsed.spaces[0].detectedHeightM).toBeLessThan(5);
+		expect(parsed.spaces).toEqual([]);
+		expect(parsed.roomDetection.state).toBe('incomplete boundary');
+		expect(parsed.roomDetection.reason).toContain('ceiling');
 	});
 });
+
+function roomShellEntities(elevation: number): BomEntity[] {
+	return [
+		face3d('Floor boundary', [[0, 0, elevation], [0, 4, elevation], [5, 4, elevation], [5, 0, elevation]], 20, 'floor'),
+		face3d('Upper horizontal boundary', [[5, 0, elevation + 3], [5, 4, elevation + 3], [0, 4, elevation + 3], [0, 0, elevation + 3]], 20, 'floor'),
+		face3d('West wall', [[0, 0, elevation], [0, 0, elevation + 3], [0, 4, elevation + 3], [0, 4, elevation]], 12, 'wall_x_neg'),
+		face3d('East wall', [[5, 4, elevation], [5, 4, elevation + 3], [5, 0, elevation + 3], [5, 0, elevation]], 12, 'wall_x_pos'),
+		face3d('North wall', [[0, 0, elevation], [5, 0, elevation], [5, 0, elevation + 3], [0, 0, elevation + 3]], 15, 'wall_y_pos'),
+		face3d('South wall', [[5, 4, elevation], [0, 4, elevation], [0, 4, elevation + 3], [5, 4, elevation + 3]], 15, 'wall_y_neg')
+	];
+}

@@ -36,7 +36,9 @@
 	import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 	import type { AnalysisKind, AnalysisResult, FaceRecord, OverlayMarker, ParsedBuildingModel, PartKey, SpaceZone } from './model';
 	import { PART_META } from './model';
-	import { buildRuntimeGeometryGroups, runtimePartOverrides } from './render/build-runtime-scene';
+	import { buildRuntimeGeometryGroups, runtimeComponentOverrides, runtimePartOverrides } from './render/build-runtime-scene';
+	import { applyBuildingVisibility, createBuildingVisibility, tagCategoryObject, tagComponentObject } from './render/visibility';
+	import { EdgeGeometryCache, MaterialStateManager, type ViewMode } from './render/material-state';
 	import type { QACameraSpec } from './render/qa-camera';
 	import { buildClassificationUnitHighlight } from './annotation/highlight';
 	import type { ClassificationUnitRecord } from './annotation';
@@ -55,6 +57,12 @@
 		result = null,
 		spaces = [],
 		visiblePartKeys = [],
+		visibleComponentIds = [],
+		selectedComponentId = null,
+		hoveredComponentId = null,
+		viewMode = 'solid',
+		hoveredRoomId = null,
+		selectedRoomId = null,
 		qaMode = false,
 		qaCamera = null,
 		onQaReady = undefined,
@@ -78,6 +86,12 @@
 		result: AnalysisResult | null;
 		spaces: SpaceZone[];
 		visiblePartKeys: PartKey[];
+		visibleComponentIds?: string[];
+		selectedComponentId?: string | null;
+		hoveredComponentId?: string | null;
+		viewMode?: ViewMode;
+		hoveredRoomId?: string | null;
+		selectedRoomId?: string | null;
 		qaMode?: boolean;
 		qaCamera?: QACameraSpec | null;
 		annotationUnit?: Pick<ClassificationUnitRecord, 'sourceNodeIds' | 'sourcePrimitiveIds'> | null;
@@ -107,6 +121,7 @@
 
 	type PartRuntime = {
 		key: PartKey;
+		componentId?: string;
 		baseColor?: string;
 		textureName?: string;
 		mesh: Mesh;
@@ -114,6 +129,7 @@
 		edgeGeometry?: BufferGeometry;
 		material: MeshStandardMaterial;
 		edgeMaterial: LineBasicMaterial;
+		materialKey: string;
 		baseY: number;
 		topY: number;
 		movesWithWallTop: boolean;
@@ -136,6 +152,9 @@
 	let runtimes: PartRuntime[] = [];
 	let overlayObjects: Array<Mesh | ArrowHelper | Sprite | Group | LineSegments> = [];
 	let evidenceOverlayObjects: Array<Group | LineSegments> = [];
+	let roomInteractionObjects: Array<Group> = [];
+	const materialState = new MaterialStateManager();
+	const edgeCache = new EdgeGeometryCache();
 	const roomRaycaster = new Raycaster();
 	const pointer = new Vector2();
 	let appliedRoomFocusRequest = 0;
@@ -152,6 +171,10 @@
 		scene = new Scene();
 		scene.background = new Color('#eef2f0');
 		camera = new PerspectiveCamera(42, 1, 0.05, 2000);
+		camera.layers.enable(1);
+		camera.layers.enable(2);
+		camera.layers.enable(3);
+		camera.layers.enable(4);
 		camera.position.set(12, 9, 14);
 
 		scene.add(new AmbientLight('#f8fbff', 2.2));
@@ -291,17 +314,19 @@
 
 	function clearModel() {
 		clearAnnotationHighlight();
+		materialState.dispose();
+		edgeCache.dispose();
 		runtimes.forEach((runtime) => {
 			root.remove(runtime.mesh);
 			root.remove(runtime.edges);
 			runtime.mesh.geometry.dispose();
-			runtime.edgeGeometry?.dispose();
 			runtime.material.dispose();
 			runtime.edgeMaterial.dispose();
 		});
 		runtimes = [];
 		clearOverlays();
 		clearEvidenceOverlays();
+		clearRoomInteractionOverlays();
 		currentModel = null;
 	}
 
@@ -313,6 +338,11 @@
 	function clearEvidenceOverlays() {
 		disposeOverlayObjects(evidenceOverlayObjects);
 		evidenceOverlayObjects = [];
+	}
+
+	function clearRoomInteractionOverlays() {
+		disposeOverlayObjects(roomInteractionObjects);
+		roomInteractionObjects = [];
 	}
 
 	function disposeOverlayObjects(objects: Array<Mesh | ArrowHelper | Sprite | Group | LineSegments>) {
@@ -392,21 +422,26 @@
 			grouped.set(groupKey, group);
 		});
 
-		grouped.forEach(({ key, baseColor, textureName, movesWithWallTop, stretchesWithWall, faces }) => {
+		grouped.forEach(({ key, baseColor, textureName, movesWithWallTop, stretchesWithWall, faces }, groupId) => {
 			const geometry = geometryFromFaces(faces);
 			const material = makeSurfaceMaterial(key, baseColor, textureName);
+			const materialKey = `legacy:${groupId}`;
+			materialState.register(materialKey, material, key);
 			const mesh = new Mesh(geometry, material);
+			tagCategoryObject(mesh, key);
 			mesh.name = key;
 			mesh.frustumCulled = true;
-			const edgeGeometry = new EdgesGeometry(geometry, key === 'roof' ? 34 : 42);
+			const edgeGeometry = edgeCache.get(materialKey, geometry, key === 'roof' ? 34 : 42);
 			const edgeMaterial = new LineBasicMaterial({
 				color: '#27333a',
 				transparent: true,
 				opacity: defaultEdgeVisible(key) ? 0.2 : 0.08
 			});
 			const edges = new LineSegments(edgeGeometry, edgeMaterial);
+			tagCategoryObject(edges, key);
 			edges.frustumCulled = true;
 			edges.visible = defaultEdgeVisible(key);
+			edges.layers.set(1);
 			root.add(mesh);
 			root.add(edges);
 			runtimes.push({
@@ -418,6 +453,7 @@
 				edgeGeometry,
 				material,
 				edgeMaterial,
+				materialKey,
 				baseY: Math.min(...faces.map((face) => face.bounds.min.y)),
 				topY: Math.max(...faces.map((face) => face.bounds.max.y)),
 				movesWithWallTop,
@@ -434,10 +470,18 @@
 
 	function buildIndexedRuntimeModel(sourceModel: ParsedBuildingModel, wallGuide: ReturnType<typeof modelWallGuide>) {
 		if (!sourceModel.runtimeScene) return;
-		const groups = buildRuntimeGeometryGroups(sourceModel.runtimeScene, runtimePartOverrides(sourceModel.faces));
-		groups.forEach((group) => {
+		const groups = buildRuntimeGeometryGroups(
+			sourceModel.runtimeScene,
+			runtimePartOverrides(sourceModel.faces),
+			runtimeComponentOverrides(sourceModel.componentIndex?.bindings || [])
+		);
+		groups.forEach((group, groupIndex) => {
 			const material = makeSurfaceMaterial(group.key, group.baseColor, group.textureName);
+			const materialKey = `runtime:${group.sourceMeshIndex}:${group.definitionIndex}:${group.componentId || group.key}:${groupIndex}`;
+			materialState.register(materialKey, material, group.key);
 			const mesh = new InstancedMesh(group.geometry, material, group.matrices.length);
+			tagCategoryObject(mesh, group.key);
+			if (group.componentId) tagComponentObject(mesh, group.componentId);
 			group.matrices.forEach((matrix, index) => mesh.setMatrixAt(index, matrix));
 			mesh.instanceMatrix.needsUpdate = true;
 			mesh.computeBoundingBox();
@@ -446,12 +490,23 @@
 			mesh.frustumCulled = true;
 
 			const edges = new Group();
-			edges.name = `${mesh.name}:edges-omitted-for-instancing`;
+			tagCategoryObject(edges, group.key);
+			if (group.componentId) tagComponentObject(edges, group.componentId);
+			edges.name = `${mesh.name}:cached-edges`;
+			edges.layers.set(1);
 			const edgeMaterial = new LineBasicMaterial({
 				color: '#27333a',
 				transparent: true,
 				opacity: 0
 			});
+			const edgeGeometry = edgeCache.get(materialKey, group.geometry, group.key === 'roof' ? 34 : 42);
+			for (const matrix of group.matrices) {
+				const lines = new LineSegments(edgeGeometry, edgeMaterial);
+				lines.matrix.copy(matrix);
+				lines.matrixAutoUpdate = false;
+				lines.layers.set(1);
+				edges.add(lines);
+			}
 			root.add(mesh);
 			root.add(edges);
 
@@ -460,12 +515,14 @@
 			const movesWithWallTop = !stretchesWithWall && relatedFaces.some((face) => faceMovesWithWallTop(face, wallGuide));
 			runtimes.push({
 				key: group.key,
+				componentId: group.componentId,
 				baseColor: group.baseColor,
 				textureName: group.textureName,
 				mesh,
 				edges,
 				material,
 				edgeMaterial,
+				materialKey,
 				baseY: group.baseY,
 				topY: group.topY,
 				movesWithWallTop,
@@ -719,20 +776,31 @@
 	}
 
 	function refreshSurfaceMaterials() {
-		const visible = new Set(visiblePartKeys.length ? visiblePartKeys : model?.partStats.map((part) => part.key));
+		const visibility = createBuildingVisibility(
+			Object.keys(PART_META) as PartKey[],
+			visiblePartKeys,
+			model?.componentIndex?.all.map((component) => component.id) || [],
+			visibleComponentIds
+		);
+		applyBuildingVisibility(root, visibility);
 		runtimes.forEach((runtime) => {
 			const visual = partVisual(runtime.key, runtime.baseColor);
-			const isVisible = visible.has(runtime.key);
+			const isVisible = visibility.categories.get(runtime.key) === true && (!runtime.componentId || visibility.components.get(runtime.componentId) === true);
+			const selected = Boolean(runtime.componentId && runtime.componentId === selectedComponentId);
+			const hovered = Boolean(runtime.componentId && runtime.componentId === hoveredComponentId);
 			runtime.mesh.visible = isVisible;
-			runtime.edges.visible = isVisible && (Boolean(result) || defaultEdgeVisible(runtime.key));
-			runtime.material.color.set(!result && runtime.textureName ? '#ffffff' : visual.color);
-			runtime.material.map = result ? null : proceduralTexture(runtime.textureName, runtime.key);
+			runtime.edges.visible = isVisible && (selected || hovered || Boolean(result) || defaultEdgeVisible(runtime.key));
+			runtime.material.color.set(selected ? '#f59e0b' : hovered ? '#22b8a7' : !result && runtime.textureName ? '#ffffff' : visual.color);
+			runtime.material.map = result || selected || hovered ? null : proceduralTexture(runtime.textureName, runtime.key);
 			const opacity = annotationUnit ? Math.min(visual.opacity, 0.12) : visual.opacity;
 			runtime.material.opacity = opacity;
 			runtime.material.transparent = opacity < 1;
 			runtime.material.depthWrite = opacity > 0.35;
 			runtime.material.needsUpdate = true;
-			runtime.edgeMaterial.opacity = result ? 0.28 : defaultEdgeVisible(runtime.key) ? 0.2 : 0.08;
+			materialState.applyMode(viewMode);
+			runtime.mesh.material = materialState.materialFor(runtime.materialKey, viewMode, selected || hovered);
+			runtime.edges.visible = isVisible && (viewMode !== 'solid' || selected || hovered || Boolean(result) || defaultEdgeVisible(runtime.key));
+			runtime.edgeMaterial.opacity = selected ? 0.9 : hovered ? 0.65 : viewMode === 'xray' ? 0.55 : viewMode === 'wireframe' ? 0.32 : result ? 0.28 : defaultEdgeVisible(runtime.key) ? 0.2 : 0.08;
 		});
 	}
 
@@ -848,6 +916,62 @@
 			overlayRoot.add(object);
 			overlayObjects.push(object);
 		});
+	}
+
+	function buildRoomInteractionOverlay() {
+		clearRoomInteractionOverlays();
+		const activeId = selectedRoomId || hoveredRoomId;
+		const room = spaces.find((space) => space.id === activeId);
+		if (!room) return;
+		const footprint = room.footprint?.length && room.footprint.length >= 3 ? room.footprint : fallbackRoomFootprint(room);
+		const shape = footprint.map((point) => new Vector2(point.x, point.z));
+		const triangles = ShapeUtils.triangulateShape(shape, []);
+		const height = room.detectedHeightM > 0.2 ? room.detectedHeightM : room.heightM;
+		const baseY = room.center.y - Math.max(height, 0) / 2 + 0.012;
+		const selected = selectedRoomId === room.id;
+		const color = new Color(selected ? '#f59e0b' : '#14b8a6');
+		const group = new Group();
+		group.name = `room-interaction:${room.id}`;
+		group.userData.roomId = room.id;
+		group.renderOrder = 30;
+
+		const floorGeometry = new BufferGeometry();
+		floorGeometry.setAttribute('position', new Float32BufferAttribute(triangulatedPositions(triangles, shape, baseY), 3));
+		floorGeometry.computeVertexNormals();
+		const floor = new Mesh(floorGeometry, roomSurfaceMaterial(color, selected ? 0.48 : 0.36));
+		floor.layers.set(2);
+		floor.renderOrder = 30;
+		group.add(floor);
+
+		const edgeGeometry = new BufferGeometry();
+		edgeGeometry.setAttribute('position', new Float32BufferAttribute(roomBoundaryPositions(footprint, baseY + 0.015), 3));
+		const edges = new LineSegments(edgeGeometry, new LineBasicMaterial({ color, transparent: true, opacity: 1, depthTest: true }));
+		edges.layers.set(2);
+		edges.renderOrder = 31;
+		group.add(edges);
+
+		if (height > 0.2) {
+			const prismGeometry = new BufferGeometry();
+			prismGeometry.setAttribute('position', new Float32BufferAttribute(roomPrismSidePositions(footprint, baseY, baseY + height), 3));
+			prismGeometry.computeVertexNormals();
+			const prism = new Mesh(prismGeometry, roomSurfaceMaterial(color, selected ? 0.22 : 0.14));
+			prism.layers.set(2);
+			prism.renderOrder = 29;
+			group.add(prism);
+		}
+
+		overlayRoot.add(group);
+		roomInteractionObjects.push(group);
+	}
+
+	function fallbackRoomFootprint(room: SpaceZone) {
+		const half = Math.sqrt(Math.max(room.areaM2, 0.25)) / 2;
+		return [
+			{ x: room.center.x - half, z: room.center.z - half },
+			{ x: room.center.x + half, z: room.center.z - half },
+			{ x: room.center.x + half, z: room.center.z + half },
+			{ x: room.center.x - half, z: room.center.z + half }
+		];
 	}
 
 	// Status colour palette for room candidates
@@ -1216,7 +1340,7 @@
 	}
 
 	function roomSurfaceMaterial(color: Color, opacity: number) {
-		return new MeshStandardMaterial({ color, transparent: true, opacity, side: DoubleSide, depthWrite: false, roughness: 0.8, metalness: 0 });
+		return new MeshStandardMaterial({ color, transparent: true, opacity, side: DoubleSide, depthWrite: false, roughness: 0.8, metalness: 0, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
 	}
 
 	function triangulatedPositions(tris: number[][], shape: Vector2[], elevation: number) {
@@ -1380,6 +1504,12 @@
 		activeAnalysis;
 		result;
 		visiblePartKeys;
+		visibleComponentIds;
+		selectedComponentId;
+		hoveredComponentId;
+		viewMode;
+		hoveredRoomId;
+		selectedRoomId;
 		annotationUnit;
 		roomCandidates;
 		selectedRoomCandidateId;
@@ -1392,6 +1522,7 @@
 		buildingAnalysis;
 		if (mounted) {
 			refreshSurfaceMaterials();
+			buildRoomInteractionOverlay();
 			rebuildAnnotationHighlight();
 			buildOverlays();
 			buildRoomDebugOverlays();

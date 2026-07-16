@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import type { Bome2RuntimeScene } from '../formats/bome2';
-import { buildRuntimeGeometryGroups, runtimePartOverrides } from './build-runtime-scene';
+import { buildRuntimeGeometryGroups, runtimeComponentOverrides, runtimePartOverrides } from './build-runtime-scene';
 
 const identity = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
 const translated = (x: number) => [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, 0, 0, 1];
@@ -34,6 +34,17 @@ describe('BOME2 indexed instanced runtime scene', () => {
 			{ id: 'node:root/node:3:face:1', partKey: 'walls' }
 		]);
 		expect(overrides.get('face:1')).toBe('furniture');
+	});
+
+	test('splits reused definition instances into independently visible logical components', () => {
+		const overrides = runtimeComponentOverrides([
+			{ componentId: 'wall:a', partKey: 'walls', instancePath: 'node:root/node:1', sourceFaceIds: ['face:1'] },
+			{ componentId: 'wall:b', partKey: 'walls', instancePath: 'node:root/node:2', sourceFaceIds: ['face:1'] }
+		]);
+		const groups = buildRuntimeGeometryGroups(fixture(), new Map(), overrides);
+		expect(groups).toHaveLength(2);
+		expect(groups.map((group) => group.componentId).sort()).toEqual(['wall:a', 'wall:b']);
+		expect(groups.every((group) => group.matrices.length === 1)).toBe(true);
 	});
 });
 

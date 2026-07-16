@@ -84,6 +84,7 @@
 	import RecommendationsPanel from '$lib/rooms/ui/RecommendationsPanel.svelte';
 	import OptimizationPanel from '$lib/rooms/ui/OptimizationPanel.svelte';
 	import { RELEASE } from '$lib/release';
+	import type { ViewMode } from '$lib/render/material-state';
 
 	type NumberInputKey = 'peopleCount' | 'operationHours' | 'setPointC' | 'orientationDeg' | 'glassRatio' | 'roomHeightM';
 	type ModelCanvasProps = {
@@ -92,6 +93,12 @@
 		result: AnalysisResult | null;
 		spaces: SpaceZone[];
 		visiblePartKeys: PartKey[];
+		visibleComponentIds?: string[];
+		selectedComponentId?: string | null;
+		hoveredComponentId?: string | null;
+		viewMode?: ViewMode;
+		hoveredRoomId?: string | null;
+		selectedRoomId?: string | null;
 		qaMode?: boolean;
 		qaCamera?: QACameraSpec | null;
 		annotationUnit?: Pick<ClassificationUnitRecord, 'sourceNodeIds' | 'sourcePrimitiveIds'> | null;
@@ -164,6 +171,13 @@
 	let touched = $state<TouchedInputs>({});
 	let selectedAnalysis = $state<AnalysisKind>('lighting');
 	let visiblePartKeys = $state<PartKey[]>([]);
+	let visibleComponentIds = $state<string[]>([]);
+	let expandedComponentParts = $state<PartKey[]>([]);
+	let selectedComponentId = $state<string | null>(null);
+	let hoveredComponentId = $state<string | null>(null);
+	let viewMode = $state<ViewMode>('solid');
+	let hoveredRoomId = $state<string | null>(null);
+	let selectedRoomId = $state<string | null>(null);
 	let selectedInspectionId = $state('');
 	let result = $state<AnalysisResult | null>(null);
 	let isLoading = $state(false);
@@ -311,6 +325,10 @@
 			} else {
 				void loadHouse2DebugModel();
 			}
+		}
+		if (debugModel === 'smboost1' || debugModel === 'smboost2') {
+			if (!import.meta.env.DEV) loadError = 'SMBOOST debug loader is disabled in production.';
+			else void loadSmboostDebugModel(debugModel === 'smboost1' ? '1' : '2');
 		}
 	});
 
@@ -494,7 +512,13 @@
 		})[0]?.id || '';
 		void ensureModelCanvas();
 		spaces = model.spaces.map((space) => ({ ...space }));
-		visiblePartKeys = model.partStats.map((part) => part.key);
+		visiblePartKeys = Object.keys(PART_META) as PartKey[];
+		visibleComponentIds = model.componentIndex?.all.map((component) => component.id) || [];
+		expandedComponentParts = [];
+		selectedComponentId = null;
+		hoveredComponentId = null;
+		hoveredRoomId = null;
+		selectedRoomId = null;
 		const detectedHeight = averageRoomHeight(spaces);
 		if (spaces[0]) inputs = { ...inputs, roomFunction: spaces[0].functionKey, roomHeightM: detectedHeight };
 		else inputs = { ...inputs, roomHeightM: detectedHeight };
@@ -873,20 +897,70 @@
 
 	function runSelectedAnalysis() {
 		if (!model) return;
+		if (!model.validation.downstreamAnalysisAllowed) {
+			result = null;
+			parseMessage = `Analisis dinonaktifkan: ${model.roomDetection.reason}`;
+			return;
+		}
 		result = runAnalysis(selectedAnalysis, model, inputs, spaces);
 	}
 
 	function togglePart(key: PartKey, event: Event) {
 		const checked = (event.currentTarget as HTMLInputElement).checked;
 		visiblePartKeys = checked ? Array.from(new Set([...visiblePartKeys, key])) : visiblePartKeys.filter((item) => item !== key);
+		const ids = componentsForPart(key).map((component) => component.id);
+		if (ids.length) visibleComponentIds = checked ? Array.from(new Set([...visibleComponentIds, ...ids])) : visibleComponentIds.filter((id) => !ids.includes(id));
+	}
+
+	async function loadSmboostDebugModel(id: '1' | '2') {
+		isLoading = true;
+		loadError = '';
+		parseMessage = `Loading SMBOOST ${id} diagnostic fixture...`;
+		try {
+			const response = await fetch(`/api/debug-model/smboost/${id}`);
+			if (!response.ok) throw new Error(`SMBOOST debug model tidak bisa dibaca: ${response.status}`);
+			const filename = response.headers.get('x-bom-fixture-file') || `PROJECT SBOOST ${id}_model-eval.json`;
+			const file = new File([await response.arrayBuffer()], filename, { type: 'application/json' });
+			acceptModel(await readBomModelData(file, MAX_DECOMPRESSED_MODEL_BYTES), filename);
+		} catch (error) {
+			loadError = error instanceof Error ? error.message : 'Gagal load SMBOOST debug model';
+		} finally {
+			isLoading = false;
+		}
 	}
 
 	function showAllParts() {
-		visiblePartKeys = presentParts.map((part) => part.key);
+		visiblePartKeys = Object.keys(PART_META) as PartKey[];
+		visibleComponentIds = model?.componentIndex?.all.map((component) => component.id) || [];
 	}
 
 	function hideRoof() {
 		visiblePartKeys = visiblePartKeys.filter((key) => key !== 'roof');
+	}
+
+	function componentsForPart(key: PartKey) {
+		if (!model?.componentIndex) return [];
+		if (key === 'walls') return model.componentIndex.walls;
+		if (key === 'doors') return model.componentIndex.doors;
+		if (key === 'windows') return model.componentIndex.windows;
+		if (key === 'openings') return model.componentIndex.unresolvedOpenings;
+		return [];
+	}
+
+	function partComponentState(key: PartKey) {
+		const ids = componentsForPart(key).map((component) => component.id);
+		if (!ids.length) return { checked: visiblePartKeys.includes(key), indeterminate: false };
+		const selected = ids.filter((id) => visibleComponentIds.includes(id)).length;
+		return { checked: selected === ids.length && visiblePartKeys.includes(key), indeterminate: selected > 0 && selected < ids.length };
+	}
+
+	function toggleComponent(id: string, event: Event) {
+		const checked = (event.currentTarget as HTMLInputElement).checked;
+		visibleComponentIds = checked ? Array.from(new Set([...visibleComponentIds, id])) : visibleComponentIds.filter((item) => item !== id);
+	}
+
+	function toggleComponentGroup(key: PartKey) {
+		expandedComponentParts = expandedComponentParts.includes(key) ? expandedComponentParts.filter((item) => item !== key) : [...expandedComponentParts, key];
 	}
 
 	function surfacePartKey(key: SurfaceKey): PartKey {
@@ -1190,6 +1264,17 @@
 					<div><strong>{model.components.doors}</strong><span>pintu</span></div>
 					<div><strong>{model.components.windows}</strong><span>jendela</span></div>
 				</div>
+				<p class:validation-ok={model.validation.downstreamAnalysisAllowed} class="status-line">
+					Status ruang: {model.roomDetection.state}. {model.roomDetection.reason}
+				</p>
+				{#if model.validation.expectedRoomCount !== null}
+					<p class:validation-ok={model.validation.roomCountMatchesExpected === true} class="status-line">
+						Validasi fixture: ruang {model.validation.detectedRoomCount}/{model.validation.expectedRoomCount},
+						pintu {model.validation.detectedDoorCount}/{model.validation.expectedDoorCount},
+						jendela {model.validation.detectedWindowCount}/{model.validation.expectedWindowCount}.
+						Unresolved {model.validation.unresolvedOpeningCount}; duplicate {model.validation.duplicateOpeningCount}.
+					</p>
+				{/if}
 				<div class="part-list">
 					<div class="part-list-heading">
 						<strong>Bagian model</strong>
@@ -1199,13 +1284,36 @@
 						</div>
 					</div>
 					{#each presentParts as part}
+						{@const componentRows = componentsForPart(part.key)}
+						{@const selection = partComponentState(part.key)}
 						<div class="part-group">
 							<label class="part-row">
-								<input checked={visiblePartKeys.includes(part.key)} type="checkbox" onchange={(event) => togglePart(part.key, event)} />
+								<input checked={selection.checked} indeterminate={selection.indeterminate} type="checkbox" onchange={(event) => togglePart(part.key, event)} />
 								<span class="swatch" style={`background:${PART_META[part.key].color}`}></span>
 								<span>{part.label}</span>
-								<strong>{format(part.areaM2, 1)} m2</strong>
+								<strong>{componentRows.length ? `${componentRows.length} item` : `${format(part.areaM2, 1)} m2`}</strong>
 							</label>
+							{#if componentRows.length}
+								<button class="component-expander" type="button" onclick={() => toggleComponentGroup(part.key)}>
+									{expandedComponentParts.includes(part.key) ? '▾' : '▸'} {part.label} individual
+								</button>
+								{#if expandedComponentParts.includes(part.key)}
+									<div class="component-detail">
+										{#each componentRows as component}
+											<div
+												class:selected-component={selectedComponentId === component.id}
+												class="component-row"
+											>
+												<input aria-label={`Tampilkan ${component.displayName || component.id}`} checked={visibleComponentIds.includes(component.id)} type="checkbox" onchange={(event) => toggleComponent(component.id, event)} />
+												<button class="component-select" type="button" onmouseenter={() => hoveredComponentId = component.id} onmouseleave={() => hoveredComponentId = null} onclick={() => selectedComponentId = component.id}>
+													<span title={component.id}>{component.displayName || component.id}</span>
+													<strong>{format(component.areaM2, 1)} m2</strong>
+												</button>
+											</div>
+										{/each}
+									</div>
+								{/if}
+							{/if}
 							{#if surfaceStatsForPart(part.key).length}
 								<div class="surface-detail">
 									{#each surfaceStatsForPart(part.key) as stat}
@@ -1220,6 +1328,29 @@
 						</div>
 					{/each}
 				</div>
+				{#if spaces.length}
+					<div class="room-list" aria-label="Daftar ruang">
+						<div class="room-list-heading">
+							<strong>Ruang</strong>
+							<span>{spaces.length}</span>
+						</div>
+						{#each spaces as space, index (space.id)}
+							<button
+								class:active={selectedRoomId === space.id}
+								class:hovered={hoveredRoomId === space.id}
+								class="room-list-row"
+								type="button"
+								aria-pressed={selectedRoomId === space.id}
+								onmouseenter={() => hoveredRoomId = space.id}
+								onmouseleave={() => hoveredRoomId = null}
+								onclick={() => selectedRoomId = selectedRoomId === space.id ? null : space.id}
+							>
+								<span>Ruang {index + 1}</span>
+								<strong>{format(space.areaM2, 1)} m2</strong>
+							</button>
+						{/each}
+					</div>
+				{/if}
 				{#if model.warnings.length}
 					<ul class="warning-list">
 						{#each model.warnings as warning}
@@ -1331,8 +1462,16 @@
 	</aside>
 
 	<section class="stage-panel">
+		<div class="view-mode-selector" aria-label="View Mode">
+			<span>View Mode</span>
+			{#each ['solid', 'xray', 'wireframe'] as mode}
+				<button class:active={viewMode === mode} type="button" onclick={() => viewMode = mode as ViewMode}>
+					{mode === 'solid' ? 'Solid' : mode === 'xray' ? 'X-Ray' : 'Wireframe'}
+				</button>
+			{/each}
+		</div>
 		{#if ModelCanvasComponent}
-			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} activeAnalysis={selectedAnalysis} {result} {qaMode} {qaCamera} annotationUnit={annotationMode ? selectedAnnotationUnit : null} roomCandidates={roomDebug ? visibleRoomCandidates : []} {selectedRoomCandidateId} onRoomCandidateSelect={selectRoomCandidate} roomTopology={roomDebug ? (roomDebugTopology?.graph ?? null) : null} roomSemantics={roomDebug ? (roomDebugSemantics ?? null) : null} detectedRooms={roomDebug ? (roomDebugDetectedRooms?.rooms ?? null) : null} buildingAnalysis={roomDebug ? (roomDebugIntelligence?.analysis ?? null) : null} {selectedDetectedRoomId} onDetectedRoomSelect={selectDetectedRoom} {roomFocusRequest} {roomOverlayVisibility} {selectedRoomCandidateTrace} {showSelectedRoomEvidence} onQaReady={handleQaReady} />
+			<ModelCanvasComponent {model} {spaces} {visiblePartKeys} {visibleComponentIds} {selectedComponentId} {hoveredComponentId} {viewMode} {hoveredRoomId} {selectedRoomId} activeAnalysis={selectedAnalysis} {result} {qaMode} {qaCamera} annotationUnit={annotationMode ? selectedAnnotationUnit : null} roomCandidates={roomDebug ? visibleRoomCandidates : []} {selectedRoomCandidateId} onRoomCandidateSelect={selectRoomCandidate} roomTopology={roomDebug ? (roomDebugTopology?.graph ?? null) : null} roomSemantics={roomDebug ? (roomDebugSemantics ?? null) : null} detectedRooms={roomDebug ? (roomDebugDetectedRooms?.rooms ?? null) : null} buildingAnalysis={roomDebug ? (roomDebugIntelligence?.analysis ?? null) : null} {selectedDetectedRoomId} onDetectedRoomSelect={selectDetectedRoom} {roomFocusRequest} {roomOverlayVisibility} {selectedRoomCandidateTrace} {showSelectedRoomEvidence} onQaReady={handleQaReady} />
 
 		{:else}
 			<div class="model-stage-placeholder">
@@ -1763,7 +1902,7 @@
 			{/if}
 
 			<div class="button-row">
-				<button class="primary-button" type="button" onclick={runSelectedAnalysis} disabled={!model || selectedReadiness?.status === 'blocked'}>Run analisis</button>
+				<button class="primary-button" type="button" onclick={runSelectedAnalysis} disabled={!model || !model.validation.downstreamAnalysisAllowed || selectedReadiness?.status === 'blocked'}>Run analisis</button>
 				<button class="ghost-button" type="button" onclick={saveTemplate}>Save template</button>
 				<button class="ghost-button" type="button" onclick={loadTemplate}>Load template</button>
 			</div>
@@ -2338,6 +2477,59 @@
 		border-left: 1px solid #e2e9e6;
 	}
 
+	.component-expander {
+		min-height: 26px;
+		margin-left: 36px;
+		border: 0;
+		background: transparent;
+		color: #536970;
+		font-size: 0.72rem;
+		font-weight: 750;
+		text-align: left;
+	}
+
+	.component-detail {
+		display: grid;
+		max-height: 220px;
+		overflow: auto;
+		margin-left: 36px;
+		border-left: 1px solid #dbe6e2;
+	}
+
+	.component-row {
+		display: grid;
+		grid-template-columns: 16px minmax(0, 1fr);
+		align-items: center;
+		gap: 7px;
+		padding: 4px 7px;
+		color: #62747b;
+		font-size: 0.72rem;
+	}
+
+	.component-row:hover,
+	.component-row.selected-component {
+		background: #e7f2ef;
+		color: #183f39;
+	}
+
+	.component-select {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 7px;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: inherit;
+		font: inherit;
+		text-align: left;
+	}
+
+	.component-select span {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
 	.surface-row {
 		display: grid;
 		grid-template-columns: 10px 1fr auto;
@@ -2369,6 +2561,91 @@
 		padding-left: 18px;
 		color: #8a5a10;
 		font-size: 0.78rem;
+	}
+
+	.room-list {
+		display: grid;
+		gap: 4px;
+		margin-top: 12px;
+		padding-top: 10px;
+		border-top: 1px solid #dbe6e2;
+	}
+
+	.room-list-heading,
+	.room-list-row {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.room-list-heading {
+		padding: 0 4px 4px;
+		color: #2f4449;
+		font-size: 0.82rem;
+	}
+
+	.room-list-row {
+		min-height: 32px;
+		padding: 6px 8px;
+		border: 1px solid transparent;
+		border-radius: 6px;
+		background: #f3f7f5;
+		color: #415158;
+		font-size: 0.78rem;
+		text-align: left;
+	}
+
+	.room-list-row:hover,
+	.room-list-row.hovered {
+		border-color: #5ecdc0;
+		background: #e5f7f3;
+	}
+
+	.room-list-row.active {
+		border-color: #f59e0b;
+		background: #fff5dd;
+		color: #744500;
+	}
+
+	.view-mode-selector {
+		position: absolute;
+		top: 16px;
+		left: 50%;
+		z-index: 18;
+		display: flex;
+		align-items: center;
+		gap: 3px;
+		padding: 4px;
+		border: 1px solid rgba(207, 220, 215, 0.95);
+		border-radius: 8px;
+		background: rgba(248, 250, 248, 0.9);
+		box-shadow: 0 8px 22px rgba(40, 58, 62, 0.1);
+		transform: translateX(-50%);
+		backdrop-filter: blur(10px);
+	}
+
+	.view-mode-selector span {
+		padding: 0 7px;
+		color: #66777f;
+		font-size: 0.7rem;
+		font-weight: 800;
+	}
+
+	.view-mode-selector button {
+		min-height: 28px;
+		padding: 5px 9px;
+		border: 0;
+		border-radius: 5px;
+		background: transparent;
+		color: #42575c;
+		font-size: 0.72rem;
+		font-weight: 800;
+	}
+
+	.view-mode-selector button.active {
+		background: #1d5b54;
+		color: #fff;
 	}
 
 	.readiness-row {

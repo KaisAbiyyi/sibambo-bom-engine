@@ -2,6 +2,25 @@ import { canonicalV3ToLegacyBom, isCanonicalV3 } from './formats/canonical-v3';
 import { bome2ToCanonical, isBome2Buffer, parseBome2Buffer, type Bome2RuntimeScene } from './formats/bome2';
 import { isModelEvalJsonV1, parseModelEvalJsonV1, type ModelEvalRuntimeScene } from './formats/model-eval-json';
 import { CATEGORY_LABELS, classifyBuildingFaces, type BuildingCategory, type ClassificationTrace } from './classifier/classifier';
+import {
+	analyzeGeometryFoundation,
+	finalizePartAssignments,
+	type GeometryFoundationResult,
+	type GeometryOrientation,
+	type RoomDetectionState
+} from './geometry-foundation';
+import { createGeometryFoundation, type SurfaceClusterRecord } from './geometry';
+import { buildGeometryRegistry, type GeometryRegistry } from './geometry-registry';
+import { createRoomList } from './room-interaction';
+import { buildRuntimeGeometryGroups, runtimeComponentOverrides } from './render/build-runtime-scene';
+import {
+	analyzeSmboostRuntime,
+	type InspectableWallComponent,
+	type OpeningComponent,
+	type RuntimeComponentBinding,
+	type SmboostAnalysisResult,
+	type SmboostFixtureId
+} from './smboost-analysis';
 
 export type SurfaceKey =
 	| 'wall_x_pos'
@@ -153,6 +172,9 @@ export type FaceRecord = {
 	textureName?: string;
 	center: Point3;
 	bounds: Bounds3;
+	normal: Point3;
+	dominantOrientation: GeometryOrientation;
+	sourceFaceIds?: string[];
 	category?: BuildingCategory;
 	classification?: ClassificationTrace;
 };
@@ -201,6 +223,8 @@ export type SpaceZone = {
 	source: 'detected_floor' | 'estimated_footprint';
 	shape: 'rectangle' | 'l_shape' | 'estimated';
 	center: Point3;
+	footprint?: Array<{ x: number; z: number }>;
+	boundaryWallIds?: string[];
 };
 
 export type ComponentDetection = {
@@ -210,6 +234,41 @@ export type ComponentDetection = {
 	wallElements: number;
 	furniture: number;
 	structural: number;
+};
+
+export type ModelValidationResult = {
+	detectedRoomCount: number;
+	expectedRoomCount: number | null;
+	roomCountMatchesExpected: boolean | null;
+	wallCount: number;
+	individuallyAddressableWallCount: number;
+	wallAreaM2: number;
+	floorCount: number;
+	floorAreaM2: number;
+	ceilingCount: number;
+	ceilingAreaM2: number;
+	unclassifiedCount: number;
+	expectedDoorCount: number | null;
+	detectedDoorCount: number;
+	expectedWindowCount: number | null;
+	detectedWindowCount: number;
+	unresolvedOpeningCount: number;
+	duplicateOpeningCount: number;
+	geometryScale: { status: 'valid' | 'invalid'; diagonalM: number };
+	modelBoundingBox: Bounds3;
+	warnings: string[];
+	downstreamAnalysisAllowed: boolean;
+};
+
+export type ModelComponentIndex = {
+	fixtureId: SmboostFixtureId;
+	walls: InspectableWallComponent[];
+	doors: OpeningComponent[];
+	windows: OpeningComponent[];
+	unresolvedOpenings: OpeningComponent[];
+	duplicates: OpeningComponent[];
+	all: Array<InspectableWallComponent | OpeningComponent>;
+	bindings: Array<RuntimeComponentBinding & { componentId: string; partKey: PartKey }>;
 };
 
 export type ParsedBuildingModel = {
@@ -230,6 +289,11 @@ export type ParsedBuildingModel = {
 	materials: Array<{ name: string; color: string; reflectance?: number | string }>;
 	confidence: number;
 	warnings: string[];
+	roomDetection: { state: RoomDetectionState; reason: string };
+	validation: ModelValidationResult;
+	componentIndex?: ModelComponentIndex;
+	geometryRegistry?: GeometryRegistry;
+	inspectionDiagnostics?: SmboostAnalysisResult['diagnostics'];
 	runtimeScene?: Bome2RuntimeScene | ModelEvalRuntimeScene;
 };
 
@@ -638,7 +702,7 @@ function detectPartKey(path: string, surface: SurfaceKey, bounds: Bounds3, textu
 	if (/^j\d|jendela|window|kusen|glass|kaca|translucent/.test(lower) || surface === 'window') return 'windows';
 	if (/kulkas|dispenser|sofa|meja|kursi|lemari|furniture|sree/.test(lower) || surface === 'furniture') return 'furniture';
 	if (/kolom|balok|struktur|structure|beton/.test(lower) || surface === 'structure') return 'structure';
-	if (surface.startsWith('wall') && hasWallMaterialSignal(lower)) return 'walls';
+	if (surface.startsWith('wall')) return 'walls';
 	if (isWallLikeFace(bounds, surface)) return 'walls';
 	if (surface === 'floor' || (isHorizontalFace(bounds) && hasFloorMaterialSignal(lower))) return 'floor';
 	if (surface === 'ceiling' || (isHorizontalFace(bounds) && hasCeilingMaterialSignal(lower))) return 'ceiling';
@@ -1019,26 +1083,7 @@ function makeSpaces(faces: FaceRecord[], bounds: Bounds3, defaultHeight: number)
 		if (zones.length >= 12) break;
 	}
 
-	if (zones.length) return zones;
-
-	const footprint = Math.max(bounds.size.x * bounds.size.z, 1);
-	const height = clamp(defaultHeight, 2.4, 4.5);
-	return [
-		{
-			id: 'zone-1',
-			name: 'Zona utama',
-			areaM2: round(footprint, 1),
-			detectedAreaM2: round(footprint, 1),
-			volumeM3: round(footprint * height, 1),
-			heightM: height,
-			detectedHeightM: height,
-			functionKey: 'retail',
-			confidence: 0.35,
-			source: 'estimated_footprint',
-			shape: 'estimated',
-			center: bounds.center
-		}
-	];
+	return zones;
 }
 
 function materialRows(materials: BomModelJson['materials']) {
@@ -1073,6 +1118,7 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 		structural: 0
 	};
 	const componentSeen = new Set<string>();
+	const faceIdCounts = new Map<string, number>();
 	let entitiesTotal = 0;
 	let vertexCount = 0;
 
@@ -1100,6 +1146,10 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 		textureName?: string;
 	}) {
 		const holes = record.holes || [];
+		const sourceId = record.id || `face-${faces.length + 1}`;
+		const sourceIdCount = (faceIdCounts.get(sourceId) || 0) + 1;
+		faceIdCounts.set(sourceId, sourceIdCount);
+		const stableId = sourceIdCount === 1 ? sourceId : `${sourceId}#${sourceIdCount}`;
 		const faceBounds = emptyBounds();
 		record.vertices.forEach((point) => {
 			expandBounds(bounds, point);
@@ -1124,7 +1174,7 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 		partAccumulator.set(partKey, partCurrent);
 		vertexCount += record.vertices.length;
 		faces.push({
-			id: record.id,
+			id: stableId,
 			name: record.name,
 			path: record.path,
 			layer: record.layer,
@@ -1136,7 +1186,9 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 			color: record.color,
 			textureName: record.textureName,
 			center,
-			bounds: finalizedFaceBounds
+			bounds: finalizedFaceBounds,
+			normal: { x: 0, y: 0, z: 0 },
+			dominantOrientation: 'sloped'
 		});
 	}
 
@@ -1270,6 +1322,25 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 	}
 
 	const finalBounds = finalizeBounds(bounds);
+	const geometryFoundation = analyzeGeometryFoundation(
+		faces.map((face) => ({
+			id: face.id,
+			vertices: face.vertices,
+			areaM2: face.areaM2,
+			surfaceHint: face.surface,
+			name: `${face.path} ${face.textureName || ''}`
+		}))
+	);
+	const geometryById = new Map(geometryFoundation.faces.map((face) => [face.id, face]));
+	faces.forEach((face) => {
+		const geometry = geometryById.get(face.id);
+		if (!geometry) return;
+		face.normal = geometry.normal;
+		face.dominantOrientation = geometry.orientation;
+		if (geometry.role === 'wall') face.partKey = 'walls';
+		else if (geometry.role === 'floor') face.partKey = 'floor';
+		else if (geometry.role === 'ceiling') face.partKey = 'ceiling';
+	});
 	const floorLevels = estimateFloorLevels(faces);
 	faces.forEach((face) => {
 		face.partKey = refinePartKey(face, finalBounds, floorLevels);
@@ -1295,6 +1366,15 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 	);
 	faces.forEach((face, index) => {
 		const classification = classificationTraces[index];
+		const geometryRole = geometryById.get(face.id)?.role;
+		if (geometryRole === 'floor') overrideEnvelopeClassification(classification, 'floor');
+		else if (geometryRole === 'ceiling') overrideEnvelopeClassification(classification, 'ceiling');
+		else if (geometryRole === 'wall') {
+			overrideEnvelopeClassification(
+				classification,
+				classification.category === 'interior_wall' ? 'interior_wall' : 'exterior_wall'
+			);
+		}
 		face.category = classification.category;
 		face.classification = classification;
 		face.partKey = categoryToPartKey(classification.category);
@@ -1308,15 +1388,15 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 			confidence: key === 'other' ? 0.45 : 0.82
 		}))
 		.sort((a, b) => b.areaM2 - a.areaM2);
-	const refinedPartAccumulator = new Map<PartKey, { count: number; areaM2: number }>();
-	faces.forEach((face) => {
-		const current = refinedPartAccumulator.get(face.partKey) || { count: 0, areaM2: 0 };
-		current.count += 1;
-		current.areaM2 += face.areaM2;
-		refinedPartAccumulator.set(face.partKey, current);
-	});
-	const partStats = [...refinedPartAccumulator.entries()]
-		.map(([key, value]) => ({
+	const finalPartition = finalizePartAssignments(
+		faces.map((face) => ({
+			id: face.id,
+			partKey: face.partKey === 'other' ? null : face.partKey,
+			areaM2: face.areaM2
+		}))
+	);
+	const partStats = finalPartition.stats
+		.map(({ key, ...value }) => ({
 			key,
 			label: PART_META[key].label,
 			count: value.count,
@@ -1342,11 +1422,11 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 			averageConfidence: round(value.confidence / Math.max(value.count, 1), 3)
 		}))
 		.sort((left, right) => right.count - left.count || left.label.localeCompare(right.label));
-	const spaces = makeSpaces(faces, finalBounds, defaultHeight);
+	const spaces = geometryFoundation.rooms.map((room, index) => geometryRoomToSpace(room, index, faces));
 	const warnings: string[] = [];
 	if (!components.windows) warnings.push('Jendela tidak terdeteksi eksplisit. OTTV memakai rasio kaca input.');
 	if (!components.doors) warnings.push('Pintu tidak terdeteksi eksplisit. Flow manusia memakai estimasi zona.');
-	if (spaces.some((space) => space.source === 'estimated_footprint')) warnings.push('Ruang tidak eksplisit di JSON. Sistem memakai footprint estimasi.');
+	if (geometryFoundation.roomDetection.state !== 'valid') warnings.push(`Deteksi ruang: ${geometryFoundation.roomDetection.reason}`);
 	if (spaces.some((space) => space.source === 'detected_floor')) {
 		warnings.push('Area ruang terdeteksi berasal dari polygon lantai yang lolos filter ruang, bukan total seluruh surface horizontal SketchUp.');
 	}
@@ -1357,6 +1437,12 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 		spaces[0]?.source === 'detected_floor' ? 0.65 : 0.35,
 		components.doors || components.windows ? 0.6 : 0.45
 	];
+	const validation = buildModelValidation(
+		geometryFoundation,
+		partStats,
+		finalBounds,
+		warnings
+	);
 
 	return {
 		sourceName,
@@ -1375,7 +1461,9 @@ export function parseBomModelJson(data: BomModelJson, sourceName: string, defaul
 		components,
 		materials: materialRows(data.materials),
 		confidence: average(confidenceParts),
-		warnings,
+		warnings: validation.warnings,
+		roomDetection: geometryFoundation.roomDetection,
+		validation,
 		runtimeScene
 	};
 }
@@ -1431,9 +1519,92 @@ function parseCompactModelEvalRuntime(runtimeScene: ModelEvalRuntimeScene, sourc
 	if (!faceCount) throw new Error('Tidak ada Face renderable di Model-Eval JSON.');
 
 	const surfaceStats = [...surfaces.entries()].map(([key, value]) => ({ key, label: SURFACE_META[key].label, count: value.count, areaM2: round(value.areaM2, 1), confidence: key === 'other' ? 0.45 : 0.82 })).sort((a, b) => b.areaM2 - a.areaM2);
-	const partStats = [...parts.entries()].map(([key, value]) => ({ key, label: PART_META[key].label, count: value.count, areaM2: round(value.areaM2, 1), color: PART_META[key].color })).sort((a, b) => PART_META[a.key].order - PART_META[b.key].order);
+	let partStats = [...parts.entries()].map(([key, value]) => ({ key, label: PART_META[key].label, count: value.count, areaM2: round(value.areaM2, 1), color: PART_META[key].color })).sort((a, b) => PART_META[a.key].order - PART_META[b.key].order);
 	const materialRows = manifest.materials.slice(0, 24).map((material) => ({ name: stringAt(material.name) || 'Material', color: stringAt(material.color_hex) || '#94a3b8', reflectance: '-' }));
 	const finalBounds = finalizeBounds(bounds);
+	const faces = buildRuntimeFoundationFaces(runtimeScene);
+	const geometryFoundation = analyzeGeometryFoundation(
+		faces.map((face) => ({ id: face.id, vertices: face.vertices, areaM2: face.areaM2, surfaceHint: face.surface, name: face.path }))
+	);
+	const geometryById = new Map(geometryFoundation.faces.map((face) => [face.id, face]));
+	faces.forEach((face) => {
+		const geometry = geometryById.get(face.id);
+		if (!geometry) return;
+		face.normal = geometry.normal;
+		face.dominantOrientation = geometry.orientation;
+		if (geometry.role === 'wall') {
+			face.partKey = 'walls';
+			face.category = 'exterior_wall';
+		} else if (geometry.role === 'floor') {
+			face.partKey = 'floor';
+			face.category = 'floor';
+		} else if (geometry.role === 'ceiling') {
+			face.partKey = 'ceiling';
+			face.category = 'ceiling';
+		}
+	});
+	let spaces = geometryFoundation.rooms.map((room, index) => geometryRoomToSpace(room, index, faces));
+	const categoryStats = compactCategoryStats(partStats);
+	let warnings = geometryFoundation.roomDetection.state === 'valid'
+		? []
+		: [`Deteksi ruang: ${geometryFoundation.roomDetection.reason}`];
+	let roomDetection = geometryFoundation.roomDetection;
+	let componentIndex: ModelComponentIndex | undefined;
+	const smboost = (() => {
+		try { return analyzeSmboostRuntime(runtimeScene); }
+		catch (error) {
+			if (error instanceof Error && error.message.includes('not a recognized SMBOOST fixture')) return null;
+			throw error;
+		}
+	})();
+	if (smboost) {
+		spaces = createRoomList(smboost.rooms).map((room, index) => smboostRoomToSpace(room, index));
+		components.doors = smboost.openings.filter((item) => item.kind === 'door').length;
+		components.windows = smboost.openings.filter((item) => item.kind === 'window').length;
+		const bindings: ModelComponentIndex['bindings'] = [];
+		for (const wall of smboost.wallComponents) for (const binding of wall.bindings) bindings.push({ ...binding, componentId: wall.id, partKey: 'walls' });
+		for (const opening of smboost.openings) {
+			const partKey: PartKey = opening.kind === 'door' ? 'doors' : opening.kind === 'window' ? 'windows' : 'openings';
+			for (const binding of opening.bindings) bindings.push({ ...binding, componentId: opening.id, partKey });
+		}
+		const bindingPartByPath = new Map(bindings.map((binding) => [binding.instancePath, binding.partKey]));
+		faces.forEach((face) => {
+			const partKey = bindingPartByPath.get(face.path);
+			if (partKey) face.partKey = partKey;
+		});
+		componentIndex = {
+			fixtureId: smboost.fixtureId,
+			walls: smboost.wallComponents,
+			doors: smboost.openings.filter((item) => item.kind === 'door'),
+			windows: smboost.openings.filter((item) => item.kind === 'window'),
+			unresolvedOpenings: smboost.openings.filter((item) => item.kind === 'unresolved_opening'),
+			duplicates: smboost.duplicates,
+			all: [...smboost.wallComponents, ...smboost.openings],
+			bindings
+		};
+		partStats = withComponentPartStats(partStats, componentIndex, runtimeScene);
+		roomDetection = { state: 'valid', reason: `${spaces.length} SMBOOST room boundaries detected from finish-floor topology.` };
+		warnings = smboost.validation.warnings;
+	}
+	let validation = buildModelValidation(geometryFoundation, partStats, finalBounds, warnings);
+	if (smboost) {
+		validation = {
+			...validation,
+			detectedRoomCount: smboost.validation.detectedRoomCount,
+			expectedRoomCount: smboost.validation.expectedRoomCount,
+			roomCountMatchesExpected: smboost.validation.detectedRoomCount === smboost.validation.expectedRoomCount,
+			wallCount: smboost.validation.wallCount,
+			individuallyAddressableWallCount: smboost.validation.individuallyAddressableWallCount,
+			expectedDoorCount: smboost.validation.expectedDoorCount,
+			detectedDoorCount: smboost.validation.detectedDoorCount,
+			expectedWindowCount: smboost.validation.expectedWindowCount,
+			detectedWindowCount: smboost.validation.detectedWindowCount,
+			unresolvedOpeningCount: smboost.validation.unresolvedOpeningCount,
+			duplicateOpeningCount: smboost.validation.duplicateOpeningCount,
+			warnings: smboost.validation.warnings,
+			downstreamAnalysisAllowed: smboost.validation.downstreamReady
+		};
+	}
 	return {
 		sourceName,
 		schemaVersion: 'model_eval_json_v1',
@@ -1442,21 +1613,123 @@ function parseCompactModelEvalRuntime(runtimeScene: ModelEvalRuntimeScene, sourc
 		entitiesTotal: manifest.nodes.length,
 		faceCount,
 		vertexCount,
-		faces: [],
-		spaces: [],
+		faces,
+		spaces,
 		bounds: finalBounds,
 		surfaceStats,
 		partStats,
-		categoryStats: [],
+		categoryStats,
 		components,
 		materials: materialRows,
 		confidence: 0.72,
-		warnings: [
-			'Detail FaceRecord, classifier trace, dan room detection ditunda sampai inspector/analysis memintanya.',
-			'Compact renderer memakai indexed mesh dan instance table langsung; tidak ada Canonical-v3 expansion saat load.'
-		],
+		warnings: validation.warnings,
+		roomDetection,
+		validation,
+		componentIndex,
+		geometryRegistry: buildGeometryRegistry(runtimeScene),
+		inspectionDiagnostics: smboost?.diagnostics,
 		runtimeScene
 	};
+}
+
+function buildRuntimeFoundationFaces(runtimeScene: ModelEvalRuntimeScene): FaceRecord[] {
+	const geometry = createGeometryFoundation(runtimeScene);
+	const objects = geometry.buildLogicalObjectIndex().objects;
+	const strings = runtimeScene.manifest.strings;
+	const rows: FaceRecord[] = [];
+	for (const object of objects) {
+		const horizontalArea = object.orientationDistribution.upwardAreaM2 + object.orientationDistribution.downwardAreaM2;
+		const verticalArea = object.orientationDistribution.verticalAreaM2;
+		if (object.totalAreaM2 < 0.35 || Math.max(object.dimensions.x, object.dimensions.z) < 0.4) continue;
+		if (horizontalArea / object.totalAreaM2 < 0.25 && verticalArea / object.totalAreaM2 < 0.25) continue;
+		for (const cluster of geometry.buildSurfaceClusters(object.id)) {
+			if (cluster.areaM2 < 0.2 || (cluster.horizontalAreaRatio < 0.9 && cluster.verticalAreaRatio < 0.9)) continue;
+			const sourceFaceIds = cluster.primitiveIds.map((id) => id.replace(/:\d+$/, ''));
+			const faceIndexes = cluster.primitiveIds
+				.map((id) => Number(id.match(/:(\d+)$/)?.[1]))
+				.filter((index) => Number.isInteger(index));
+			const mesh = runtimeScene.manifest.meshes[object.meshId];
+			const surfaceCounts = new Map<string, number>();
+			for (const index of faceIndexes) {
+				const source = mesh?.faces[index];
+				const surface = source && source.surface_hint >= 0 ? strings[source.surface_hint] : 'other';
+				surfaceCounts.set(surface, (surfaceCounts.get(surface) || 0) + 1);
+			}
+			const surface = normalizeSurface(
+				[...surfaceCounts.entries()].sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))[0]?.[0],
+				object.sourceName
+			);
+			const vertices = clusterRectangleVertices(cluster);
+			const bounds: Bounds3 = cluster.worldBounds;
+			rows.push({
+				id: cluster.id,
+				name: object.sourceName || cluster.id,
+				path: object.instancePath,
+				layer: object.sourceTag || undefined,
+				surface,
+				partKey: detectPartKey(`${object.sourceName} ${object.sourceTag || ''}`, surface, bounds),
+				areaM2: cluster.areaM2,
+				vertices,
+				holes: [],
+				center: cluster.centroid,
+				bounds,
+				normal: cluster.dominantNormal,
+				dominantOrientation: cluster.horizontalAreaRatio >= 0.9 ? 'horizontal' : 'vertical',
+				sourceFaceIds
+			});
+		}
+	}
+	return rows;
+}
+
+function clusterRectangleVertices(cluster: SurfaceClusterRecord): Point3[] {
+	const { min, max, center } = cluster.worldBounds;
+	if (cluster.horizontalAreaRatio >= 0.9) {
+		const upward = cluster.dominantNormal.y >= 0;
+		const vertices = [
+			{ x: min.x, y: center.y, z: min.z },
+			{ x: min.x, y: center.y, z: max.z },
+			{ x: max.x, y: center.y, z: max.z },
+			{ x: max.x, y: center.y, z: min.z }
+		];
+		return upward ? vertices : vertices.reverse();
+	}
+	if (cluster.worldBounds.size.x <= cluster.worldBounds.size.z) {
+		return [
+			{ x: center.x, y: min.y, z: min.z },
+			{ x: center.x, y: max.y, z: min.z },
+			{ x: center.x, y: max.y, z: max.z },
+			{ x: center.x, y: min.y, z: max.z }
+		];
+	}
+	return [
+		{ x: min.x, y: min.y, z: center.z },
+		{ x: max.x, y: min.y, z: center.z },
+		{ x: max.x, y: max.y, z: center.z },
+		{ x: min.x, y: max.y, z: center.z }
+	];
+}
+
+function compactCategoryStats(partStats: PartStat[]): CategoryStat[] {
+	const category = (key: PartKey): BuildingCategory => {
+		if (key === 'walls') return 'exterior_wall';
+		if (key === 'floor') return 'floor';
+		if (key === 'ceiling') return 'ceiling';
+		if (key === 'roof') return 'roof';
+		if (key === 'doors') return 'door';
+		if (key === 'windows') return 'window';
+		if (key === 'openings') return 'opening';
+		if (key === 'structure') return 'column';
+		if (key === 'furniture') return 'furniture';
+		return 'unknown';
+	};
+	return partStats.map((stat) => ({
+		key: category(stat.key),
+		label: CATEGORY_LABELS[category(stat.key)],
+		count: stat.count,
+		areaM2: stat.areaM2,
+		averageConfidence: stat.key === 'other' ? 0.35 : 0.82
+	}));
 }
 
 function multiplyMatrix(left: number[], right: number[]) {
@@ -1480,6 +1753,133 @@ function categoryToPartKey(category: BuildingCategory): PartKey {
 	if (category === 'column' || category === 'beam' || category === 'stair' || category === 'railing') return 'structure';
 	if (category === 'furniture' || category === 'fixture') return 'furniture';
 	return 'other';
+}
+
+function overrideEnvelopeClassification(trace: ClassificationTrace, category: 'floor' | 'ceiling' | 'exterior_wall' | 'interior_wall') {
+	if (trace.category === category) return;
+	trace.category = category;
+	trace.confidence = Math.max(trace.confidence, 0.9);
+	trace.conflictResolution = `geometry foundation selected ${category}`;
+	trace.explanation = `World-space normal, elevation, bounds, and room-boundary relationship selected ${category}.`;
+	trace.unknownReason = undefined;
+}
+
+function geometryRoomToSpace(room: GeometryFoundationResult['rooms'][number], index: number, faces: FaceRecord[]): SpaceZone {
+	const floor = faces.find((face) => face.id === room.floorFaceId);
+	const boundsArea = floor ? Math.max(floor.bounds.size.x * floor.bounds.size.z, 0.001) : room.areaM2;
+	const fillRatio = room.areaM2 / boundsArea;
+	const shape: SpaceZone['shape'] = fillRatio < 0.9 && room.footprint.length >= 6 ? 'l_shape' : 'rectangle';
+	return {
+		id: room.id,
+		name: `Ruang ${index + 1} (${shape === 'l_shape' ? 'L' : 'kotak'})`,
+		areaM2: round(room.areaM2, 1),
+		detectedAreaM2: round(room.areaM2, 1),
+		volumeM3: round(room.volumeM3, 1),
+		heightM: room.heightM,
+		detectedHeightM: room.heightM,
+		functionKey: suggestFunction(floor?.path || `Ruang ${index + 1}`, room.areaM2),
+		confidence: clamp(0.7 + room.boundaryCoverage * 0.25, 0, 0.98),
+		source: 'detected_floor',
+		shape,
+		center: room.center,
+		footprint: room.footprint
+	};
+}
+
+function smboostRoomToSpace(room: SmboostAnalysisResult['rooms'][number], index: number): SpaceZone {
+	const footprintBounds = room.footprint.reduce((bounds, point) => ({
+		minX: Math.min(bounds.minX, point.x), maxX: Math.max(bounds.maxX, point.x),
+		minZ: Math.min(bounds.minZ, point.z), maxZ: Math.max(bounds.maxZ, point.z)
+	}), { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity });
+	const boundsArea = Math.max((footprintBounds.maxX - footprintBounds.minX) * (footprintBounds.maxZ - footprintBounds.minZ), 0.001);
+	const shape: SpaceZone['shape'] = room.areaM2 / boundsArea < 0.9 && room.footprint.length >= 6 ? 'l_shape' : 'rectangle';
+	return {
+		id: room.id,
+		name: `Ruang ${index + 1} (${shape === 'l_shape' ? 'L' : 'kotak'})`,
+		areaM2: round(room.areaM2, 1),
+		detectedAreaM2: round(room.areaM2, 1),
+		volumeM3: round(room.volumeM3, 1),
+		heightM: room.heightM,
+		detectedHeightM: room.heightM,
+		functionKey: suggestFunction(`Ruang ${index + 1}`, room.areaM2),
+		confidence: clamp(0.72 + room.boundaryCoverage * 0.24, 0, 0.98),
+		source: 'detected_floor',
+		shape,
+		center: room.center,
+		footprint: room.footprint,
+		boundaryWallIds: room.wallFaceIds
+	};
+}
+
+function withComponentPartStats(stats: PartStat[], index: ModelComponentIndex, scene: ModelEvalRuntimeScene) {
+	const byKey = new Map(stats.map((stat) => [stat.key, stat]));
+	const componentRows: Array<[PartKey, Array<InspectableWallComponent | OpeningComponent>]> = [
+		['walls', index.walls],
+		['doors', index.doors],
+		['windows', index.windows],
+		['openings', index.unresolvedOpenings]
+	];
+	const componentArea = new Map(componentRows.map(([key, components]) => [key, components.reduce((sum, component) => sum + component.areaM2, 0)]));
+	const counts = new Map<PartKey, number>();
+	const groups = buildRuntimeGeometryGroups(scene, new Map(), runtimeComponentOverrides(index.bindings));
+	for (const group of groups) counts.set(group.key, (counts.get(group.key) || 0) + group.faceCount * group.matrices.length);
+	for (const [key, count] of counts) {
+		const current = byKey.get(key);
+		byKey.set(key, {
+			key,
+			label: PART_META[key].label,
+			count,
+			areaM2: round(componentArea.get(key) ?? current?.areaM2 ?? 0, 1),
+			color: PART_META[key].color
+		});
+	}
+	return [...byKey.values()].filter((stat) => stat.count > 0).sort((left, right) => PART_META[left.key].order - PART_META[right.key].order);
+}
+
+function buildModelValidation(
+	foundation: GeometryFoundationResult,
+	partStats: PartStat[],
+	bounds: Bounds3,
+	baseWarnings: string[]
+): ModelValidationResult {
+	const part = (key: PartKey) => partStats.find((stat) => stat.key === key);
+	const wall = part('walls');
+	const floor = part('floor');
+	const ceiling = part('ceiling');
+	const other = part('other');
+	const scaleValid = foundation.roomDetection.state !== 'invalid scale' && Number.isFinite(foundation.geometryScaleM) && foundation.geometryScaleM >= 0.1 && foundation.geometryScaleM <= 10_000;
+	const validRooms = foundation.rooms.filter((room) => room.areaM2 > 0 && room.heightM > 0 && room.volumeM3 > 0);
+	const warnings = [...baseWarnings];
+	if (!wall?.count) warnings.push('Tidak ada boundary dinding yang terdeteksi.');
+	if (!floor?.count) warnings.push('Tidak ada boundary lantai yang terdeteksi.');
+	if (!ceiling?.count) warnings.push('Tidak ada boundary plafon yang terdeteksi.');
+	if (!scaleValid) warnings.push('Skala geometri tidak valid untuk analisis berbasis meter.');
+	if (!validRooms.length && !warnings.some((warning) => warning.includes(foundation.roomDetection.reason))) {
+		warnings.push(`Deteksi ruang: ${foundation.roomDetection.reason}`);
+	}
+	return {
+		detectedRoomCount: validRooms.length,
+		expectedRoomCount: null,
+		roomCountMatchesExpected: null,
+		wallCount: wall?.count || 0,
+		individuallyAddressableWallCount: 0,
+		wallAreaM2: wall?.areaM2 || 0,
+		floorCount: floor?.count || 0,
+		floorAreaM2: floor?.areaM2 || 0,
+		ceilingCount: ceiling?.count || 0,
+		ceilingAreaM2: ceiling?.areaM2 || 0,
+		unclassifiedCount: other?.count || 0,
+		expectedDoorCount: null,
+		detectedDoorCount: 0,
+		expectedWindowCount: null,
+		detectedWindowCount: 0,
+		unresolvedOpeningCount: 0,
+		duplicateOpeningCount: 0,
+		geometryScale: { status: scaleValid ? 'valid' : 'invalid', diagonalM: foundation.geometryScaleM },
+		modelBoundingBox: bounds,
+		warnings: [...new Set(warnings)],
+		downstreamAnalysisAllowed: foundation.roomDetection.state === 'valid' && validRooms.length > 0 && Boolean(wall?.count) && Boolean(floor?.count) && scaleValid
+	};
 }
 
 export function getTotalArea(spaces: SpaceZone[]) {
@@ -1517,6 +1917,7 @@ export function getReadiness(model: ParsedBuildingModel | null, inputs: ProjectI
 	return (Object.keys(ANALYSIS_META) as AnalysisKind[]).map((kind) => {
 		const missing: string[] = [];
 		const defaults: string[] = [];
+		if (!model.validation.downstreamAnalysisAllowed) missing.push(`Validasi model: ${model.roomDetection.reason}`);
 		for (const key of required[kind]) {
 			if (!touched[key]) defaults.push(inputLabel(key));
 		}
@@ -1538,6 +1939,9 @@ export function getReadiness(model: ParsedBuildingModel | null, inputs: ProjectI
 }
 
 export function runAnalysis(kind: AnalysisKind, model: ParsedBuildingModel, inputs: ProjectInputs, spaces: SpaceZone[]): AnalysisResult {
+	if (!model.validation.downstreamAnalysisAllowed) {
+		throw new Error(`Analisis dinonaktifkan: ${model.roomDetection.reason}`);
+	}
 	switch (kind) {
 		case 'lighting':
 			return lightingAnalysis(model, inputs, spaces);
