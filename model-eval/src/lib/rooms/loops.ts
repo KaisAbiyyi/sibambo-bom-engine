@@ -11,6 +11,7 @@ import type {
 	RankedBoundaryLoopCandidate,
 	RankedBoundaryLoopResult
 } from './types';
+import { sha256Digest } from './hash';
 import type { NormalizedBarrierGraph } from './helpers';
 
 
@@ -80,17 +81,6 @@ function isSelfIntersectingLoop(coords: PlanCoord[]): boolean {
 	return false;
 }
 
-function simpleHash(str: string): string {
-	let h1 = 2166136261;
-	let h2 = 5381;
-	for (let i = 0; i < str.length; i++) {
-		const char = str.charCodeAt(i);
-		h1 = Math.imul(h1 ^ char, 16777619) >>> 0;
-		h2 = Math.imul(h2 ^ char, 33) >>> 0;
-	}
-	return h1.toString(16).padStart(8, '0') + h2.toString(16).padStart(8, '0');
-}
-
 export function generateBoundaryLoopId(storeyCandidateId: string, nodeIds: string[]): string {
 	return `loop:${storeyCandidateId}:${nodeIds.join('_')}`;
 }
@@ -123,19 +113,7 @@ export function calculateBoundaryLoopFingerprint(input: BoundaryLoopResult | Bou
 
 	const serialized = JSON.stringify(payload);
 
-	let sha256: (str: string) => string;
-	if (typeof window === 'undefined') {
-		try {
-			const { createHash } = require('crypto');
-			sha256 = (str: string) => createHash('sha256').update(str).digest('hex');
-		} catch (e) {
-			sha256 = simpleHash;
-		}
-	} else {
-		sha256 = simpleHash;
-	}
-
-	return sha256(serialized);
+	return sha256Digest(serialized);
 }
 
 export function findBoundaryLoopCandidates(graph: NormalizedBarrierGraph): BoundaryLoopResult {
@@ -622,16 +600,5 @@ export function calculateRankedBoundaryLoopFingerprint(input: RankedBoundaryLoop
 	}));
 
 	const serialized = JSON.stringify(payload);
-	let sha256: (str: string) => string;
-	if (typeof window === 'undefined') {
-		try {
-			const { createHash } = require('crypto');
-			sha256 = (str: string) => createHash('sha256').update(str).digest('hex');
-		} catch (e) {
-			sha256 = simpleHash;
-		}
-	} else {
-		sha256 = simpleHash;
-	}
-	return sha256(serialized);
+	return sha256Digest(serialized);
 }

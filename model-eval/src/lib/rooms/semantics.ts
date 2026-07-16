@@ -6,10 +6,10 @@
  * degree/connections, objects/fixtures, and vocabulary tags (including Indonesian and English).
  */
 
-import { createHash } from 'crypto';
 import type { DetectedRoom } from './detected-room';
 import type { RoomTopologyGraph, RoomTopologyNode } from './topology';
 import { getConnectedRooms, getExteriorConnections } from './topology';
+import { sha256Hex } from './hash';
 
 // ─── Semantic Contracts ───────────────────────────────────────────────────────
 
@@ -161,11 +161,8 @@ function pointInPolygon2D(pt: { x: number; z: number }, poly: { x: number; z: nu
 }
 
 export function calculateRoomSemanticsFingerprint(inferences: RoomSemanticInference[]): string {
-	const hash = createHash('sha256');
-	for (const inf of [...inferences].sort((a, b) => a.roomId.localeCompare(b.roomId))) {
-		hash.update(`${inf.roomId}:${inf.primaryFunction}:${inf.confidence.toFixed(4)}`);
-	}
-	return `${inferences.length}:${hash.digest('hex').substring(0, 12)}`;
+	const input = [...inferences].sort((a, b) => a.roomId.localeCompare(b.roomId)).map((inf) => `${inf.roomId}:${inf.primaryFunction}:${inf.confidence.toFixed(4)}`).join('');
+	return `${inferences.length}:${sha256Hex(input).substring(0, 12)}`;
 }
 
 // ─── Core Inference Engine ────────────────────────────────────────────────────

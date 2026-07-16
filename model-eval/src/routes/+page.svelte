@@ -83,6 +83,7 @@
 	} from '$lib/rooms/analysis';
 	import RecommendationsPanel from '$lib/rooms/ui/RecommendationsPanel.svelte';
 	import OptimizationPanel from '$lib/rooms/ui/OptimizationPanel.svelte';
+	import { RELEASE } from '$lib/release';
 
 	type NumberInputKey = 'peopleCount' | 'operationHours' | 'setPointC' | 'orientationDeg' | 'glassRatio' | 'roomHeightM';
 	type ModelCanvasProps = {
@@ -1051,7 +1052,8 @@
 </script>
 
 <svelte:head>
-	<title>Model Evaluation</title>
+	<title>Sibambo Model Eval {RELEASE.version}</title>
+	<meta name="description" content="Early-stage building analysis from SketchUp/BOM JSON exports." />
 </svelte:head>
 
 <main
@@ -1084,6 +1086,11 @@
 			{#if loadError}
 				<p class="error-line">{loadError}</p>
 			{/if}
+		</section>
+		<section class="panel-block release-block" aria-label="Release information">
+			<p class="eyebrow">Release {RELEASE.version}</p>
+			<p class="muted small">Build {RELEASE.build} · {RELEASE.date}</p>
+			<p class="muted small">{RELEASE.disclaimer}</p>
 		</section>
 
 		{#if annotationMode && model}

@@ -137,6 +137,27 @@ npm run preview
 
 ## Data Contract
 
+## Release Candidate 6A
+
+- Version: `0.6.0-rc.1`
+- Integrated build: `0a8bc39`
+- Supported workflow: upload supported BOM JSON/BOME2 input, review detected rooms, apply project calibration, run analysis, review recommendations or bounded optimization, then export JSON or HTML report.
+- Production target: Vercel with `@sveltejs/adapter-vercel`; Vercel supplies `VERCEL=1` during its build. Local production preview uses `@sveltejs/adapter-node`, so Windows does not need symlink permissions. No application environment variables are required for browser-only workflow.
+- Upload limits: 80 MB source file, 120 MB decompressed model payload, 512 KB project template.
+- Production preview: `bun run preview:production`.
+
+Deploy staging from `model-eval/` after release checks pass:
+
+```powershell
+bun install --frozen-lockfile
+bun run release:check
+bunx vercel --target=preview
+```
+
+Set Vercel project Root Directory to `model-eval`. Internal `/api/corpus/*` endpoints are local QA tooling backed by repository artifacts; staging users upload model files directly. Dev-only `devModel` and `debugModel=house2` loaders return actionable production errors and do not expose local files.
+
+Release smoke scope: use `house2` end-to-end, `PROJECT SBOOST 2` for one bounded run, and `PROJECT SBOOST 1` only to verify cancellation. Do not use `presentation20`.
+
 Expected JSON shape:
 
 - `entities`: nested model entities.

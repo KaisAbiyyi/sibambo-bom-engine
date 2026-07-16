@@ -12,6 +12,7 @@ import type {
 	BarrierGraphNode,
 	BarrierGraphEdge
 } from './types';
+import { sha256Digest } from './hash';
 import { GEOMETRY_TOLERANCES, type SurfaceClusterRecord } from '../geometry';
 import type { ClassificationUnitRecord } from '../annotation';
 
@@ -446,31 +447,7 @@ export function calculateRoomEvidenceFingerprint(snapshot: RoomEvidenceSnapshot)
 
 	const serialized = JSON.stringify(payload);
 
-	// Safe require for environment check
-	let sha256: (str: string) => string;
-	if (typeof window === 'undefined') {
-		try {
-			const { createHash } = require('crypto');
-			sha256 = (str: string) => createHash('sha256').update(str).digest('hex');
-		} catch (e) {
-			sha256 = simpleHash;
-		}
-	} else {
-		sha256 = simpleHash;
-	}
-
-	return sha256(serialized);
-}
-
-function simpleHash(str: string): string {
-	let h1 = 2166136261;
-	let h2 = 5381;
-	for (let i = 0; i < str.length; i++) {
-		const char = str.charCodeAt(i);
-		h1 = Math.imul(h1 ^ char, 16777619) >>> 0;
-		h2 = Math.imul(h2 ^ char, 33) >>> 0;
-	}
-	return h1.toString(16).padStart(8, '0') + h2.toString(16).padStart(8, '0');
+	return sha256Digest(serialized);
 }
 
 export function rankStoreyBandCandidates(
@@ -847,19 +824,7 @@ export function calculateBarrierGraphFingerprint(graph: BarrierGraph): string {
 
 	const serialized = JSON.stringify(payload);
 
-	let sha256: (str: string) => string;
-	if (typeof window === 'undefined') {
-		try {
-			const { createHash } = require('crypto');
-			sha256 = (str: string) => createHash('sha256').update(str).digest('hex');
-		} catch (e) {
-			sha256 = simpleHash;
-		}
-	} else {
-		sha256 = simpleHash;
-	}
-
-	return sha256(serialized);
+	return sha256Digest(serialized);
 }
 
 // ---------------------------------------------------------------------------
