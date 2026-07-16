@@ -6,9 +6,9 @@
  * the barrier graph, loop candidates, and refined vertical envelopes.
  */
 
-import { createHash } from 'crypto';
 import type { PlanCoord, PlanBounds } from './types';
 import { quantizeCoord } from './helpers';
+import { sha256Hex } from './hash';
 
 // ─── Coordinate types ─────────────────────────────────────────────────────────
 
@@ -152,10 +152,7 @@ export function generateDetectedRoomId(storeyId: string, boundary2D: PlanCoord[]
 	const sorted = [...boundary2D]
 		.map((p) => `${quantizeCoord(p.x).toFixed(3)},${quantizeCoord(p.z).toFixed(3)}`)
 		.sort();
-	const hash = createHash('sha256')
-		.update(`room:${storeyId}:${sorted.join('|')}`)
-		.digest('hex')
-		.substring(0, 12);
+	const hash = sha256Hex(`room:${storeyId}:${sorted.join('|')}`).substring(0, 12);
 	return `detected-room:${storeyId}:${hash}`;
 }
 
@@ -171,7 +168,7 @@ export function generateRoomBoundarySegmentId(
 		`${quantizeCoord(start.x).toFixed(3)},${quantizeCoord(start.z).toFixed(3)}`,
 		`${quantizeCoord(end.x).toFixed(3)},${quantizeCoord(end.z).toFixed(3)}`
 	].sort();
-	const hash = createHash('sha256').update(`seg:${kind}:${a}:${b}`).digest('hex').substring(0, 8);
+	const hash = sha256Hex(`seg:${kind}:${a}:${b}`).substring(0, 8);
 	return `seg:${kind}:${hash}`;
 }
 
@@ -286,9 +283,6 @@ export function ensureCW(pts: PlanCoord[]): PlanCoord[] {
  */
 export function calculateDetectedRoomFingerprint(rooms: DetectedRoom[]): string {
 	if (rooms.length === 0) return '0:empty';
-	const hash = createHash('sha256');
-	for (const r of [...rooms].sort((a, b) => a.id.localeCompare(b.id))) {
-		hash.update(`${r.id}|${r.floorArea.toFixed(4)}|${r.status}`);
-	}
-	return `${rooms.length}:${hash.digest('hex').substring(0, 12)}`;
+	const input = [...rooms].sort((a, b) => a.id.localeCompare(b.id)).map((r) => `${r.id}|${r.floorArea.toFixed(4)}|${r.status}`).join('');
+	return `${rooms.length}:${sha256Hex(input).substring(0, 12)}`;
 }

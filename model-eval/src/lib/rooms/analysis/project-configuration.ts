@@ -16,6 +16,21 @@ const limits: Record<keyof RoomAnalysisConfiguration, [number, number, string]> 
 	defaultSolarAbsorptance: [0, 1, 'ratio'], ottvThresholdWm2: [1, 200, 'W/m²']
 };
 
+function copyProjectConfiguration(config: ProjectConfiguration): ProjectConfiguration {
+	const values = {} as ProjectConfiguration['values'];
+	for (const key of Object.keys(limits) as Array<keyof RoomAnalysisConfiguration>) {
+		const field = config.values[key];
+		values[key] = {
+			value: field.value,
+			unit: field.unit,
+			source: field.source,
+			validation: field.validation,
+			...(field.note === undefined ? {} : { note: field.note })
+		};
+	}
+	return { schema: PROJECT_CONFIGURATION_SCHEMA, version: PROJECT_CONFIGURATION_VERSION, values };
+}
+
 export function createDefaultProjectConfiguration(): ProjectConfiguration {
 	const values = {} as ProjectConfiguration['values'];
 	for (const key of Object.keys(DEFAULT_ANALYSIS_CONFIGURATION) as Array<keyof RoomAnalysisConfiguration>) {
@@ -35,11 +50,11 @@ export function validateProjectConfiguration(input: unknown): { ok: true; value:
 		const field = values?.[key]; const [min, max] = limits[key];
 		if (!field || !Number.isFinite(field.value) || field.value < min || field.value > max) issues.push(`${key} must be between ${min} and ${max}`);
 	}
-	return issues.length ? { ok: false, issues } : { ok: true, value: structuredClone(raw) as ProjectConfiguration };
+	return issues.length ? { ok: false, issues } : { ok: true, value: copyProjectConfiguration(raw as ProjectConfiguration) };
 }
 
 export function updateProjectConfiguration(config: ProjectConfiguration, key: keyof RoomAnalysisConfiguration, value: number): ProjectConfiguration {
-	const next = structuredClone(config); const [min, max] = limits[key];
+	const next = copyProjectConfiguration(config); const [min, max] = limits[key];
 	next.values[key] = { ...next.values[key], value, source: 'user', validation: Number.isFinite(value) && value >= min && value <= max ? 'valid' : 'invalid' };
 	return next;
 }

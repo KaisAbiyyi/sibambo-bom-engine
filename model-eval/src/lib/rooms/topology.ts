@@ -6,10 +6,10 @@
  * adjacency, connectivity, openings, exterior boundaries, and vertical connections.
  */
 
-import { createHash } from 'crypto';
 import type { PlanCoord, BoundaryOpeningEvidence } from './types';
 import type { DetectedRoom, DetectedRoomResult, Point3D, RoomBoundarySegment } from './detected-room';
 import { quantizeCoord } from './helpers';
+import { sha256Hex } from './hash';
 
 // ─── Topology Contracts ───────────────────────────────────────────────────────
 
@@ -111,7 +111,7 @@ export function generateSharedRoomBoundaryId(
 		`${quantizeCoord(start.x).toFixed(3)},${quantizeCoord(start.z).toFixed(3)}`,
 		`${quantizeCoord(end.x).toFixed(3)},${quantizeCoord(end.z).toFixed(3)}`
 	].sort();
-	const hash = createHash('sha256').update(`shared:${r1}:${r2}:${p1}:${p2}`).digest('hex').substring(0, 10);
+	const hash = sha256Hex(`shared:${r1}:${r2}:${p1}:${p2}`).substring(0, 10);
 	return `shared-boundary:${r1}:${r2}:${hash}`;
 }
 
@@ -122,10 +122,7 @@ export function generateRoomConnectionId(
 	type: string
 ): string {
 	const [r1, r2] = [fromRoomId, toRoomId].sort();
-	const hash = createHash('sha256')
-		.update(`conn:${r1}:${r2}:${openingId ?? 'none'}:${type}`)
-		.digest('hex')
-		.substring(0, 10);
+	const hash = sha256Hex(`conn:${r1}:${r2}:${openingId ?? 'none'}:${type}`).substring(0, 10);
 	return `room-connection:${r1}:${r2}:${hash}`;
 }
 
@@ -134,22 +131,13 @@ export function generateExteriorConnectionId(
 	openingId: string | undefined,
 	type: string
 ): string {
-	const hash = createHash('sha256')
-		.update(`ext:${roomId}:${openingId ?? 'none'}:${type}`)
-		.digest('hex')
-		.substring(0, 10);
+	const hash = sha256Hex(`ext:${roomId}:${openingId ?? 'none'}:${type}`).substring(0, 10);
 	return `ext-connection:${roomId}:${hash}`;
 }
 
 export function calculateRoomTopologyFingerprint(graph: RoomTopologyGraph): string {
-	const hash = createHash('sha256');
-	for (const r of [...graph.rooms].sort((a, b) => a.roomId.localeCompare(b.roomId))) {
-		hash.update(`${r.roomId}|${r.boundaryRoomIds.join(',')}|${r.connectionIds.join(',')}`);
-	}
-	for (const c of [...graph.connections].sort((a, b) => a.id.localeCompare(b.id))) {
-		hash.update(`${c.id}|${c.fromRoomId}|${c.toRoomId}|${c.type}`);
-	}
-	return `${graph.rooms.length}:${graph.connections.length}:${hash.digest('hex').substring(0, 12)}`;
+	const input = [...graph.rooms].sort((a, b) => a.roomId.localeCompare(b.roomId)).map((r) => `${r.roomId}|${r.boundaryRoomIds.join(',')}|${r.connectionIds.join(',')}`).join('') + [...graph.connections].sort((a, b) => a.id.localeCompare(b.id)).map((c) => `${c.id}|${c.fromRoomId}|${c.toRoomId}|${c.type}`).join('');
+	return `${graph.rooms.length}:${graph.connections.length}:${sha256Hex(input).substring(0, 12)}`;
 }
 
 // ─── Geometry & Segment Overlap Helpers ────────────────────────────────────────

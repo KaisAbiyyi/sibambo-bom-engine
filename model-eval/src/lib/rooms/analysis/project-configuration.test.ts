@@ -6,4 +6,10 @@ describe('project configuration', () => {
 	test('invalid numeric value blocks analysis config', () => { const invalid = updateProjectConfiguration(createDefaultProjectConfiguration(), 'coefficientOfUtilization', 2); expect(validateProjectConfiguration(invalid).ok).toBe(false); expect(() => toRoomAnalysisConfiguration(invalid)).toThrow(); });
 	test('field reset and JSON round trip', () => { const changed = updateProjectConfiguration(createDefaultProjectConfiguration(), 'ottvThresholdWm2', 45); const reset = resetProjectConfigurationField(changed, 'ottvThresholdWm2'); expect(reset.values.ottvThresholdWm2.value).toBe(35); expect(importProjectConfiguration(exportProjectConfiguration(changed))).toEqual({ ok: true, value: changed }); });
 	test('rejects unsupported schema', () => { const raw = JSON.parse(exportProjectConfiguration(createDefaultProjectConfiguration())); raw.schema = 'other'; expect(importProjectConfiguration(JSON.stringify(raw)).ok).toBe(false); });
+	test('accepts proxied configuration state used by Svelte runes', () => {
+		const config = createDefaultProjectConfiguration();
+		const proxied = new Proxy(config, { get: (target, key) => key === 'values' ? new Proxy(target.values, {}) : Reflect.get(target, key) });
+		expect(validateProjectConfiguration(proxied).ok).toBe(true);
+		expect(updateProjectConfiguration(proxied, 'defaultWallUValue', 1.2).values.defaultWallUValue.value).toBe(1.2);
+	});
 });

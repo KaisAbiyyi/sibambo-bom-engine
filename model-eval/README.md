@@ -137,6 +137,34 @@ npm run preview
 
 ## Data Contract
 
+## KP documentation
+
+- [Technical and analysis-method guide](docs/KP_TECHNICAL_GUIDE.md)
+- [User workflow guide](docs/KP_USER_WORKFLOW.md)
+- [Demo script and fallback plan](docs/KP_DEMO_SCRIPT.md)
+- [KP result summary](docs/KP_RESULT_SUMMARY.md)
+
+## Release 1.0.0-kp
+
+- Version: `1.0.0-kp`
+- Integrated baseline: `9a20d4c` (includes `0a8bc39` integration)
+- Supported workflow: upload supported BOM JSON/BOME2 input, review detected rooms, apply project calibration, run analysis, review recommendations or bounded optimization, then export JSON or HTML report.
+- Production target: Vercel with `@sveltejs/adapter-vercel`; Vercel supplies `VERCEL=1` during its build. Local production preview uses `@sveltejs/adapter-node`, so Windows does not need symlink permissions. No application environment variables are required for browser-only workflow.
+- Upload limits: 80 MB source file, 120 MB decompressed model payload, 512 KB project template.
+- Production preview: `bun run preview:production`.
+
+Deploy staging from `model-eval/` after release checks pass:
+
+```powershell
+bun install --frozen-lockfile
+bun run release:check
+bunx vercel --target=preview
+```
+
+Set Vercel project Root Directory to `model-eval`. Internal `/api/corpus/*` endpoints are local QA tooling backed by repository artifacts; staging users upload model files directly. Dev-only `devModel` and `debugModel=house2` loaders return actionable production errors and do not expose local files.
+
+Release smoke scope: use `house2` end-to-end, `PROJECT SBOOST 2` for one bounded run, and `PROJECT SBOOST 1` only to verify cancellation. Do not use `presentation20`.
+
 Expected JSON shape:
 
 - `entities`: nested model entities.
@@ -152,6 +180,110 @@ The parser tolerates partial metadata but requires renderable faces. If no faces
 - Mark results as estimates when defaults are still being used.
 - Keep formulas transparent in `src/lib/model.ts`.
 - Preserve original JSON; analysis state lives in browser memory/local storage and exported reports.
+
+## Design Recommendations
+
+The recommendation engine (`src/lib/rooms/analysis/recommendations.ts`) generates prioritised, evidence-backed design actions from the current building analysis result.
+
+**Scope:**
+
+| Scope | Trigger |
+|-------|---------|
+| `building` | OTTV non-compliance, missing project north, building-wide poor ventilation |
+| `room` | Per-room thermal comfort failure, AC oversize, inaccessible room |
+
+**Categories:** `envelope insulation`, `glazing performance`, `solar shading`, `natural ventilation`, `AC capacity`, `lighting quantity`, `circulation/access`, `missing project data`.
+
+**Ranking:** `critical` → `warning` → `info`, then by confidence, then by affected room count, then alphabetically by title.
+
+**Deduplication:** Recommendations with identical category and title are merged. Room IDs from merged sources are combined.
+
+**Conflict detection:** If a recommendation increases window area while OTTV is non-compliant, a conflict note is appended to `limitations`.
+
+**Applying a recommendation:** Each recommendation exposes `suggestedOverrides` (`DesignScenarioOverrides`). Pass these directly to `runScenarioAnalysis` to create a proposed scenario for comparison.
+
+## Multi-Variable Scenario Optimization
+
+The optimization engine (`src/lib/rooms/analysis/optimization.ts`) performs a bounded, deterministic pseudo-random search across user-defined variable ranges to find Pareto-optimal design configurations.
+
+### Optimization Variables
+
+| Variable path | Unit | Description |
+|---------------|------|-------------|
+| `wallUValueMultiplier` | multiplier | Scale default wall U-value (insulation improvement) |
+| `glazingUValueMultiplier` | multiplier | Scale glazing U-value |
+| `shadingCoefficientMultiplier` | multiplier | Scale shading coefficient |
+| `solarFactorMultiplier` | multiplier | Scale solar heat gain factor |
+| `windowAreaMultiplier` | multiplier | Scale all exterior window areas |
+| `exteriorOpeningAreaMultiplier` | multiplier | Scale all exterior openings (ventilation) |
+| `defaultLuminaireFluxLm` | lm | Override lamp efficacy |
+| `acSafetyMargin` | fraction | Override AC safety factor |
+| `indoorDesignTempC` | °C | Override indoor design temperature |
+
+Each variable requires `min`, `max`, and `step`.
+
+### Objectives
+
+| Objective | Direction |
+|-----------|-----------|
+| `reduce_cooling_load` | lower is better (kW) |
+| `reduce_ottv` | lower is better (W/m²) |
+| `improve_ach` | higher is better (ACH) |
+| `improve_thermal_comfort` | higher compliance rate is better |
+| `reduce_luminaires` | lower count is better |
+| `minimize_changes` | minimize deviation from baseline |
+
+### Pareto Interpretation
+
+The Pareto frontier contains only **non-dominated** scenarios. A scenario A dominates B if A is no worse on all objectives and strictly better on at least one. Dominated scenarios are excluded from the frontier.
+
+The **recommended (balanced) scenario** is selected using normalized min-sum across all objectives. It minimises the sum of per-objective distances from the best frontier values.
+
+### Scenario Application
+
+After optimization, apply the result:
+
+```typescript
+const scenario: DesignScenario = {
+  id: 'opt-applied',
+  name: 'Optimized Design',
+  description: 'From Pareto optimizer',
+  isBaseline: false,
+  overrides: result.recommendedScenario.scenario.overrides
+};
+const proposed = runScenarioAnalysis(scenario, rooms, topology, semantics, config);
+const comparison = compareScenarios(baseline, proposed);
+```
+
+### Cancellation and Budget Behavior
+
+- `timeBudgetMs`: hard wall-clock limit. Stops evaluation loop and reports `Time budget of Xms exceeded.` in diagnostics.
+- `AbortController.signal`: stops after the current evaluation completes. Reports `Optimization cancelled by user.` in diagnostics.
+- Partial results from cancelled runs are always returned. `totalEvaluated`, `feasibleCount`, `paretoFrontier`, and `diagnostics` are always populated.
+
+## Supported Models
+
+| Model | Use |
+|-------|-----|
+| `house2` | Full end-to-end acceptance testing |
+| `PROJECT SBOOST 2` | Bounded end-to-end smoke run |
+| `PROJECT SBOOST 1` | Cancellation and resource-limit verification only |
+
+Do not use `presentation20` for room analysis; it is a legacy fixture not aligned with the current export schema.
+
+## Known Limitations
+
+- **Room detection is heuristic.** Closed-room detection uses planar graph cycle analysis. Open plans or non-standard geometry may produce zero or incorrect rooms.
+- **Analysis results are engineering estimates.** Thermal comfort, OTTV, cooling capacity, and illuminance calculations use simplified methods (ISO 7730 PMV approximation, simplified solar heat gain, lumen method). Results are not suitable for regulatory submission.
+- **OTTV is approximate.** Facade orientation is inferred from geometry, not surveyed. Non-orthogonal facades may have incorrect compass assignments.
+- **Ventilation type is inferred.** Cross-ventilation vs single-sided is determined from topology, not CFD.
+- **No dynamic simulation.** All analysis is steady-state and design-day based.
+- **Optimization is a random search.** The Pareto frontier is not exhaustive. Larger `maxEvaluations` budgets and finer `step` sizes improve quality at the cost of runtime.
+- **Scenario overrides are building-wide.** Room-specific geometric multipliers (e.g., `windowAreaMultiplier`) apply uniformly to all rooms. Per-room geometry editing is not supported.
+
+## Engineering-Estimate Disclaimer
+
+All results produced by Sibambo Model Eval are preliminary engineering estimates based on simplified first-principle methods and assumed default values. They are intended for early-stage decision support only. Results must not be used for regulatory compliance, structural design, energy certification, or any purpose requiring certified engineering calculations. Always verify critical decisions with a licensed engineer using appropriate simulation tools.
 
 ## License
 

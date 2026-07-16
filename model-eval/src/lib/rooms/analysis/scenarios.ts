@@ -38,6 +38,7 @@ export type DesignScenarioOverrides = Partial<RoomAnalysisConfiguration> & {
 	shadingCoefficientMultiplier?: number;
 	solarFactorMultiplier?: number;
 	windowAreaMultiplier?: number;
+	exteriorOpeningAreaMultiplier?: number;
 	wwrOverride?: number; // clamps or sets target glazing ratio
 	isHVACConditionedOverride?: boolean;
 };
@@ -140,6 +141,9 @@ export function validateScenarioOverrides(overrides: DesignScenarioOverrides): S
 	if (overrides.windowAreaMultiplier !== undefined && (!Number.isFinite(overrides.windowAreaMultiplier) || overrides.windowAreaMultiplier < 0)) {
 		errors.push(`Invalid windowAreaMultiplier: ${overrides.windowAreaMultiplier} (must be non-negative finite number)`);
 	}
+	if (overrides.exteriorOpeningAreaMultiplier !== undefined && (!Number.isFinite(overrides.exteriorOpeningAreaMultiplier) || overrides.exteriorOpeningAreaMultiplier < 0)) {
+		errors.push(`Invalid exteriorOpeningAreaMultiplier: ${overrides.exteriorOpeningAreaMultiplier} (must be non-negative finite number)`);
+	}
 
 	return {
 		isValid: errors.length === 0,
@@ -222,20 +226,23 @@ export function runScenarioAnalysis(
 		if (scenario.overrides.isHVACConditionedOverride !== undefined) {
 			clone.assumptions.usageProfile.thermalComfortMethodEligibility = scenario.overrides.isHVACConditionedOverride ? 'mechanical' : 'adaptive';
 		}
-
-		// Window area multiplier or WWR override on exterior window openings
-		if (scenario.overrides.windowAreaMultiplier !== undefined || scenario.overrides.wwrOverride !== undefined) {
+		// Window area multiplier or WWR override on exterior window openings, and exterior opening multiplier
+		if (scenario.overrides.windowAreaMultiplier !== undefined || scenario.overrides.wwrOverride !== undefined || scenario.overrides.exteriorOpeningAreaMultiplier !== undefined) {
 			for (const opening of clone.openings) {
-				if (opening.isExterior && opening.type === 'window') {
-					if (scenario.overrides.windowAreaMultiplier !== undefined) {
-						opening.area = Math.max(0, opening.area * scenario.overrides.windowAreaMultiplier);
-					}
-					if (scenario.overrides.wwrOverride !== undefined) {
-						// Scale window area towards the target WWR proportion of the wall
-						const wallArea = clone.geometry.height * opening.width;
-						if (wallArea > 0) {
-							opening.area = Math.min(wallArea, wallArea * scenario.overrides.wwrOverride);
+				if (opening.isExterior) {
+					if (opening.type === 'window') {
+						if (scenario.overrides.windowAreaMultiplier !== undefined) {
+							opening.area = Math.max(0, opening.area * scenario.overrides.windowAreaMultiplier);
 						}
+						if (scenario.overrides.wwrOverride !== undefined) {
+							const wallArea = clone.geometry.height * opening.width;
+							if (wallArea > 0) {
+								opening.area = Math.min(wallArea, wallArea * scenario.overrides.wwrOverride);
+							}
+						}
+					}
+					if (scenario.overrides.exteriorOpeningAreaMultiplier !== undefined) {
+						opening.area = Math.max(0, opening.area * scenario.overrides.exteriorOpeningAreaMultiplier);
 					}
 				}
 			}
