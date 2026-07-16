@@ -137,10 +137,17 @@ npm run preview
 
 ## Data Contract
 
-## Release Candidate 6A
+## KP documentation
 
-- Version: `0.6.0-rc.1`
-- Integrated build: `0a8bc39`
+- [Technical and analysis-method guide](docs/KP_TECHNICAL_GUIDE.md)
+- [User workflow guide](docs/KP_USER_WORKFLOW.md)
+- [Demo script and fallback plan](docs/KP_DEMO_SCRIPT.md)
+- [KP result summary](docs/KP_RESULT_SUMMARY.md)
+
+## Release 1.0.0-kp
+
+- Version: `1.0.0-kp`
+- Integrated baseline: `9a20d4c` (includes `0a8bc39` integration)
 - Supported workflow: upload supported BOM JSON/BOME2 input, review detected rooms, apply project calibration, run analysis, review recommendations or bounded optimization, then export JSON or HTML report.
 - Production target: Vercel with `@sveltejs/adapter-vercel`; Vercel supplies `VERCEL=1` during its build. Local production preview uses `@sveltejs/adapter-node`, so Windows does not need symlink permissions. No application environment variables are required for browser-only workflow.
 - Upload limits: 80 MB source file, 120 MB decompressed model payload, 512 KB project template.
