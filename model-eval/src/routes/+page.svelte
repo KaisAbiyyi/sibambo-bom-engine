@@ -1419,6 +1419,7 @@
 									if (k === 'solarFactorMultiplier') projectConfiguration = updateProjectConfiguration(projectConfiguration, 'defaultSolarFactor', projectConfiguration.values.defaultSolarFactor.value * (v as number));
 								}
 								recalculateProjectAnalysis();
+								projectConfigurationMessage = `Applied proposed scenario: ${rec.title}. Baseline comparison retained.`;
 							}}
 						/>
 					</div>
@@ -1446,6 +1447,7 @@
 								if (k === 'lightLossFactor') projectConfiguration = updateProjectConfiguration(projectConfiguration, 'lightLossFactor', v as number);
 							}
 							recalculateProjectAnalysis();
+							projectConfigurationMessage = 'Applied optimized scenario. Baseline comparison retained.';
 						}}
 					/>
 				</div>
